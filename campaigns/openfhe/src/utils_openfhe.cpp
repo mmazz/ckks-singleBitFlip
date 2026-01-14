@@ -51,27 +51,37 @@ CampaignContext setup_campaign(const CampaignArgs& args, PRNG& prng) {
     return {cc, keys, input};
 }
 
-std::vector<double> run_iteration(const CampaignContext& ctx, const CampaignArgs& args, PRNG& prng, const IterationArgs& iterArgs)
+IterationResult run_iteration(const CampaignContext& ctx, const CampaignArgs& args, PRNG& prng, std::optional<IterationArgs> iterArgs)
 {
     prng.ResetToSeed();
     Plaintext result_bitFlip;
 
     Plaintext ptxt1 = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
-    if(args.stage=="encode")
-        bitFlip(ptxt1, args.withNTT, iterArgs.limb, iterArgs.coeff, iterArgs.bit);
+    if (iterArgs && args.stage == "encode") {
+        bitFlip(ptxt1, args.withNTT,
+                iterArgs->limb, iterArgs->coeff, iterArgs->bit);
+    }
+
     Ciphertext<DCRTPoly> c = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt1);
-    if(args.stage=="encrypt_c0")
-        bitFlip(c, args.withNTT, 0, iterArgs.limb, iterArgs.coeff, iterArgs.bit);
-    if(args.stage=="encrypt_c0")
-        bitFlip(c, args.withNTT, 1, iterArgs.limb, iterArgs.coeff, iterArgs.bit);
+
+    if (iterArgs && args.stage == "encrypt_c0") {
+        bitFlip(c, args.withNTT, 0,
+                iterArgs->limb, iterArgs->coeff, iterArgs->bit);
+    }
+    if (iterArgs && args.stage == "encrypt_c1") {
+        bitFlip(c, args.withNTT, 1,
+                iterArgs->limb, iterArgs->coeff, iterArgs->bit);
+    }
 
     ctx.cc->Decrypt(ctx.keys.secretKey, c, &result_bitFlip);
+
+    bool detected = SDCConfigHelper::WasSDCDetected(result_bitFlip);
     result_bitFlip->SetLength(args.logSlots);
 
 
     std::vector<double> result_bitFlip_vec = result_bitFlip->GetRealPackedValue();
 
 
-    return result_bitFlip_vec;
+    return IterationResult{result_bitFlip_vec, detected};
 }
 

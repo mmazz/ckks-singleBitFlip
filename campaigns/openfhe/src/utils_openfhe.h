@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 #include <random>
-
+#include <optional>
 using namespace lbcrypto;
 
 struct CampaignContext {
@@ -28,7 +28,10 @@ struct IterationArgs{
         : limb(l), coeff(c), bit(b) {}
 };
 
-
+struct IterationResult {
+    std::vector<double> values;
+    bool detected;
+};
 
 void bitFlip(Ciphertext<DCRTPoly> &c, bool withNTT, size_t k, size_t i, size_t j, size_t bit);
 void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bit);
@@ -37,6 +40,6 @@ void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bit);
 CampaignContext setup_campaign(const CampaignArgs& args, PRNG& prng);
 
 
-std::vector<double> run_iteration(const CampaignContext& ctx, const CampaignArgs& args, PRNG& prng, const IterationArgs& iterArgs);
+IterationResult run_iteration(const CampaignContext& ctx, const CampaignArgs& args, PRNG& prng, std::optional<IterationArgs> iterArgs = std::nullopt);
 
 

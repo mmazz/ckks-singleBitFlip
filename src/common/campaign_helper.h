@@ -1,11 +1,31 @@
 #pragma once
+
+#include "openfhe.h"
 #include <getopt.h>
 #include <iostream>
 #include <string>
 #include <cstdlib>
 #include <cstdint>
 
+using namespace lbcrypto;
 
+inline const char* to_string(SecretKeyAttackMode mode) {
+    switch (mode) {
+        case SecretKeyAttackMode::Disabled:
+            return "Disabled";
+        case SecretKeyAttackMode::CompleteInjection:
+            return "CompleteInjection";
+        case SecretKeyAttackMode::RealOnly:
+            return "RealOnly";
+        case SecretKeyAttackMode::ImaginaryOnly:
+            return "ImaginaryOnly";
+    }
+    return "Unknown";
+}
+
+inline std::ostream& operator<<(std::ostream& os, SecretKeyAttackMode mode) {
+    return os << to_string(mode);
+}
 struct CampaignArgs {
     std::string library = "openfhe";
     std::string stage = "all";
@@ -18,6 +38,8 @@ struct CampaignArgs {
     uint64_t seed_input = 42;
     uint32_t num_limbs = 3;
     bool withNTT = true;
+    SecretKeyAttackMode attackMode = SecretKeyAttackMode::CompleteInjection;
+    double thresholdBitsSKA = 5.0;
     std::string results_dir = "results";
     bool verbose = false;
 
@@ -34,6 +56,8 @@ struct CampaignArgs {
            << "  Num limbs: " << num_limbs << '\n'
            << "  WithNTT: " << withNTT << '\n'
            << "  Stage: " << stage << '\n'
+           << "  AttackModeSKA: " << attackMode << '\n'
+           << "  thresholdBitsSKA: " << thresholdBitsSKA << '\n'
            << "  Results dir: " << results_dir << '\n';
     }
 };

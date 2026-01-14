@@ -14,7 +14,9 @@ void print_usage(const char* program_name) {
               << "  --withNTT <value>       Turn on or off NTT (default: 1)\n"
               << "  --seed <value>          Random seed for scheme (default: 42)\n"
               << "  --seed-input <value>    Random seed for input (default: 42)\n"
-              << "  --limbs <value>         Number of RNS limbs (default: 3)\n"
+              << "  --num_limbs <value>     Number of RNS limbs (default: 3)\n"
+              << "  --attackModeSKA <value> Type of error injection for SKA (default: complete)\n"
+              << "  --thresholdSKA <value>  Bits for threshold for SKA (default: 5.0)\n"
               << "  --results-dir <path>    Results directory (default: results)\n"
               << "  --verbose, -v           Verbose output\n"
               << "  --help, -h              Show this help\n\n"
@@ -41,6 +43,8 @@ const CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"seed",          required_argument, 0, 'r'},
         {"seed-input",  required_argument, 0, 'b'},
         {"limbs",         required_argument, 0, 'L'},
+        {"attackModeSKA ", required_argument, 0, 'a'},
+        {"thresholdSKA ",  required_argument, 0, 't'},
         {"results-dir",   required_argument, 0, 'R'},
         {"verbose",       no_argument,       0, 'v'},  // No requiere argumento
         {"help",          no_argument,       0, 'h'},
@@ -106,6 +110,16 @@ const CampaignArgs parse_arguments(int argc, char* argv[]) {
 
             case 'S':  // --stage o -S
                 args.stage = optarg;
+                // Opcional: validar stages válidos
+                break;
+
+            case 'a':  // --stage o -S
+                args.attackMode =  static_cast<SecretKeyAttackMode>(std::stoul(optarg)) ;
+                // Opcional: validar stages válidos
+                break;
+
+            case 't':  // --stage o -S
+                args.thresholdBitsSKA =  std::stod(optarg);
                 // Opcional: validar stages válidos
                 break;
 
