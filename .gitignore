@@ -2,4 +2,5 @@ campaigns/openfhe/build/
 campaigns/heaan/build/
 src/openfhe-PRNG-Control
 src/HEAAN-PRNG-Control
-
+results/
+.cache/
