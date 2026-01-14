@@ -1,6 +1,7 @@
 #!/bin/bash
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 mkdir -p build && cd build
 cmake -DCMAKE_PREFIX_PATH="$PROJECT_ROOT/src/openfhe-PRNG-Control/install/lib/OpenFHE" \

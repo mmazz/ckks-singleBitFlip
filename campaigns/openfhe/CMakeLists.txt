@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16.3)
-get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
+get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 
 ### To use gcc/g++ on a Macintosh, you must set the Compilers
 ### here, not inside the project
@@ -69,7 +69,7 @@ set(EXECUTABLES
 )
 
 foreach(exec_name ${EXECUTABLES})
-    add_executable(${exec_name} openfhe/${exec_name}.cpp)
+    add_executable(${exec_name} src/${exec_name}.cpp)
     target_link_libraries(${exec_name} PRIVATE mainlib_common ${OpenFHE_SHARED_LIBRARIES})
 endforeach()
 
