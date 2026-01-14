@@ -6,15 +6,17 @@ void print_usage(const char* program_name) {
               << "Options:\n"
               << "  --library <name>        Library: openfhe or heaan (default: openfhe)\n"
               << "  --stage <name>          Stage to attack: all, encode, encrypt_c0, encrypt_c1, mul_c0, mul_c1, add_c0, add_c1 (default: all)\n"
-              << "  --logN <value>          log Ring dimension (default: 14 = 2^14 = 16384)\n"
+              << "  --logN <value>          log Ring dimension (default: 3 = 2^3 = 8)\n"
               << "  --logQ <value>          First mod bits (default: 60)\n"
               << "  --logDelta <value>      Scaling factor bits (default: 50)\n"
-              << "  --logSlots <value>      log Slots used (default: 4)\n"
+              << "  --logSlots <value>      log Slots used (default: 1)\n"
               << "  --mult-depth <value>    Multiplicative depth (default: 5)\n"
               << "  --withNTT <value>       Turn on or off NTT (default: 1)\n"
               << "  --seed <value>          Random seed for scheme (default: 42)\n"
               << "  --seed-input <value>    Random seed for input (default: 42)\n"
               << "  --num_limbs <value>     Number of RNS limbs (default: 3)\n"
+              << "  --logMin <value>        logMin value (default: 0= sample from [-1,)\n"
+              << "  --logMax <value>        logMax value (default: 0= sample up to ,1])\n"
               << "  --attackModeSKA <value> Type of error injection for SKA (default: complete)\n"
               << "  --thresholdSKA <value>  Bits for threshold for SKA (default: 5.0)\n"
               << "  --results-dir <path>    Results directory (default: results)\n"
@@ -42,7 +44,9 @@ const CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"withNTT",    required_argument, 0, 'n'},
         {"seed",          required_argument, 0, 'r'},
         {"seed-input",  required_argument, 0, 'b'},
-        {"limbs",         required_argument, 0, 'L'},
+        {"num_limbs",         required_argument, 0, 'L'},
+        {"logMin",         required_argument, 0, 'x'},
+        {"logMax",         required_argument, 0, 'y'},
         {"attackModeSKA ", required_argument, 0, 'a'},
         {"thresholdSKA ",  required_argument, 0, 't'},
         {"results-dir",   required_argument, 0, 'R'},
@@ -104,6 +108,14 @@ const CampaignArgs parse_arguments(int argc, char* argv[]) {
                 args.num_limbs = std::stoul(optarg);
                 break;
 
+            case 'x':  // --limbs o -L
+                args.logMin = std::stoul(optarg);
+                break;
+
+            case 'y':  // --limbs o -L
+                args.logMax = std::stoul(optarg);
+                break;
+
             case 'n':  // --withNTT o -n
                 args.withNTT = false;
                 break;
@@ -140,6 +152,9 @@ const CampaignArgs parse_arguments(int argc, char* argv[]) {
                 exit(1);
         }
     }
+
+    if(args.num_limbs==0)
+        args.num_limbs = args.mult_depth + 1;
 
     // Opcional: procesar argumentos no-opción (posicionales)
     // if (optind < argc) {

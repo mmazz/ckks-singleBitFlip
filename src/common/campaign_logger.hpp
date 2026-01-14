@@ -30,6 +30,8 @@ struct CampaignMetadata {
     uint64_t seed_input;
     bool withNTT;
     uint32_t num_limbs;
+    uint32_t logMin;
+    uint32_t logMax;
 
     // Golden reference
     double golden_norm;
@@ -61,6 +63,8 @@ struct CampaignMetadata {
            << seed_input << ","
            << (withNTT ? "1" : "0") << ","
            << num_limbs << ","
+           << logMin << ","
+           << logMax << ","
            << std::scientific << std::setprecision(6) << golden_norm << ","
            << total_bitflips << ","
            << sdc_count << ","
@@ -73,7 +77,7 @@ struct CampaignMetadata {
 
     static std::string csv_header() {
         return "campaign_id,library,timestamp_start,timestamp_end,logN,logQ,logDelta,logSlots,"
-               "mult_depth,seed,seed_input,withNTT,num_limbs,"
+               "mult_depth,seed,seed_input,withNTT,num_limbs,logMin,logMax,"
                "golden_norm,total_bitflips,sdc_count,num_stages,"
                "duration_seconds,bitflips_per_second,data_file";
     }

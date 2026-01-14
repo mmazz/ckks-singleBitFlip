@@ -34,7 +34,7 @@ CampaignContext setup_campaign(const CampaignArgs& args, PRNG& prng) {
     params.SetMultiplicativeDepth(args.mult_depth);
     params.SetScalingModSize(args.logDelta);
     params.SetFirstModSize(args.logQ);
-    params.SetBatchSize(args.logSlots);
+    params.SetBatchSize(1 << args.logSlots);
     params.SetRingDim(1 << args.logN);
     params.SetScalingTechnique(FIXEDMANUAL);
     params.SetSecurityLevel(HEStd_NotSet);
@@ -46,7 +46,7 @@ CampaignContext setup_campaign(const CampaignArgs& args, PRNG& prng) {
     auto keys = cc->KeyGen();
 
     std::vector<double> input =
-        uniform_dist(4, -1, 1, args.seed_input, false);
+        uniform_dist(1 << args.logSlots, args.logMin, args.logMax, args.seed_input, false);
 
     return {cc, keys, input};
 }
@@ -76,7 +76,7 @@ IterationResult run_iteration(const CampaignContext& ctx, const CampaignArgs& ar
     ctx.cc->Decrypt(ctx.keys.secretKey, c, &result_bitFlip);
 
     bool detected = SDCConfigHelper::WasSDCDetected(result_bitFlip);
-    result_bitFlip->SetLength(args.logSlots);
+    result_bitFlip->SetLength(1 << args.logSlots);
 
 
     std::vector<double> result_bitFlip_vec = result_bitFlip->GetRealPackedValue();

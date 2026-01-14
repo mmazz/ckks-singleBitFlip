@@ -30,14 +30,16 @@ inline std::ostream& operator<<(std::ostream& os, SecretKeyAttackMode mode) {
 struct CampaignArgs {
     std::string library = "openfhe";
     std::string stage = "all";
-    uint32_t logN = 14;
+    uint32_t logN = 3;
     uint32_t logQ = 60;
     uint32_t logDelta = 50;
-    uint32_t logSlots = 4;
-    uint32_t mult_depth = 5;
+    uint32_t logSlots = 2;
+    uint32_t mult_depth = 0;
     uint64_t seed = 42;
     uint64_t seed_input = 42;
-    uint32_t num_limbs = 3;
+    uint32_t num_limbs = 0;
+    uint32_t logMin = 0;
+    uint32_t logMax = 0;
     bool withNTT = true;
     SecretKeyAttackMode attackMode = SecretKeyAttackMode::CompleteInjection;
     double thresholdBitsSKA = 5.0;
@@ -55,6 +57,8 @@ struct CampaignArgs {
            << "  Seed: " << seed << '\n'
            << "  Seed-input: " << seed_input << '\n'
            << "  Num limbs: " << num_limbs << '\n'
+           << "  logMin: " << logMin << '\n'
+           << "  logMax: " << logMax << '\n'
            << "  WithNTT: " << withNTT << '\n'
            << "  Stage: " << stage << '\n'
            << "  AttackModeSKA: " << attackMode << '\n'

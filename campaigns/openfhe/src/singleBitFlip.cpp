@@ -47,6 +47,8 @@ int main(int argc, char* argv[]) {
         args.seed_input,
         args.withNTT,
         args.num_limbs,
+        args.logMin,
+        args.logMax,
         0.0,                                      // golden_norm (se calcula abajo)
         0,                                        // total_bitflips (se actualiza al final)
         0,                                        // sdc_count (se actualiza al final)
@@ -96,8 +98,7 @@ int main(int argc, char* argv[]) {
     if (progress_interval == 0) progress_interval = 10000;
 
     if(golden_norm2<0.5){
-        size_t limbs = args.mult_depth + 1;
-        for (size_t limb = 0; limb < limbs; limb++)
+        for (size_t limb = 0; limb < args.num_limbs; limb++)
         {
             for (size_t coeff = 0; coeff < num_coeffs; coeff++)
             {
