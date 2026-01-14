@@ -26,6 +26,7 @@ inline const char* to_string(SecretKeyAttackMode mode) {
 inline std::ostream& operator<<(std::ostream& os, SecretKeyAttackMode mode) {
     return os << to_string(mode);
 }
+
 struct CampaignArgs {
     std::string library = "openfhe";
     std::string stage = "all";
