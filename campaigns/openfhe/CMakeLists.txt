@@ -19,6 +19,8 @@ get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE
 
 project(demo CXX)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 option(BUILD_STATIC "Set to ON to include static versions of the library" OFF)
 
 find_package(OpenFHE CONFIG REQUIRED)
@@ -61,15 +63,28 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-add_library(mainlib_common ${PROJECT_ROOT}/src/common/utils-ckks.cpp)
-target_include_directories(mainlib_common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+
+add_library(mainlib_common
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils_openfhe.cpp
+    ${PROJECT_ROOT}/src/common/utils_ckks.cpp
+    ${PROJECT_ROOT}/src/common/campaign_helper.cpp
+    ${PROJECT_ROOT}/src/common/campaign_logger.hpp
+)
+target_include_directories(mainlib_common PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROJECT_ROOT}/src/common          # <-- AGREGAR ESTA LÍNEA para poder hacer #include "common/campaign_helper.h"
+)
 
 set(EXECUTABLES
     testPRNG
+    singleBitFlip    # <-- Asegúrate que este nombre esté aquí
 )
 
 foreach(exec_name ${EXECUTABLES})
     add_executable(${exec_name} src/${exec_name}.cpp)
     target_link_libraries(${exec_name} PRIVATE mainlib_common ${OpenFHE_SHARED_LIBRARIES})
 endforeach()
+
+
 

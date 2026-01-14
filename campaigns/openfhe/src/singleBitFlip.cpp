@@ -1,30 +1,61 @@
 #include "openfhe.h"
 
 #include "campaign_helper.h"
+#include "campaign_logger.hpp"
+#include "utils_openfhe.h"
 
 int main(int argc, char* argv[]) {
-    // 1. Parsear argumentos
-    CampaignArgs args = parse_arguments(argc, argv);
+    const CampaignArgs args = parse_arguments(argc, argv);
 
-    // 2. Mostrar configuración (opcional)
     if (args.verbose) {
-        std::cout << "Campaign Configuration:" << std::endl;
-        std::cout << "  Library: " << args.library << std::endl;
-        std::cout << "  N: " << args.N << std::endl;
-        std::cout << "  Delta: " << args.delta << std::endl;
-        std::cout << "  Mult depth: " << args.mult_depth << std::endl;
-        std::cout << "  Seed: " << args.seed << std::endl;
-        std::cout << "  Seed-input: " << args.seed_input << std::endl;
-        std::cout << "  Num limbs: " << args.num_limbs << std::endl;
-        std::cout << "  Stage: " << args.stage << std::endl;
-        std::cout << "  Results dir: " << args.results_dir << std::endl;
+        args.print();
     }
+ // Setup registry
+    CampaignRegistry registry(args.results_dir);
+    uint32_t campaign_id = registry.get_next_campaign_id();
 
-    // 3. Usar los argumentos en tu código
-    std::cout << "\nRunning campaign with N=" << args.N
-              << " on stage=" << args.stage << std::endl;
+    std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
-    // ... resto de tu código ...
+    // Falta first mod, y batchsize, cambiar N a logN, logDelta
+    CampaignMetadata metadata = {
+        campaign_id,
+        args.library,
+        get_timestamp(),
+        args.logN,
+        args.logQ,
+        args.logDelta,
+        args.logSlots,
+        args.mult_depth,
+        args.seed,
+        args.seed_input,
+        args.num_limbs,
+        args.withNTT,
+        0.0,  // golden_norm (to be calculated)
+        0,    // total_bitflips (to be calculated)
+        0     // num_stages (to be calculated)
+    };
+
+    // Setup logger
+    CampaignLogger logger(campaign_id, args.results_dir + "/data");
+
+
+
+    registry.register_campaign(metadata);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    PRNG& prng = PseudoRandomNumberGenerator::GetPRNG();
+    CampaignContext ctx = setup_campaign(args, prng);
+    IterationArgs iterArgs(10, 1, 0);
+    std::vector<double> res = run_iteration(ctx, args, prng, iterArgs);
+//  log_bitflip(uint32_t limb,uint32_t coeff, uint8_t bit, const std::string& stage, double norm2, double rel_error, bool is_sdc = false)
+    logger.log_bitflip(iterArgs.limb, iterArgs.coeff, iterArgs.bit, "encrypt", 0.01, 0.123, 0);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(
+                    end_time - start_time).count();
+
+    std::cout << duration << std::endl;
 
     return 0;
 }

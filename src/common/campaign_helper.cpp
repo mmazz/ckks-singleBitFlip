@@ -5,10 +5,13 @@ void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [OPTIONS]\n\n"
               << "Options:\n"
               << "  --library <name>        Library: openfhe or heaan (default: openfhe)\n"
-              << "  --stage <name>          Stage to attack: all, encode, encrypt, mul, add, decrypt (default: all)\n"
-              << "  --N <value>             Ring dimension (default: 16384)\n"
-              << "  --delta <value>         Scaling factor bits (default: 50)\n"
+              << "  --stage <name>          Stage to attack: all, encode, encrypt_c0, encrypt_c1, mul_c0, mul_c1, add_c0, add_c1 (default: all)\n"
+              << "  --logN <value>          log Ring dimension (default: 14 = 2^14 = 16384)\n"
+              << "  --logQ <value>          First mod bits (default: 60)\n"
+              << "  --logDelta <value>      Scaling factor bits (default: 50)\n"
+              << "  --logSlots <value>      log Slots used (default: 4)\n"
               << "  --mult-depth <value>    Multiplicative depth (default: 5)\n"
+              << "  --withNTT <value>       Turn on or off NTT (default: 1)\n"
               << "  --seed <value>          Random seed for scheme (default: 42)\n"
               << "  --seed-input <value>    Random seed for input (default: 42)\n"
               << "  --limbs <value>         Number of RNS limbs (default: 3)\n"
@@ -21,7 +24,7 @@ void print_usage(const char* program_name) {
               << "  " << program_name << " --stage mul --limbs 4 -v\n";
 }
 
-CampaignArgs parse_arguments(int argc, char* argv[]) {
+const CampaignArgs parse_arguments(int argc, char* argv[]) {
     CampaignArgs args;  // Inicializa con valores por defecto
 
     // Definir opciones largas
@@ -29,9 +32,12 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
     static struct option long_options[] = {
         {"library",       required_argument, 0, 'l'},  // Requiere argumento
         {"stage",         required_argument, 0, 'S'},
-        {"N",             required_argument, 0, 'n'},
-        {"delta",         required_argument, 0, 'd'},
+        {"logN",             required_argument, 0, 'N'},
+        {"logQ",             required_argument, 0, 'Q'},
+        {"logDelta",         required_argument, 0, 'd'},
+        {"logSlots",         required_argument, 0, 's'},
         {"mult-depth",    required_argument, 0, 'm'},
+        {"withNTT",    required_argument, 0, 'n'},
         {"seed",          required_argument, 0, 'r'},
         {"seed-input",  required_argument, 0, 'b'},
         {"limbs",         required_argument, 0, 'L'},
@@ -62,16 +68,24 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                 }
                 break;
 
-            case 'n':  // --N o -n
-                args.N = std::stoul(optarg);  // String to unsigned long
+            case 'N':  // --logN o -N
+                args.logN = std::stoul(optarg);  // String to unsigned long
                 break;
 
-            case 'd':  // --delta o -d
-                args.delta = std::stoul(optarg);
+            case 'Q':  // --logQ o -Q
+                args.logQ = std::stoul(optarg);  // String to unsigned long
+                break;
+
+            case 'd':  // --logDelta o -d
+                args.logDelta = std::stoul(optarg);
                 break;
 
             case 'm':  // --mult-depth o -m
                 args.mult_depth = std::stoul(optarg);
+                break;
+
+            case 's':  // --slots o -s
+                args.logSlots = std::stoul(optarg);
                 break;
 
             case 'r':  // --seed o -r
@@ -84,6 +98,10 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
             case 'L':  // --limbs o -L
                 args.num_limbs = std::stoul(optarg);
+                break;
+
+            case 'n':  // --withNTT o -n
+                args.withNTT = false;
                 break;
 
             case 'S':  // --stage o -S
