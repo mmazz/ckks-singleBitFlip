@@ -52,6 +52,15 @@ fi
 
 cd "$PROJECT_ROOT"
 
+if [ ! -f "campaigns/openfhe/build/bin/singleBitFlip" ]; then
+    echo "Building OpenFHE campaigns..."
+    cd campaigns/openfhe
+    ./build.sh
+    cd -
+else
+    echo "OpenFHE campaigns already built (singleBitFlip found)"
+fi
+
 echo ""
 echo "=== Setup completed successfully ==="
 echo "Project structure created in: $PROJECT_ROOT/src"
