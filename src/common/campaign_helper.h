@@ -29,7 +29,7 @@ inline std::ostream& operator<<(std::ostream& os, SecretKeyAttackMode mode) {
 
 struct CampaignArgs {
     std::string library = "openfhe";
-    std::string stage = "all";
+    std::string stage = "none";
     uint32_t logN = 3;
     uint32_t logQ = 60;
     uint32_t logDelta = 50;
@@ -43,7 +43,7 @@ struct CampaignArgs {
     bool withNTT = true;
     SecretKeyAttackMode attackMode = SecretKeyAttackMode::CompleteInjection;
     double thresholdBitsSKA = 5.0;
-    std::string results_dir = "results";
+    std::string results_dir = "../results";
     bool verbose = false;
 
     void print(std::ostream& os = std::cout) const {

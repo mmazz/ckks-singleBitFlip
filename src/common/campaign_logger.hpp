@@ -11,15 +11,22 @@
 #include <filesystem>
 #include <ctime>
 #include <zlib.h>
-
+#include "campaign_helper.h"
 
 namespace fs = std::filesystem;
+
+inline std::string get_timestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&time_t_now), "%Y-%m-%dT%H:%M:%S");
+    return ss.str();
+}
+
 struct CampaignMetadata {
     uint32_t campaign_id;
     std::string library;
-    std::string timestamp_start;
-    std::string timestamp_end;
-
     // Parámetros CKKS
     uint32_t logN;
     uint32_t logQ;
@@ -39,21 +46,69 @@ struct CampaignMetadata {
     // Resultados
     uint64_t total_bitflips;
     uint64_t sdc_count;
-    uint32_t num_stages;
 
     // Performance
     uint64_t duration_seconds;
-    double bitflips_per_second;
 
     // Archivos
     std::string data_file;
+    std::string timestamp_start;
+    std::string timestamp_end;
 
+
+    CampaignMetadata(const CampaignArgs& args, uint32_t camp_id)
+        : campaign_id(camp_id),
+          library(args.library),
+          logN(args.logN),
+          logQ(args.logQ),
+          logDelta(args.logDelta),
+          logSlots(args.logSlots),
+          mult_depth(args.mult_depth),
+          seed(args.seed),
+          seed_input(args.seed_input),
+          withNTT(args.withNTT),
+          num_limbs(args.num_limbs),
+          logMin(args.logMin),
+          logMax(args.logMax),
+          golden_norm(0.0),
+          total_bitflips(0),
+          sdc_count(0),
+          data_file("campaign_" + std::to_string(camp_id) + ".csv.gz"),
+          timestamp_start(get_timestamp()),
+          timestamp_end("")
+    {}
+    static CampaignMetadata from_csv_line(const std::string& line) {
+            CampaignMetadata meta;
+            std::stringstream ss(line);
+            std::string token;
+
+            std::getline(ss, token, ','); meta.campaign_id = std::stoul(token);
+            std::getline(ss, meta.library, ',');
+            std::getline(ss, token, ','); meta.logN = std::stoul(token);
+            std::getline(ss, token, ','); meta.logQ = std::stoul(token);
+            std::getline(ss, token, ','); meta.logDelta = std::stoul(token);
+            std::getline(ss, token, ','); meta.logSlots = std::stoul(token);
+            std::getline(ss, token, ','); meta.mult_depth = std::stoul(token);
+            std::getline(ss, token, ','); meta.seed = std::stoull(token);
+            std::getline(ss, token, ','); meta.seed_input = std::stoull(token);
+            std::getline(ss, token, ','); meta.withNTT = (token == "1");
+            std::getline(ss, token, ','); meta.num_limbs = std::stoul(token);
+            std::getline(ss, token, ','); meta.logMin = std::stoul(token);
+            std::getline(ss, token, ','); meta.logMax = std::stoul(token);
+            std::getline(ss, token, ','); meta.golden_norm = std::stod(token);
+            std::getline(ss, token, ','); meta.total_bitflips = std::stoull(token);
+            std::getline(ss, token, ','); meta.sdc_count = std::stoull(token);
+            std::getline(ss, token, ','); meta.duration_seconds = std::stoull(token);
+            std::getline(ss, meta.data_file, ',');
+            std::getline(ss, meta.timestamp_start, ',');
+            std::getline(ss, meta.timestamp_end);
+
+            return meta;
+        }
     std::string to_csv_row() const {
         std::stringstream ss;
         ss << campaign_id << ","
            << library << ","
-           << timestamp_start << ","
-           << timestamp_end << ","
            << logN << ","
            << logQ << ","
            << logDelta << ","
@@ -64,23 +119,30 @@ struct CampaignMetadata {
            << (withNTT ? "1" : "0") << ","
            << num_limbs << ","
            << logMin << ","
-           << logMax << ","
-           << std::scientific << std::setprecision(6) << golden_norm << ","
-           << total_bitflips << ","
+           << logMax << ",";
+           {
+                std::ostringstream tmp;
+                tmp << std::scientific << std::setprecision(6) << golden_norm;
+                ss << tmp.str() << ",";
+            }
+        ss << total_bitflips << ","
            << sdc_count << ","
-           << num_stages << ","
            << duration_seconds << ","
-           << std::fixed << std::setprecision(2) << bitflips_per_second << ","
-           << data_file;
+           << data_file << ","
+           << timestamp_start << ","
+           << timestamp_end;
         return ss.str();
     }
 
     static std::string csv_header() {
-        return "campaign_id,library,timestamp_start,timestamp_end,logN,logQ,logDelta,logSlots,"
+        return "campaign_id,library,logN,logQ,logDelta,logSlots,"
                "mult_depth,seed,seed_input,withNTT,num_limbs,logMin,logMax,"
-               "golden_norm,total_bitflips,sdc_count,num_stages,"
-               "duration_seconds,bitflips_per_second,data_file";
+               "golden_norm,total_bitflips,sdc_count,"
+               "duration_seconds,data_file,timestamp_start,timestamp_end";
     }
+
+    private:
+        CampaignMetadata() = default;  // Solo accesible internamente
 };
 
 struct BitflipResult {
@@ -97,74 +159,43 @@ struct BitflipResult {
         ss << limb << ","
            << coeff << ","
            << (int)bit << ","
-           << stage << ","
-           << std::scientific << std::setprecision(6) << norm2 << ","
-           << rel_error << ","
+           << stage << ",";
+           {
+                std::ostringstream tmp;
+                tmp << std::scientific << std::setprecision(6) << norm2;
+                ss << tmp.str() << ",";
+            }
+          ss << rel_error << ","
            << (is_sdc ? "1" : "0");
         return ss.str();
     }
 
     static std::string csv_header() {
-        return "limb,coeff,bit,stage,norm2,rel_error,is_sdc";
+        return "limb,coeff,bit,stage,l2_norm,rel_error,is_sdc";
     }
 };
-inline std::string get_timestamp() {
-    auto now = std::chrono::system_clock::now();
-    auto time_t_now = std::chrono::system_clock::to_time_t(now);
 
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time_t_now), "%Y-%m-%dT%H:%M:%S");
-    return ss.str();
-}
 
 class CampaignRegistry {
 private:
     std::string registry_filepath_;
     std::mutex registry_mutex_;
 
-    // NUEVO: Leer todas las campañas del CSV
+
     std::vector<CampaignMetadata> read_all_campaigns() {
         std::vector<CampaignMetadata> campaigns;
         std::ifstream file(registry_filepath_);
         std::string line;
 
-        // Saltar header
-        std::getline(file, line);
+        std::getline(file, line);  // Saltar header
 
         while (std::getline(file, line)) {
             if (line.empty()) continue;
-
-            CampaignMetadata meta;
-            std::stringstream ss(line);
-            std::string token;
-
-            // Parse CSV line
-            std::getline(ss, token, ','); meta.campaign_id = std::stoul(token);
-            std::getline(ss, meta.library, ',');
-            std::getline(ss, meta.timestamp_start, ',');
-            std::getline(ss, meta.timestamp_end, ',');
-            std::getline(ss, token, ','); meta.logN = std::stoul(token);
-            std::getline(ss, token, ','); meta.logDelta = std::stoul(token);
-            std::getline(ss, token, ','); meta.logSlots = std::stoul(token);
-            std::getline(ss, token, ','); meta.mult_depth = std::stoul(token);
-            std::getline(ss, token, ','); meta.seed = std::stoull(token);
-            std::getline(ss, token, ','); meta.seed_input = std::stoull(token);
-            std::getline(ss, token, ','); meta.withNTT = (token == "1");
-            std::getline(ss, token, ','); meta.num_limbs = std::stoul(token);
-            std::getline(ss, token, ','); meta.golden_norm = std::stod(token);
-            std::getline(ss, token, ','); meta.total_bitflips = std::stoull(token);
-            std::getline(ss, token, ','); meta.sdc_count = std::stoull(token);
-            std::getline(ss, token, ','); meta.num_stages = std::stoul(token);
-            std::getline(ss, token, ','); meta.duration_seconds = std::stoull(token);
-            std::getline(ss, token, ','); meta.bitflips_per_second = std::stod(token);
-            std::getline(ss, meta.data_file);
-
-            campaigns.push_back(meta);
+            campaigns.push_back(CampaignMetadata::from_csv_line(line));
         }
 
         return campaigns;
     }
-
     // NUEVO: Escribir todas las campañas al CSV
     void write_all_campaigns(const std::vector<CampaignMetadata>& campaigns) {
         std::ofstream file(registry_filepath_);
@@ -178,7 +209,7 @@ private:
     }
 
 public:
-    CampaignRegistry(const std::string& results_dir = "results")
+    CampaignRegistry(const std::string& results_dir = "../results")
         : registry_filepath_(results_dir + "/campaigns.csv")
     {
         fs::create_directories(results_dir);
@@ -239,10 +270,6 @@ public:
             meta.total_bitflips = total_bitflips;
             meta.sdc_count = sdc_count;
             meta.duration_seconds = duration_seconds;
-
-            if (duration_seconds > 0) {
-                meta.bitflips_per_second = (double)total_bitflips / duration_seconds;
-            }
         });
     }
 
@@ -325,7 +352,7 @@ private:
 public:
     // Constructor actualizado con registry opcional
     CampaignLogger(uint32_t campaign_id,
-                   const std::string& results_dir = "results/data",
+                   const std::string& results_dir = "../results/data",
                    size_t flush_threshold = 10000,
                    CampaignRegistry* registry = nullptr)  // <-- NUEVO PARÁMETRO
         : campaign_id_(campaign_id),

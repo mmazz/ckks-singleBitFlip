@@ -5,7 +5,7 @@
 #include "utils_openfhe.h"
 
 int main(int argc, char* argv[]) {
-       const CampaignArgs args = parse_arguments(argc, argv);
+    const CampaignArgs args = parse_arguments(argc, argv);
     if (args.verbose) {
         args.print();
     }
@@ -24,39 +24,9 @@ int main(int argc, char* argv[]) {
 
     std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
-    // ========== 3. DETERMINAR STAGES ==========
-    std::vector<std::string> stages;
-    if (args.stage == "all") {
-        stages = {"encode", "encrypt_c0", "encrypt_c1", "mul_c0", "mul_c1", "add_c0", "add_c1"};
-    } else {
-        stages = {args.stage};
-    }
-
     // ========== 4. METADATA INICIAL ==========
-    CampaignMetadata metadata = {
-        campaign_id,
-        args.library,
-        get_timestamp(),                          // timestamp_start
-        "",                                       // timestamp_end (se actualiza al final)
-        args.logN,
-        args.logQ,
-        args.logDelta,
-        args.logSlots,
-        args.mult_depth,
-        args.seed,
-        args.seed_input,
-        args.withNTT,
-        args.num_limbs,
-        args.logMin,
-        args.logMax,
-        0.0,                                      // golden_norm (se calcula abajo)
-        0,                                        // total_bitflips (se actualiza al final)
-        0,                                        // sdc_count (se actualiza al final)
-        (uint32_t)stages.size(),                  // num_stages
-        0,                                        // duration_seconds (se actualiza al final)
-        0.0,                                      // bitflips_per_second (se actualiza al final)
-        "campaign_" + std::to_string(campaign_id) + ".csv.gz"  // data_file
-    };
+    CampaignMetadata metadata(args, campaign_id);
+
 
     // ========== 5. SETUP CAMPAÑA ==========
     PRNG& prng = PseudoRandomNumberGenerator::GetPRNG();
@@ -89,7 +59,7 @@ int main(int argc, char* argv[]) {
     uint32_t N = 1 << args.logN;
     size_t num_coeffs = N / 2;
     size_t bits_per_coeff = 64;
-    size_t total_expected = args.num_limbs * num_coeffs * bits_per_coeff * stages.size();
+    size_t total_expected = args.num_limbs * num_coeffs * bits_per_coeff ;
 
     std::cout << "Expected bit flips: " << total_expected << std::endl;
 
@@ -163,7 +133,6 @@ int main(int argc, char* argv[]) {
               << metadata.data_file << std::endl;
     std::cout << "  Registry: " << args.results_dir << "/campaigns.csv"
               << std::endl;
-
 
     return 0;
 }

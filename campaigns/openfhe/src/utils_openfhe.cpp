@@ -51,6 +51,8 @@ CampaignContext setup_campaign(const CampaignArgs& args, PRNG& prng) {
     return {cc, keys, input};
 }
 
+
+
 IterationResult run_iteration(const CampaignContext& ctx, const CampaignArgs& args, PRNG& prng, std::optional<IterationArgs> iterArgs)
 {
     prng.ResetToSeed();

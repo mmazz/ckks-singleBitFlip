@@ -5,7 +5,7 @@ void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [OPTIONS]\n\n"
               << "Options:\n"
               << "  --library <name>        Library: openfhe or heaan (default: openfhe)\n"
-              << "  --stage <name>          Stage to attack: all, encode, encrypt_c0, encrypt_c1, mul_c0, mul_c1, add_c0, add_c1 (default: all)\n"
+              << "  --stage <name>          Stage to attack: none, encode, encrypt_c0, encrypt_c1, mul_c0, mul_c1, add_c0, add_c1 (default: none)\n"
               << "  --logN <value>          log Ring dimension (default: 3 = 2^3 = 8)\n"
               << "  --logQ <value>          First mod bits (default: 60)\n"
               << "  --logDelta <value>      Scaling factor bits (default: 50)\n"
