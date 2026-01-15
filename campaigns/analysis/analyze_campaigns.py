@@ -1,8 +1,13 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import sys
+import os
+sys.path.append(os.path.abspath('./'))
+import config
 import matplotlib.pyplot as plt
-
+show = config.show
+width = int(config.width)
 # ============================================================
 # CONFIGURACIÓN
 # ============================================================
@@ -163,11 +168,10 @@ def plot_concatenated_coeffs(mean_data, bits_per_coeff=64):
     y = y.iloc[order]
 
     plt.figure(figsize=(12, 5))
-    plt.plot(x, y, linewidth=0.8)
-
-    plt.xlabel("Global bit index (coeff * 64 + bit)")
-    plt.ylabel("Mean L2 norm (avg over campaigns)")
-    plt.title("Error per bit, coefficients concatenated")
+    plt.plot(x, y, linewidth=width, color=config.colors["blue"])
+    plt.yscale('symlog')
+    plt.ylabel('$L_2$ norm (Symlog scale)')
+    plt.xlabel('Modified Bit Index')
     plt.grid(True)
     plt.tight_layout()
     plt.show()
