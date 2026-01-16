@@ -1,0 +1,47 @@
+BIN := ./build/bin/singleBitFlip
+OUT := results
+
+STAGES := encrypt_c0 encrypt_c1
+NTT := 0 1
+logDelta := 20 30 40
+
+$(shell mkdir -p $(OUT))
+
+#############################################
+# Template de ejecución
+#############################################
+define RUN
+$(OUT)/$(1).log:
+	@echo "[RUN] $(1)"
+	@$(BIN) $(2) > $$@ 2>&1
+endef
+
+#############################################
+# Campaign 1: encrypt_c0 sweep
+#############################################
+$(foreach n,$(NTT), \
+  $(foreach d,$(logDelta), \
+    $(eval $(call RUN,encrypt_c0_ntt$(n)_d$(d), \
+      --stage encrypt_c0 --withNTT $(n) --logDelta $(d) --verbose 1))))
+
+encrypt_sweep: \
+$(foreach n,$(NTT),$(foreach d,$(logDelta),$(OUT)/encrypt_c0_ntt$(n)_d$(d).log))
+
+#############################################
+# Campaign 2: fixed flags, many stages
+#############################################
+$(foreach s,$(STAGES), \
+  $(eval $(call RUN,$(s)_fixed, \
+    --stage $(s) --withNTT 0 --mult-depth 0 --verbose 1)))
+
+stages_fixed: \
+$(foreach s,$(STAGES),$(OUT)/$(s)_fixed.log)
+
+#############################################
+# Meta targets
+#############################################
+all: encrypt_sweep stages_fixed
+
+clean:
+	rm -rf $(OUT)
+
