@@ -1,12 +1,13 @@
 PROJECT_ROOT := $(shell cd ../.. && pwd)
 HEAAN_SRC := $(PROJECT_ROOT)/src/HEAAN-PRNG-Control
+COMMON_SRC := $(PROJECT_ROOT)/src/common
 
 CXX := g++
 CXXFLAGS := -std=c++17 -O2 -I$(HEAAN_SRC)/src -pthread
 
 # Separar LDFLAGS (directorios) de LIBS (bibliotecas)
 LDFLAGS := -L$(HEAAN_SRC)/lib -L/usr/local/lib
-LIBS := $(HEAAN_SRC)/lib/libHEAAN.a -lntl -lgmp -lm
+LIBS := $(HEAAN_SRC)/lib/libHEAAN.a -I$(COMMON_SRC) -lntl -lgmp -lm
 
 # Directorios
 BUILD_DIR := build

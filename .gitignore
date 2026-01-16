@@ -1,6 +1,7 @@
-campaigns/openfhe/build/
-campaigns/heaan/build/
+backends/openfhe/build/
+backends/heaan/build/
 src/openfhe-PRNG-Control
 src/HEAAN-PRNG-Control
+analysis/__pycache__
 results/
 .cache/
