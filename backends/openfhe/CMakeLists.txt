@@ -69,7 +69,8 @@ add_library(mainlib_common
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils_openfhe.cpp
     ${PROJECT_ROOT}/src/common/utils_ckks.cpp
     ${PROJECT_ROOT}/src/common/campaign_helper.cpp
-    ${PROJECT_ROOT}/src/common/campaign_logger.hpp
+    ${PROJECT_ROOT}/src/common/campaign_logger.cpp
+    ${PROJECT_ROOT}/src/common/campaign_registry.cpp
 )
 target_include_directories(mainlib_common PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

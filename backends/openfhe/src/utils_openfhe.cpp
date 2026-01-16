@@ -29,7 +29,7 @@ void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bit){
 }
 
 
-CampaignContext setup_campaign(const CampaignArgs& args, PRNG& prng) {
+CKKSExperimentContext setup_campaign(const CampaignArgs& args, PRNG& prng) {
     prng.SetSeed(args.seed);
     CCParams<CryptoContextCKKSRNS> params;
     params.SetMultiplicativeDepth(args.mult_depth);
@@ -54,7 +54,7 @@ CampaignContext setup_campaign(const CampaignArgs& args, PRNG& prng) {
 
 
 
-IterationResult run_iteration(const CampaignContext& ctx, const CampaignArgs& args, PRNG& prng, std::optional<IterationArgs> iterArgs)
+IterationResult run_iteration(const CKKSExperimentContext & ctx, const CampaignArgs& args, PRNG& prng, std::optional<IterationArgs> iterArgs)
 {
     prng.ResetToSeed();
     Plaintext result_bitFlip;

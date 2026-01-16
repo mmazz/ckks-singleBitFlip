@@ -1,6 +1,33 @@
 #include "campaign_helper.h"
+#include "campaign_registry.h"
 
-// Función para mostrar ayuda
+#include <getopt.h>
+#include <cstdlib>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
+
+
+
+void CampaignArgs::print(std::ostream& os) const {
+    os << "Campaign configuration:\n"
+       << "  library: " << library << "\n"
+       << "  logN: " << logN << "\n"
+       << "  logQ: " << logQ << "\n"
+       << "  logDelta: " << logDelta << "\n"
+       << "  logSlots: " << logSlots << "\n"
+       << "  mult_depth: " << mult_depth << "\n"
+       << "  seed: " << seed << "\n"
+       << "  seed_input: " << seed_input << "\n"
+       << "  num_limbs: " << num_limbs << "\n"
+       << "  logMin: " << logMin << "\n"
+       << "  logMax: " << logMax << "\n"
+       << "  withNTT: " << withNTT << "\n"
+       << "  attackMode: " << to_string(attackMode) << "\n"
+       << "  thresholdBitsSKA: " << thresholdBitsSKA << "\n"
+       << "  results_dir: " << results_dir << "\n";
+}
+
 void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [OPTIONS]\n\n"
               << "Options:\n"
@@ -27,143 +54,96 @@ void print_usage(const char* program_name) {
               << "  " << program_name << " --library heaan --N 32768 --delta 60 --seed 123\n"
               << "  " << program_name << " --stage mul --limbs 4 -v\n";
 }
-
 const CampaignArgs parse_arguments(int argc, char* argv[]) {
-    CampaignArgs args;  // Inicializa con valores por defecto
+    CampaignArgs args;
 
-    // Definir opciones largas
-    // Formato: {nombre, argumento_requerido?, puntero_flag, valor_corto}
     static struct option long_options[] = {
-        {"library",       required_argument, 0, 'l'},  // Requiere argumento
-        {"stage",         required_argument, 0, 'S'},
-        {"logN",             required_argument, 0, 'N'},
-        {"logQ",             required_argument, 0, 'Q'},
-        {"logDelta",         required_argument, 0, 'd'},
-        {"logSlots",         required_argument, 0, 's'},
-        {"mult-depth",    required_argument, 0, 'm'},
-        {"withNTT",    required_argument, 0, 'n'},
-        {"seed",          required_argument, 0, 'r'},
-        {"seed-input",  required_argument, 0, 'b'},
-        {"num_limbs",         required_argument, 0, 'L'},
+        {"library",        required_argument, 0, 'l'},
+        {"stage",          required_argument, 0, 'S'},
+        {"logN",           required_argument, 0, 'N'},
+        {"logQ",           required_argument, 0, 'Q'},
+        {"logDelta",       required_argument, 0, 'd'},
+        {"logSlots",       required_argument, 0, 's'},
+        {"mult-depth",     required_argument, 0, 'm'},
+        {"withNTT",        required_argument, 0, 'n'},
+        {"seed",           required_argument, 0, 'r'},
+        {"seed-input",     required_argument, 0, 'b'},
+        {"num_limbs",      required_argument, 0, 'L'},
         {"logMin",         required_argument, 0, 'x'},
         {"logMax",         required_argument, 0, 'y'},
-        {"attackModeSKA ", required_argument, 0, 'a'},
-        {"thresholdSKA ",  required_argument, 0, 't'},
-        {"results-dir",   required_argument, 0, 'R'},
-        {"verbose",       no_argument,       0, 'v'},  // No requiere argumento
-        {"help",          no_argument,       0, 'h'},
-        {0, 0, 0, 0}  // Terminador
+        {"attackModeSKA",  required_argument, 0, 'a'},
+        {"thresholdSKA",   required_argument, 0, 't'},
+        {"results-dir",    required_argument, 0, 'R'},
+        {"verbose",        no_argument,       0, 'v'},
+        {"help",           no_argument,       0, 'h'},
+        {0, 0, 0, 0}
     };
 
-    int opt;
-    int option_index = 0;
+    int opt, option_index = 0;
 
-    // Loop de parsing
-    // getopt_long procesa argv[] y retorna el carácter de la opción
-    // optarg contiene el argumento (si required_argument)
-    while ((opt = getopt_long(argc, argv,
-                              "l:n:d:s:m:b:r:L:S:R:vh",  // String de opciones cortas
-                              long_options,
-                              &option_index)) != -1)
+    while ((opt = getopt_long(
+        argc, argv,
+        "l:S:N:Q:d:s:m:n:r:b:L:x:y:a:t:R:vh",
+        long_options,
+        &option_index)) != -1)
     {
         switch (opt) {
-            case 'l':  // --library o -l
+            case 'l':
                 args.library = optarg;
-                // Validación
                 if (args.library != "openfhe" && args.library != "heaan") {
-                    std::cerr << "Error: library must be 'openfhe' or 'heaan'" << std::endl;
-                    exit(1);
+                    std::cerr << "Error: library must be 'openfhe' or 'heaan'\n";
+                    std::exit(1);
                 }
                 break;
 
-            case 'N':  // --logN o -N
-                args.logN = std::stoul(optarg);  // String to unsigned long
+            case 'N': args.logN = std::stoul(optarg); break;
+            case 'Q': args.logQ = std::stoul(optarg); break;
+            case 'd': args.logDelta = std::stoul(optarg); break;
+            case 's': args.logSlots = std::stoul(optarg); break;
+            case 'm': args.mult_depth = std::stoul(optarg); break;
+            case 'r': args.seed = std::stoull(optarg); break;
+            case 'b': args.seed_input = std::stoull(optarg); break;
+            case 'L': args.num_limbs = std::stoul(optarg); break;
+            case 'x': args.logMin = std::stoul(optarg); break;
+            case 'y': args.logMax = std::stoul(optarg); break;
+
+            case 'n':  // --withNTT 0/1
+                args.withNTT = std::stoul(optarg) != 0;
                 break;
 
-            case 'Q':  // --logQ o -Q
-                args.logQ = std::stoul(optarg);  // String to unsigned long
-                break;
-
-            case 'd':  // --logDelta o -d
-                args.logDelta = std::stoul(optarg);
-                break;
-
-            case 'm':  // --mult-depth o -m
-                args.mult_depth = std::stoul(optarg);
-                break;
-
-            case 's':  // --slots o -s
-                args.logSlots = std::stoul(optarg);
-                break;
-
-            case 'r':  // --seed o -r
-                args.seed = std::stoull(optarg);  // String to unsigned long long
-                break;
-
-            case 'b':  // --seed-input o -b
-                args.seed_input = std::stoull(optarg);
-                break;
-
-            case 'L':  // --limbs o -L
-                args.num_limbs = std::stoul(optarg);
-                break;
-
-            case 'x':  // --limbs o -L
-                args.logMin = std::stoul(optarg);
-                break;
-
-            case 'y':  // --limbs o -L
-                args.logMax = std::stoul(optarg);
-                break;
-
-            case 'n':  // --withNTT o -n
-                args.withNTT = false;
-                break;
-
-            case 'S':  // --stage o -S
+            case 'S':
                 args.stage = optarg;
-                // Opcional: validar stages válidos
                 break;
 
-            case 'a':  // --stage o -S
-                args.attackMode =  static_cast<SecretKeyAttackMode>(std::stoul(optarg)) ;
-                // Opcional: validar stages válidos
+            case 'a':
+                args.attackMode =
+                    static_cast<SecretKeyAttackMode>(std::stoul(optarg));
                 break;
 
-            case 't':  // --stage o -S
-                args.thresholdBitsSKA =  std::stod(optarg);
-                // Opcional: validar stages válidos
+            case 't':
+                args.thresholdBitsSKA = std::stod(optarg);
                 break;
 
-            case 'R':  // --results-dir o -R
+            case 'R':
                 args.results_dir = optarg;
                 break;
 
-            case 'v':  // --verbose o -v (no argumento)
+            case 'v':
                 args.verbose = true;
                 break;
 
-            case 'h':  // --help o -h
+            case 'h':
                 print_usage(argv[0]);
-                exit(0);
+                std::exit(0);
 
-            default:  // Opción desconocida
+            default:
                 print_usage(argv[0]);
-                exit(1);
+                std::exit(1);
         }
     }
 
-    if(args.num_limbs==0)
+    if (args.num_limbs == 0)
         args.num_limbs = args.mult_depth + 1;
-
-    // Opcional: procesar argumentos no-opción (posicionales)
-    // if (optind < argc) {
-    //     std::cout << "Argumentos extra: ";
-    //     while (optind < argc) {
-    //         std::cout << argv[optind++] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
 
     return args;
 }

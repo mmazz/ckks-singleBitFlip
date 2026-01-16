@@ -14,16 +14,16 @@
 #include <optional>
 using namespace lbcrypto;
 
-struct CampaignContext {
-    CryptoContext<DCRTPoly> cc;
-    KeyPair<DCRTPoly> keys;
-    std::vector<double> baseInput;
+struct CKKSExperimentContext{
+   const CryptoContext<DCRTPoly> cc;
+   const KeyPair<DCRTPoly> keys;
+   const std::vector<double> baseInput;
 };
 
 struct IterationArgs{
-    uint64_t limb;
-    uint64_t coeff;
-    uint64_t bit;
+    uint32_t limb;
+    uint32_t coeff;
+    uint32_t bit;
     IterationArgs(uint64_t l, uint64_t c, uint64_t b)
         : limb(l), coeff(c), bit(b) {}
 };
@@ -37,9 +37,9 @@ void bitFlip(Ciphertext<DCRTPoly> &c, bool withNTT, size_t k, size_t i, size_t j
 void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bit);
 
 
-CampaignContext setup_campaign(const CampaignArgs& args, PRNG& prng);
+CKKSExperimentContext setup_campaign(const CampaignArgs& args, PRNG& prng);
 
 
-IterationResult run_iteration(const CampaignContext& ctx, const CampaignArgs& args, PRNG& prng, std::optional<IterationArgs> iterArgs = std::nullopt);
+IterationResult run_iteration(const CKKSExperimentContext & ctx, const CampaignArgs& args, PRNG& prng, std::optional<IterationArgs> iterArgs = std::nullopt);
 
 
