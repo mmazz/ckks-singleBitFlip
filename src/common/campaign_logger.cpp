@@ -1,8 +1,5 @@
 #include "campaign_logger.h"
-#include <filesystem>
-#include <sstream>
-#include <iomanip>
-#include <cstdlib>
+
 
 namespace fs = std::filesystem;
 
@@ -24,9 +21,12 @@ CampaignLogger::CampaignLogger(uint32_t id,
     : flush_threshold_(flush_th)
 {
     fs::create_directories(dir);
+
     std::ostringstream path;
     path << dir << "/campaign_" << std::setw(6)
          << std::setfill('0') << id << ".csv";
+    csv_path_ = path.str();
+
     file_.open(path.str());
     file_ << BitflipResult::header() << "\n";
 }
@@ -70,5 +70,20 @@ void CampaignLogger::flush() {
 void CampaignLogger::close() {
     flush();
     file_.close();
-}
+    compress_and_cleanup();
 
+}
+void CampaignLogger::compress_and_cleanup() {
+    std::string gz_path = csv_path_ + ".gz";
+
+    std::string cmd = "gzip -f " + csv_path_;
+    int ret = std::system(cmd.c_str());
+
+    if (ret != 0) {
+        std::cerr << "[WARN] gzip failed for " << csv_path_ << std::endl;
+        return;
+    }
+
+    // gzip ya borra el .csv si usás -f
+    std::cout << "[INFO] Compressed campaign data → " << gz_path << std::endl;
+}

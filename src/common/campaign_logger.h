@@ -4,6 +4,11 @@
 #include <mutex>
 #include <string>
 #include <cstdint>
+#include <filesystem>
+#include <sstream>
+#include <iomanip>
+#include <cstdlib>
+#include <iostream>
 
 struct BitflipResult {
     uint32_t limb;
@@ -28,6 +33,7 @@ public:
     void log(uint32_t limb, uint32_t coeff, uint32_t bit,
          const std::string& stage, double norm2, double rel_error, bool is_sdc);
 
+    void compress_and_cleanup();
     void flush();
     void close();
 
@@ -37,6 +43,7 @@ public:
 
 private:
     std::ofstream file_;
+    std::string csv_path_;
     std::vector<std::string> buffer_;
     std::mutex mtx_;
     size_t flush_threshold_;

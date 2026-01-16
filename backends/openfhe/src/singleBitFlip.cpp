@@ -115,7 +115,6 @@ int main(int argc, char* argv[]) {
         std::cout << "Bits precision   : " << metrics.bits_precision << "\n";
         std::cerr << "Error with golden norm, checkout the used parameters" << std::endl;
     }
-    logger.close();
     registry.register_end({
             campaign_id,
             logger.total(),

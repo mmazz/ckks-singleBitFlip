@@ -66,7 +66,7 @@ def load_campaign_data(selected_campaigns, data_dir):
 
     for _, row in selected_campaigns.iterrows():
         cid = int(row["campaign_id"])
-        filename = f"campaign_{cid:04d}.csv.gz"
+        filename = f"campaign_{cid:06d}.csv.gz"
         path = data_dir / filename
 
         if not path.exists():
