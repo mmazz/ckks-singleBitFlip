@@ -1,28 +1,122 @@
-# CKKS Single Bit flip injeccion
+# CKKS Single-Bit Fault Injection Framework
 
-We inject single-bit faults at the RNS-limb level, flipping one bit of a uint64_t coefficient of a single CRT component, either in coefficient or NTT domain, at a well-defined pipeline stage (encode, encrypt-c0, encrypt-c1).
+This project studies **single-bit fault injection in CKKS-based FHE schemes** at the **RNS limb level**.
 
-campaign_arguments.*
-    - Parsea argumentos
+We inject faults by flipping **one bit of a `uint64_t` coefficient** belonging to a single CRT component (RNS limb). Faults can be injected in either:
+
+- **Coefficient domain**
+- **NTT domain**
+
+at well-defined pipeline stages:
+
+- `encode`
+- `encrypt-c0`
+- `encrypt-c1`
+
+The goal is to analyze numerical degradation, error propagation, and Silent Data Corruption (SDC) behavior under precise, low-level faults.
+
+---
+
+## Project Structure
+```
+├── analyse/
+│ └── Python scripts for post-processing and data analysis
+│
+├── src/
+│ ├── Third-party libraries (OpenFHE, HEAAN)
+│ └── Common components (campaign loggers, helpers, utilities)
+│
+├── backends/
+│ ├── openfhe/
+│ │ └── src/ # OpenFHE-specific campaign sources
+│ └── heaan/
+│ └── src/ # HEAAN-specific campaign sources
+│
+├── setup_project.sh
+└── results/
+```
+### Setup Script
+
+`setup_project.sh` performs the following:
+
+1. Downloads and builds the supported FHE libraries (OpenFHE, HEAAN)
+2. Builds all fault-injection campaigns
+
+---
+
+## Results Layout
+
+After running a campaign, a new directory is created under `results/` containing:
+
+- **`campaign_start.csv`**
+  One row per campaign execution, including:
+  - Unique `campaign_id`
+  - All configuration parameters
+
+- **`campaign_end.csv`**
+  One row per completed campaign, including:
+  - `campaign_id`
+  - Execution time
+  - Aggregated statistics (e.g., P95 L2 norm, error metrics)
+
+- **`data/` directory**
+  Contains **one CSV file per campaign**, with:
+  - One row per injected bit flip
+  - Detailed fault-level measurements
+
+---
+
+## Campaign Execution Model
+
+- **Multiprocessing is supported**
+- **Multithreading is intentionally not used**
+
+Parallelism is achieved by running **multiple independent campaigns in parallel**, not by parallelizing a single campaign.
+
+⚠️ **Important note**
+CSV flushing and file appends are **not fully synchronized across processes**.
+Race conditions are avoided by design assumptions (append-only files, campaign-level isolation), but no explicit locking is implemented.
+
+---
+
+## Core Components
+
+### `campaign_arguments.*`
+- Parses command-line arguments
+- Validates campaign configuration
+
+### `campaign_registry.*`
+Responsible for **global campaign bookkeeping**:
+- Assigns a unique `campaign_id` (atomic, inter-process safe)
+- Appends to the global `campaign_start.csv`
+- Appends to the global `campaign_end.csv`
+- **Append-only semantics**
+- No per-campaign data logging
+
+### `campaign_logger.*`
+- Writes **per-campaign CSV files** (bit-flip–level data)
+- Thread-safe at the local level
+- **Never interacts with the registry automatically**
+
+### `campaign_helper.*`
+High-level orchestration:
+- Parses arguments
+- Creates the campaign registry
+- Registers campaign start
+- Instantiates the campaign logger
+- Registers campaign completion at shutdown
+
+---
+
+## Dependencies
+
+- `zlib`
+
+---
+
+## Notes
+
+This framework is designed for **fine-grained fault modeling**, not performance benchmarking.
+Correctness, reproducibility, and traceability of injected faults take priority over throughput.
 
 
-campaign_registry.*
-  - asigna campaign_id (atomic, inter-proceso)
-  - escribe CSV GLOBAL de inicio
-  - escribe CSV GLOBAL de finalización
-  - SOLO append
-
-campaign_logger.*
-  - escribe CSV por campaña (bitflips)
-  - thread-safe local
-  - NUNCA toca el registry automáticamente
-
-campaign_helper.*
-  - parse args
-  - crea registry
-  - registra inicio
-  - arma logger
-  - al final registra cierre
-
-Dependancys:
-zlib

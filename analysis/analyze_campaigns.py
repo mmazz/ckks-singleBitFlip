@@ -12,7 +12,7 @@ width = int(config.width)
 # CONFIGURACIÓN
 # ============================================================
 
-CAMPAIGNS_CSV = "../results/campaigns.csv"
+CAMPAIGNS_CSV = "../results/campaigns_start.csv"
 DATA_DIR = Path("../results/data")
 
 FILTERS = {
