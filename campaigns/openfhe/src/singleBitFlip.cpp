@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
                     IterationArgs iterArgs(limb, coeff, bit);
                     IterationResult res = run_iteration(ctx, args, prng, iterArgs);
                     double norm2 = compute_norm2(golden.values, res.values);
-                    logger.log_bitflip(iterArgs.limb, iterArgs.coeff, iterArgs.bit, "encrypt", norm2, 0.123, res.detected);
+                    logger.log_bitflip(iterArgs.limb, iterArgs.coeff, iterArgs.bit, args.stage, norm2, 0.123, res.detected);
                     total_iterations++;
 
                     // Progress

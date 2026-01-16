@@ -14,6 +14,7 @@ void bitFlip(Ciphertext<DCRTPoly> &c, bool withNTT, size_t k, size_t i, size_t j
     if(!withNTT)
         c->GetElements()[k].SwitchFormat();
 }
+
 void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bit){
     if(!withNTT)
         ptxt->GetElement<DCRTPoly>().SwitchFormat();
