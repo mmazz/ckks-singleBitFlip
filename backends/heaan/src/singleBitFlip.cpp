@@ -2,24 +2,17 @@
 #include "campaign_helper.h"
 #include "campaign_logger.h"
 #include "campaign_registry.h"
-#include "utils_openfhe.h"
+#include "backend_interface.h"
 #include "utils_ckks.h"
 
 
-
-
 int main(int argc, char* argv[]) {
-    const CampaignArgs args = parse_arguments(argc, argv);
+    std::cout << "\n=== Starting Campaign "<< std::endl;
+    CampaignArgs args = parse_arguments(argc, argv);
+    args.library = "heaan";
     if (args.verbose) {
         args.print();
     }
-    auto cfg = SDCConfigHelper::MakeConfig(
-        false,
-        args.attackMode,
-        args.thresholdBitsSKA
-    );
-
-    SDCConfigHelper::SetGlobalConfig(cfg);
 
     CampaignRegistry registry(args.results_dir);
     uint32_t campaign_id = registry.allocate_campaign_id();
@@ -37,12 +30,14 @@ int main(int argc, char* argv[]) {
     args.results_dir + "/data",
     10000);
 
-    PRNG& prng = PseudoRandomNumberGenerator::GetPRNG();
-    CKKSExperimentContext ctx = setup_campaign(args, prng);
+    BackendContext* ctx = setup_campaign(args);
 
     std::cout << "Computing golden output..." << std::endl;
-    IterationResult golden = run_iteration(ctx, args, prng);
-    auto metrics = EvaluateCKKSAccuracy(ctx.baseInput, golden.values);
+    IterationResult golden = run_iteration(ctx, args);
+
+    const auto& input = get_reference_input(ctx);
+
+    auto scheme_metrics = EvaluateCKKSAccuracy(input, golden.values);
 
     // Actualizar metadata con golden_norm
  //   metadata.golden_norm = golden_norm2;
@@ -68,13 +63,13 @@ int main(int argc, char* argv[]) {
     size_t progress_interval = total_expected / 100;  // 1% intervals
     if (progress_interval == 0) progress_interval = 10000;
 
-    if(AcceptCKKSResult(metrics)){
+    if(AcceptCKKSResult(scheme_metrics)){
         for (size_t coeff = 0; coeff < num_coeffs; coeff++)
         {
             for(size_t bit=0; bit<bits_per_coeff; bit++)
             {
-                IterationArgs iterArgs(limb, coeff, bit);
-                IterationResult res = run_iteration(ctx, args, prng, iterArgs);
+                IterationArgs iterArgs(0, coeff, bit);
+                IterationResult res = run_iteration(ctx, args, iterArgs);
                 auto metricsBitFlip = EvaluateCKKSAccuracy(golden.values, res.values);
 
                 logger.log(iterArgs.limb,
@@ -106,9 +101,9 @@ int main(int argc, char* argv[]) {
             }
         }
     } else {
-        std::cout << "L2 relative error : " << metrics.l2_rel_error << "\n";
-        std::cout << "Linf abs error   : " << metrics.linf_abs_error << "\n";
-        std::cout << "Bits precision   : " << metrics.bits_precision << "\n";
+        std::cout << "L2 relative error : " << scheme_metrics.l2_rel_error << "\n";
+        std::cout << "Linf abs error   : "  << scheme_metrics.linf_abs_error << "\n";
+        std::cout << "Bits precision   : "  << scheme_metrics.bits_precision << "\n";
         std::cerr << "Error with golden norm, checkout the used parameters" << std::endl;
     }
     registry.register_end({

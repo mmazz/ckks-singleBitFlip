@@ -22,43 +22,54 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  num_limbs: " << num_limbs << "\n"
        << "  logMin: " << logMin << "\n"
        << "  logMax: " << logMax << "\n"
-       << "  withNTT: " << withNTT << "\n"
-       << "  attackMode: " << to_string(attackMode) << "\n"
-       << "  thresholdBitsSKA: " << thresholdBitsSKA << "\n"
-       << "  results_dir: " << results_dir << "\n";
+       << "  withNTT: " << withNTT << "\n";
+           /* -------- OpenFHE-only knobs -------- */
+        if (library == "openfhe") {
+            os << "  attackModeSKA: ";
+            if (openfhe_attack_mode)
+                os << to_string(*openfhe_attack_mode) << "\n";
+            else
+                os << "(default)\n";
+
+            os << "  thresholdBitsSKA: ";
+            if (openfhe_threshold_bits)
+                os << *openfhe_threshold_bits << "\n";
+            else
+                os << "(default)\n";
+        }
+    os << "  results_dir: " << results_dir << "\n";
+
 }
 
 void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [OPTIONS]\n\n"
               << "Options:\n"
-              << "  --library <name>        Library: openfhe or heaan (default: openfhe)\n"
               << "  --stage <name>          Stage to attack: none, encode, encrypt_c0, encrypt_c1, mul_c0, mul_c1, add_c0, add_c1 (default: none)\n"
               << "  --logN <value>          log Ring dimension (default: 3 = 2^3 = 8)\n"
               << "  --logQ <value>          First mod bits (default: 60)\n"
               << "  --logDelta <value>      Scaling factor bits (default: 50)\n"
               << "  --logSlots <value>      log Slots used (default: 1)\n"
-              << "  --mult-depth <value>    Multiplicative depth (default: 5)\n"
-              << "  --withNTT <value>       Turn on or off NTT (default: 1)\n"
+              << "  --mult-depth <value>    Multiplicative depth (only heaan, default: 5)\n"
+              << "  --withNTT <value>       Turn on or off NTT (only heaan, default: 1)\n"
               << "  --seed <value>          Random seed for scheme (default: 42)\n"
               << "  --seed-input <value>    Random seed for input (default: 42)\n"
-              << "  --num_limbs <value>     Number of RNS limbs (default: 3)\n"
+              << "  --num_limbs <value>     Number of RNS limbs (only heaan, default: 3)\n"
               << "  --logMin <value>        logMin value (default: 0= sample from [-1,)\n"
               << "  --logMax <value>        logMax value (default: 0= sample up to ,1])\n"
-              << "  --attackModeSKA <value> Type of error injection for SKA (default: complete)\n"
-              << "  --thresholdSKA <value>  Bits for threshold for SKA (default: 5.0)\n"
+              << "  --attackModeSKA <value> Type of error injection for SKA (only heaan, default: complete)\n"
+              << "  --thresholdSKA <value>  Bits for threshold for SKA (only heaan, default: 5.0)\n"
               << "  --results-dir <path>    Results directory (default: results)\n"
               << "  --verbose, -v           Verbose output\n"
               << "  --help, -h              Show this help\n\n"
               << "Examples:\n"
-              << "  " << program_name << " --library openfhe --N 16384 --stage encrypt\n"
-              << "  " << program_name << " --library heaan --N 32768 --delta 60 --seed 123\n"
+              << "  " << program_name << " --library openfhe --logN 16 --stage encrypt\n"
+              << "  " << program_name << " --library heaan --logN 15 --logDelta 60 --seed 123\n"
               << "  " << program_name << " --stage mul --limbs 4 -v\n";
 }
-const CampaignArgs parse_arguments(int argc, char* argv[]) {
+CampaignArgs parse_arguments(int argc, char* argv[]) {
     CampaignArgs args;
 
     static struct option long_options[] = {
-        {"library",        required_argument, 0, 'l'},
         {"stage",          required_argument, 0, 'S'},
         {"logN",           required_argument, 0, 'N'},
         {"logQ",           required_argument, 0, 'Q'},
@@ -66,13 +77,15 @@ const CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"logSlots",       required_argument, 0, 's'},
         {"mult-depth",     required_argument, 0, 'm'},
         {"withNTT",        required_argument, 0, 'n'},
-        {"seed",           required_argument, 0, 'r'},
-        {"seed-input",     required_argument, 0, 'b'},
         {"num_limbs",      required_argument, 0, 'L'},
         {"logMin",         required_argument, 0, 'x'},
         {"logMax",         required_argument, 0, 'y'},
+        {"seed",           required_argument, 0, 'r'},
+        {"seed-input",     required_argument, 0, 'b'},
+        // only Openfhe
         {"attackModeSKA",  required_argument, 0, 'a'},
         {"thresholdSKA",   required_argument, 0, 't'},
+
         {"results-dir",    required_argument, 0, 'R'},
         {"verbose",        no_argument,       0, 'v'},
         {"help",           no_argument,       0, 'h'},
@@ -83,7 +96,7 @@ const CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "l:S:N:Q:d:s:m:n:r:b:L:x:y:a:t:R:vh",
+        "S:N:Q:d:s:m:n:r:b:L:x:y:a:t:R:vh",
         long_options,
         &option_index)) != -1)
     {
@@ -116,12 +129,13 @@ const CampaignArgs parse_arguments(int argc, char* argv[]) {
                 break;
 
             case 'a':
-                args.attackMode =
-                    static_cast<SecretKeyAttackMode>(std::stoul(optarg));
+                args.openfhe_attack_mode =
+                    parse_attack_mode(std::stoul(optarg));
                 break;
 
             case 't':
-                args.thresholdBitsSKA = std::stod(optarg);
+                args.openfhe_threshold_bits =
+                    std::stod(optarg);
                 break;
 
             case 'R':

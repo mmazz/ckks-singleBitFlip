@@ -1,11 +1,13 @@
 #pragma once
-
-#include "openfhe.h"
+#include "attack_mode.h"
+#include <chrono>
+#include <iomanip>
 #include <string>
 #include <cstdint>
 #include <iostream>
 
-using namespace lbcrypto;
+#include <optional>
+
 inline std::string timestamp_now() {
     auto t = std::chrono::system_clock::to_time_t(
         std::chrono::system_clock::now());
@@ -14,40 +16,45 @@ inline std::string timestamp_now() {
     return ss.str();
 }
 
-inline const char* to_string(SecretKeyAttackMode mode) {
-    switch (mode) {
-        case SecretKeyAttackMode::Disabled: return "Disabled";
-        case SecretKeyAttackMode::CompleteInjection: return "CompleteInjection";
-        case SecretKeyAttackMode::RealOnly: return "RealOnly";
-        case SecretKeyAttackMode::ImaginaryOnly: return "ImaginaryOnly";
-    }
-    return "Unknown";
-}
+struct IterationArgs{
+    uint32_t limb;
+    uint32_t coeff;
+    uint32_t bit;
+    IterationArgs(uint64_t l, uint64_t c, uint64_t b)
+        : limb(l), coeff(c), bit(b) {}
+};
+
 
 struct CampaignArgs {
-    std::string library = "openfhe";
+    std::string library = "none";
     std::string stage = "none";
+
     uint32_t logN = 3;
     uint32_t logQ = 60;
     uint32_t logDelta = 50;
     uint32_t logSlots = 2;
     uint32_t mult_depth = 0;
-    uint64_t seed = 42;
-    uint64_t seed_input = 42;
     uint32_t num_limbs = 0;
     uint32_t logMin = 0;
     uint32_t logMax = 0;
+
+    uint64_t seed = 42;
+    uint64_t seed_input = 42;
+
     bool withNTT = true;
-    SecretKeyAttackMode attackMode = SecretKeyAttackMode::CompleteInjection;
-    double thresholdBitsSKA = 5.0;
-    std::string results_dir = "../../results";
     bool verbose = false;
+    std::string results_dir = "../../results";
+
+// OpenFHE-only
+
+    std::optional<AttackModeSKA> openfhe_attack_mode = AttackModeSKA::Disabled;
+    std::optional<double> openfhe_threshold_bits = 0.0;
 
     void print(std::ostream& os = std::cout) const;
 };
 
 void print_usage(const char* program_name);
-const CampaignArgs parse_arguments(int argc, char* argv[]);
+CampaignArgs parse_arguments(int argc, char* argv[]);
 
 /**
  * Contexto mínimo de una campaña viva

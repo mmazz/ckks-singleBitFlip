@@ -1,48 +1,56 @@
 PROJECT_ROOT := $(shell cd ../.. && pwd)
-HEAAN_SRC := $(PROJECT_ROOT)/src/HEAAN-PRNG-Control
-COMMON_SRC := $(PROJECT_ROOT)/src/common
+HEAAN_SRC    := $(PROJECT_ROOT)/src/HEAAN-PRNG-Control
+COMMON_SRC   := $(PROJECT_ROOT)/src/common
+
+SRC_DIR   := src
+BUILD_DIR := build
+BIN_DIR   := $(BUILD_DIR)/bin
+OBJ_DIR   := $(BUILD_DIR)/obj
 
 CXX := g++
-CXXFLAGS := -std=c++17 -O2 -I$(HEAAN_SRC)/src -pthread
+CXXFLAGS := -std=c++17 -O2 -pthread \
+            -I$(HEAAN_SRC)/src \
+            -I$(COMMON_SRC)
 
-# Separar LDFLAGS (directorios) de LIBS (bibliotecas)
 LDFLAGS := -L$(HEAAN_SRC)/lib -L/usr/local/lib
-LIBS := $(HEAAN_SRC)/lib/libHEAAN.a -I$(COMMON_SRC) -lntl -lgmp -lm
+LIBS    := $(HEAAN_SRC)/lib/libHEAAN.a -lntl -lgmp -lm
 
-# Directorios
-BUILD_DIR := build
-BIN_DIR := $(BUILD_DIR)/bin
-SRC_DIR := src
+$(shell mkdir -p $(BIN_DIR) $(OBJ_DIR))
 
-# Crear directorios si no existen
-$(shell mkdir -p $(BIN_DIR))
+# ---------------- Sources ----------------
 
-# Archivos fuente
-SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
-TARGETS := $(patsubst $(SRC_DIR)/%.cpp,$(BIN_DIR)/%,$(SOURCES))
+COMMON_SOURCES := $(wildcard $(COMMON_SRC)/*.cpp)
+COMMON_OBJECTS := $(patsubst $(COMMON_SRC)/%.cpp,$(OBJ_DIR)/common_%.o,$(COMMON_SOURCES))
 
-# Regla principal
-all: $(TARGETS)
+HEAAN_SOURCES := backend.cpp
+HEAAN_OBJECTS := $(OBJ_DIR)/backend.o
 
-# Compilar utils (NO necesita LDFLAGS ni LIBS en compilación, solo al linkear)
-$(BIN_DIR)/utils.o: $(SRC_DIR)/utils_heaan.cpp $(SRC_DIR)/utils_heaan.h
+MAIN_SOURCE := singleBitFlip.cpp
+MAIN_OBJECT := $(OBJ_DIR)/singleBitFlip.o
+TARGET := $(BIN_DIR)/singleBitFlip
+
+# ---------------- Rules ----------------
+
+all: $(TARGET)
+
+# Common objects
+$(OBJ_DIR)/common_%.o: $(COMMON_SRC)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Compilar ejecutables - ORDEN CORRECTO: objects primero, luego libs
-$(BIN_DIR)/%: $(SRC_DIR)/%.cpp $(BIN_DIR)/utils.o
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
-	@echo "✓ Compilado: $@"
-# Limpiar
+# HEAAN backend object
+$(OBJ_DIR)/backend.o: $(SRC_DIR)/backend.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Main
+$(OBJ_DIR)/singleBitFlip.o: $(SRC_DIR)/singleBitFlip.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Link
+$(TARGET): $(MAIN_OBJECT) $(HEAAN_OBJECTS) $(COMMON_OBJECTS)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+	@echo "✓ Built $@"
+
 clean:
 	rm -rf $(BUILD_DIR)
-	@echo "✓ Limpieza completada"
 
-# Mostrar configuración
-info:
-	@echo "Project Root: $(PROJECT_ROOT)"
-	@echo "HEAAN Source: $(HEAAN_SRC)"
-	@echo "Build Dir: $(BUILD_DIR)"
-	@echo "Sources: $(SOURCES)"
-	@echo "Targets: $(TARGETS)"
-
-.PHONY: all clean info
+.PHONY: all clean

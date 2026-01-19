@@ -66,26 +66,35 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 
 add_library(mainlib_common
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils_openfhe.cpp
     ${PROJECT_ROOT}/src/common/utils_ckks.cpp
     ${PROJECT_ROOT}/src/common/campaign_helper.cpp
     ${PROJECT_ROOT}/src/common/campaign_logger.cpp
     ${PROJECT_ROOT}/src/common/campaign_registry.cpp
 )
-target_include_directories(mainlib_common PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${PROJECT_ROOT}/src/common          # <-- AGREGAR ESTA LÍNEA para poder hacer #include "common/campaign_helper.h"
+
+
+add_library(backend_openfhe
+    ${PROJECT_ROOT}/backends/openfhe/src/backend.cpp
+)
+
+target_include_directories(backend_openfhe PUBLIC
+    ${PROJECT_ROOT}/src/common
+    ${PROJECT_ROOT}/backends/openfhe/src
+    ${OPENFHE_INCLUDE_DIR}  # donde tengas OpenFHE
+)
+target_link_libraries(backend_openfhe
+    PUBLIC
+        mainlib_common
+        ${OpenFHE_SHARED_LIBRARIES}
 )
 
 set(EXECUTABLES
     testPRNG
     singleBitFlip    # <-- Asegúrate que este nombre esté aquí
 )
-
 foreach(exec_name ${EXECUTABLES})
     add_executable(${exec_name} src/${exec_name}.cpp)
-    target_link_libraries(${exec_name} PRIVATE mainlib_common ${OpenFHE_SHARED_LIBRARIES})
+    target_link_libraries(${exec_name} PRIVATE mainlib_common backend_openfhe ${OpenFHE_SHARED_LIBRARIES})
 endforeach()
-
 
 
