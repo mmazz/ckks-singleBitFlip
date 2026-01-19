@@ -6,7 +6,7 @@
 #include <vector>
 
 
-
+const size_t MAX_H = 64;
 struct HEAANContext : BackendContext {
     Context cc;
     SecretKey sk;
@@ -40,10 +40,13 @@ get_reference_input(const BackendContext* bctx)
 
 BackendContext* setup_campaign(const CampaignArgs& args)
     {
+    long h = pow(2, args.logN);
+        if (h > MAX_H)
+            h = MAX_H;
     auto* ctx = new HEAANContext(
         args.logN,
         args.logQ,
-        12,          // h
+        h,          // h
         args.seed
     );
 

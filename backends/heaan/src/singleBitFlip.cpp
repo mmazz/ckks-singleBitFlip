@@ -10,25 +10,12 @@ int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "heaan";
+    args.num_limbs = 1;
+    args.mult_depth = 1;
     if (args.verbose) {
         args.print();
     }
 
-    CampaignRegistry registry(args.results_dir);
-    uint32_t campaign_id = registry.allocate_campaign_id();
-    std::cout << "\n=== Registring Campaign "<< std::endl;
-    registry.register_start({
-        campaign_id,
-        args,
-        ""
-    });
-
-    std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
-
-    CampaignLogger logger(
-    campaign_id,
-    args.results_dir + "/data",
-    10000);
 
     BackendContext* ctx = setup_campaign(args);
 
@@ -42,29 +29,46 @@ int main(int argc, char* argv[]) {
     // Actualizar metadata con golden_norm
  //   metadata.golden_norm = golden_norm2;
 
-    std::cout << "Campaign " << campaign_id << " registered" << std::endl;
 
-
-
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    // ========== 10. LOOP DE BIT FLIPS ==========
-    std::cout << "\nStarting bit flip campaign..." << std::endl;
-
-    // Calcular total esperado para progress
-    uint32_t N = 1 << args.logN;
-    size_t num_coeffs = N / 2;
-    size_t bits_per_coeff = 64;
-    size_t total_expected = args.num_limbs * num_coeffs * bits_per_coeff ;
-
-    std::cout << "Expected bit flips: " << total_expected << std::endl;
-
-    size_t total_iterations = 0;
-    size_t progress_interval = total_expected / 100;  // 1% intervals
-    if (progress_interval == 0) progress_interval = 10000;
 
     if(AcceptCKKSResult(scheme_metrics)){
-        for (size_t coeff = 0; coeff < num_coeffs; coeff++)
+      CampaignRegistry registry(args.results_dir);
+        uint32_t campaign_id = registry.allocate_campaign_id();
+        std::cout << "\n=== Registring Campaign "<< std::endl;
+        registry.register_start({
+            campaign_id,
+            args,
+            ""
+        });
+
+        std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
+
+        CampaignLogger logger(
+        campaign_id,
+        args.results_dir + "/data",
+        10000);
+        std::cout << "Campaign " << campaign_id << " registered" << std::endl;
+
+
+
+        auto start_time = std::chrono::high_resolution_clock::now();
+
+        // ========== 10. LOOP DE BIT FLIPS ==========
+        std::cout << "\nStarting bit flip campaign..." << std::endl;
+
+        // Calcular total esperado para progress
+        uint32_t N = 1 << args.logN;
+        size_t num_coeffs = N / 2;
+        size_t bits_per_coeff = 64;
+        size_t total_expected =  num_coeffs * bits_per_coeff ;
+
+        std::cout << "Expected bit flips: " << total_expected << std::endl;
+
+        size_t total_iterations = 0;
+        size_t progress_interval = total_expected / 10;  // 10% intervals
+        if (progress_interval == 0)
+            progress_interval = 10000;
+        for (size_t coeff = 0; coeff<num_coeffs; coeff++)
         {
             for(size_t bit=0; bit<bits_per_coeff; bit++)
             {
@@ -75,14 +79,12 @@ int main(int argc, char* argv[]) {
                 logger.log(iterArgs.limb,
                         iterArgs.coeff,
                         iterArgs.bit,
-                        args.stage,
                         metricsBitFlip.l2_rel_error,     // ||error||_2 / ||golden||_2
                         metricsBitFlip.linf_abs_error,
                         res.detected
                     );
                 total_iterations++;
 
-                // Progress
                 if (total_iterations % progress_interval == 0) {
                     double percent = (double)total_iterations / total_expected * 100.0;
                     auto now = std::chrono::high_resolution_clock::now();
@@ -100,19 +102,14 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
+    registry.register_end({campaign_id, logger.total(), logger.sdc(), 0, timestamp_now() });
     } else {
         std::cout << "L2 relative error : " << scheme_metrics.l2_rel_error << "\n";
         std::cout << "Linf abs error   : "  << scheme_metrics.linf_abs_error << "\n";
         std::cout << "Bits precision   : "  << scheme_metrics.bits_precision << "\n";
         std::cerr << "Error with golden norm, checkout the used parameters" << std::endl;
     }
-    registry.register_end({
-            campaign_id,
-            logger.total(),
-            logger.sdc(),
-            0,
-            timestamp_now()
-            });
+
     return 0;
 }
 

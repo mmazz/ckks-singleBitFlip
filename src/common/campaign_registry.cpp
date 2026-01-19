@@ -16,7 +16,7 @@ CampaignRegistry::CampaignRegistry(const std::string& results_dir) {
 
     if (!fs::exists(start_csv_)) {
         std::ofstream f(start_csv_);
-        f << "campaign_id,library,logN,logQ,logDelta,logSlots,"
+        f << "campaign_id,library,stage,logN,logQ,logDelta,logSlots,"
              "mult_depth,seed,seed_input,withNTT,num_limbs,"
              "logMin,logMax,timestamp_start\n";
     }
@@ -64,6 +64,7 @@ void CampaignRegistry::register_start(const CampaignStartRecord& r) {
     std::ofstream f(start_csv_, std::ios::app);
     f << r.campaign_id << ","
       << r.args.library << ","
+      << r.args.stage<< ","
       << r.args.logN << ","
       << r.args.logQ << ","
       << r.args.logDelta << ","

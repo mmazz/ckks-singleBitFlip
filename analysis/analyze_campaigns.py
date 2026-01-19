@@ -3,25 +3,22 @@ import numpy as np
 from pathlib import Path
 import sys
 import os
+
 sys.path.append(os.path.abspath('./'))
 import config
+
 import matplotlib.pyplot as plt
+from utils_parser import parse_args, build_filters
+
 show = config.show
 width = int(config.width)
+
 # ============================================================
 # CONFIGURACIÓN
 # ============================================================
 
 CAMPAIGNS_CSV = "../results/campaigns_start.csv"
 DATA_DIR = Path("../results/data")
-
-FILTERS = {
-    "library": "openfhe",
-    "logN": 3,
-    "logQ": 60,
-    "logDelta": 50,
-    "withNTT": 0,
-}
 
 # ============================================================
 # 1. CARGAR Y FILTRAR CAMPAÑAS
@@ -30,9 +27,18 @@ FILTERS = {
 def load_and_filter_campaigns(csv_path, filters):
     campaigns = pd.read_csv(csv_path)
 
-    # Normalizar tipos
-    campaigns["library"] = campaigns["library"].astype(str).str.strip()
+    # --- Normalizar strings ---
+    cat_cols = ["library", "stage"]
+    for c in cat_cols:
+        if c in campaigns.columns:
+            campaigns[c] = (
+                campaigns[c]
+                .astype(str)
+                .str.strip()
+                .str.lower()
+            )
 
+    # --- Normalizar enteros ---
     int_cols = [
         "campaign_id", "logN", "logQ", "logDelta", "logSlots",
         "mult_depth", "seed", "seed_input",
@@ -40,20 +46,31 @@ def load_and_filter_campaigns(csv_path, filters):
     ]
 
     for c in int_cols:
-        campaigns[c] = pd.to_numeric(campaigns[c], errors="raise")
+        if c in campaigns.columns:
+            campaigns[c] = pd.to_numeric(campaigns[c], errors="raise")
 
-    # Aplicar filtros
+    # --- Aplicar filtros ---
     mask = np.ones(len(campaigns), dtype=bool)
 
     print("=== MATCHES POR FILTRO ===")
-    for k, v in filters.items():
-        m = campaigns[k] == v
-        print(f"{k} == {v}: {m.sum()}")
+    for col, (dtype, value) in filters.items():
+        if col not in campaigns.columns:
+            raise KeyError(f"Columna '{col}' no existe en el CSV")
+
+        if dtype == "str":
+            value = str(value).strip().lower()
+        elif dtype == "int":
+            value = int(value)
+        else:
+            raise ValueError(f"Tipo de filtro desconocido: {dtype}")
+
+        m = campaigns[col] == value
+        print(f"{col} == {value}: {m.sum()}")
         mask &= m
 
     selected = campaigns[mask]
-
     print(f"\nCampañas seleccionadas: {len(selected)}")
+
     return selected
 
 
@@ -84,11 +101,6 @@ def load_campaign_data(selected_campaigns, data_dir):
     print("Data total cargada:", data.shape)
     return data
 
-
-
-# ============================================================
-# 3. PROMEDIO POR (coeficiente, bit)
-# ============================================================
 
 def mean_by_coeff_and_bit(data):
     mean_data = (
@@ -181,7 +193,12 @@ def plot_concatenated_coeffs(mean_data, bits_per_coeff=64):
 # ============================================================
 
 def main():
-    selected = load_and_filter_campaigns(CAMPAIGNS_CSV, FILTERS)
+    args = parse_args()
+    filters = build_filters(args)
+
+    print("Filtros activos:", filters)
+
+    selected = load_and_filter_campaigns(CAMPAIGNS_CSV, filters)
 
     if selected.empty:
         raise RuntimeError("No hay campañas que cumplan los filtros")

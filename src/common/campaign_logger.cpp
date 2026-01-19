@@ -4,13 +4,13 @@
 namespace fs = std::filesystem;
 
 std::string BitflipResult::header() {
-    return "limb,coeff,bit,stage,l2_norm,rel_error,is_sdc";
+    return "limb,coeff,bit,l2_norm,rel_error,is_sdc";
 }
 
 std::string BitflipResult::row() const {
     std::ostringstream ss;
     ss << limb << "," << coeff << "," << bit << ","
-       << stage << "," << norm2 << ","
+       << norm2 << ","
        << rel_error << "," << (is_sdc ? 1 : 0);
     return ss.str();
 }
@@ -46,13 +46,12 @@ void CampaignLogger::log(const BitflipResult& r) {
 }
 
 void CampaignLogger::log(uint32_t limb, uint32_t coeff, uint32_t bit,
-         const std::string& stage, double norm2, double rel_error, bool is_sdc)
+          double norm2, double rel_error, bool is_sdc)
     {
         BitflipResult r{
             limb,
             coeff,
             bit,
-            stage,
             norm2,
             rel_error,
             is_sdc

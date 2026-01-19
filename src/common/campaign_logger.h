@@ -14,7 +14,6 @@ struct BitflipResult {
     uint32_t limb;
     uint32_t coeff;
     uint32_t bit;
-    std::string stage;
     double norm2;
     double rel_error;
     bool is_sdc;
@@ -31,7 +30,7 @@ public:
 
     void log(const BitflipResult& r);
     void log(uint32_t limb, uint32_t coeff, uint32_t bit,
-         const std::string& stage, double norm2, double rel_error, bool is_sdc);
+         double norm2, double rel_error, bool is_sdc);
 
     void compress_and_cleanup();
     void flush();

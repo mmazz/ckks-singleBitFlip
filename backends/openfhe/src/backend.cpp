@@ -70,12 +70,12 @@ BackendContext* setup_campaign(const CampaignArgs& args)
         auto attackModeOF =
             args.openfhe_attack_mode
                 ? to_openfhe_attack_mode(*args.openfhe_attack_mode)
-                : SecretKeyAttackMode::Disabled;
+                : SecretKeyAttackMode::CompleteInjection;
 
-        double threshold = args.openfhe_threshold_bits.value_or(0.0);
+        double threshold = args.openfhe_threshold_bits.value_or(5.0);
 
         auto cfg = SDCConfigHelper::MakeConfig(
-            false,
+            false, // Disable execption
             attackModeOF,
             threshold
         );
@@ -101,14 +101,13 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     ctx->keys = ctx->cc->KeyGen();
 
     ctx->baseInput = uniform_dist(1 << args.logSlots, args.logMin, args.logMax,
-                                    args.seed_input, false);
+                                     args.seed_input, false);
 
     return ctx;
 }
 
 
-IterationResult
-run_iteration(BackendContext* bctx,
+IterationResult run_iteration(BackendContext* bctx,
               const CampaignArgs& args,
               std::optional<IterationArgs> iterArgs)
 {

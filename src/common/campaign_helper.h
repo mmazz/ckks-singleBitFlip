@@ -47,8 +47,8 @@ struct CampaignArgs {
 
 // OpenFHE-only
 
-    std::optional<AttackModeSKA> openfhe_attack_mode = AttackModeSKA::Disabled;
-    std::optional<double> openfhe_threshold_bits = 0.0;
+    std::optional<AttackModeSKA> openfhe_attack_mode = AttackModeSKA::CompleteInjection;
+    std::optional<double> openfhe_threshold_bits = 5.0;
 
     void print(std::ostream& os = std::cout) const;
 };
