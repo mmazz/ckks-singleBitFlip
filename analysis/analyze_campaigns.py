@@ -13,21 +13,12 @@ from utils_parser import parse_args, build_filters
 show = config.show
 width = int(config.width)
 
-# ============================================================
-# CONFIGURACIÓN
-# ============================================================
-
 CAMPAIGNS_CSV = "../results/campaigns_start.csv"
 DATA_DIR = Path("../results/data")
-
-# ============================================================
-# 1. CARGAR Y FILTRAR CAMPAÑAS
-# ============================================================
 
 def load_and_filter_campaigns(csv_path, filters):
     campaigns = pd.read_csv(csv_path)
 
-    # --- Normalizar strings ---
     cat_cols = ["library", "stage"]
     for c in cat_cols:
         if c in campaigns.columns:
@@ -38,9 +29,8 @@ def load_and_filter_campaigns(csv_path, filters):
                 .str.lower()
             )
 
-    # --- Normalizar enteros ---
     int_cols = [
-        "campaign_id", "logN", "logQ", "logDelta", "logSlots",
+        "campaign_id", "bitPerCoeff", "logN", "logQ", "logDelta", "logSlots",
         "mult_depth", "seed", "seed_input",
         "withNTT", "num_limbs", "logMin", "logMax"
     ]
@@ -49,7 +39,6 @@ def load_and_filter_campaigns(csv_path, filters):
         if c in campaigns.columns:
             campaigns[c] = pd.to_numeric(campaigns[c], errors="raise")
 
-    # --- Aplicar filtros ---
     mask = np.ones(len(campaigns), dtype=bool)
 
     print("=== MATCHES POR FILTRO ===")
@@ -73,10 +62,6 @@ def load_and_filter_campaigns(csv_path, filters):
 
     return selected
 
-
-# ============================================================
-# 2. CARGAR DATA DE CAMPAÑAS
-# ============================================================
 
 def load_campaign_data(selected_campaigns, data_dir):
     dfs = []
@@ -103,21 +88,16 @@ def load_campaign_data(selected_campaigns, data_dir):
 
 
 def mean_by_coeff_and_bit(data):
+    print("coeff únicos en data:", data["coeff"].nunique())
+    print("min/max coeff:", data["coeff"].min(), data["coeff"].max())
     mean_data = (
         data
         .groupby(["coeff", "bit"], as_index=False)
         .agg(mean_l2=("l2_norm", "mean"))
     )
-
-    #mean_data.sort_values(["bit", "coeff"], inplace=True)
+    print("coeff únicos en mean_data:", mean_data["coeff"].nunique())
     return mean_data
 
-
-
-
-# ============================================================
-# 4. NORMA L2 POR BIT
-# ============================================================
 def l2_norm_by_bit(mean_data):
     norm2 = (
         mean_data
@@ -188,9 +168,6 @@ def plot_concatenated_coeffs(mean_data, bits_per_coeff=64):
     plt.tight_layout()
     plt.show()
 
-# ============================================================
-# MAIN
-# ============================================================
 
 def main():
     args = parse_args()
@@ -210,7 +187,8 @@ def main():
 
     print("\n=== NORMA L2 POR BIT ===")
     print(norm2)
-    plot_concatenated_coeffs(mean_data, bits_per_coeff=64)
+    print(args.bitPerCoeff)
+    plot_concatenated_coeffs(mean_data, args.bitPerCoeff)
 
 
 if __name__ == "__main__":

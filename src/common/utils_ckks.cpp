@@ -1,5 +1,15 @@
 #include "utils_ckks.h"
 
+double percentile(std::vector<double>& v, double p) {
+    double pos = p * (v.size() - 1);
+    size_t idx = static_cast<size_t>(pos);
+    double frac = pos - idx;
+
+    if (idx + 1 < v.size())
+        return v[idx] * (1.0 - frac) + v[idx + 1] * frac;
+    else
+        return v[idx];
+}
 
 
 bool AcceptCKKSResult(const CKKSAccuracyMetrics& m, double max_rel_error ,
@@ -23,14 +33,6 @@ double compute_rel_norm2(const std::vector<double>& v1,
     return std::sqrt(num) / std::sqrt(den);
 }
 
-
-
-double percentile(std::vector<double> v, double p) {
-    if (v.empty()) return 0.0;
-    std::sort(v.begin(), v.end());
-    size_t idx = static_cast<size_t>(p * (v.size() - 1));
-    return v[idx];
-}
 
 SlotErrorStats categorize_slots(
     const std::vector<double>& input,
@@ -93,9 +95,8 @@ std::vector<double> uniform_dist(uint32_t batchSize,
 
     // Caso especial: ambos cero → [-1, 1]
     const bool specialSymmetric = (logMin == 0 && logMax == 0);
-
     if (!specialSymmetric && logMin >= logMax) {
-        throw std::invalid_argument("Se requiere que logMin < logMax (excepto el caso 0,0).");
+        throw std::invalid_argument("logMin < logMax (except the case 0,0 for range [-1,1]).");
     }
 
     if (verbose) {

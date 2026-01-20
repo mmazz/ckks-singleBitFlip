@@ -16,6 +16,9 @@ struct CKKSAccuracyMetrics {
     double bits_precision;  // -log2(l2_rel_error)
 };
 
+double percentile(std::vector<double>& v, double p);
+
+
 inline CKKSAccuracyMetrics EvaluateCKKSAccuracy(const std::vector<double>& golden,
                              const std::vector<double>& ckks, double zero_eps= 1e-12)
 {
@@ -126,7 +129,6 @@ double compute_rel_norm2(const std::vector<double>& v1, const std::vector<double
 
 std::vector<double> uniform_dist(uint32_t batchSize, int64_t  logMin, int64_t logMax, uint64_t seed, bool verbose=false);
 
-double percentile(std::vector<double> v, double p);
 
 
 struct SlotErrorStats {

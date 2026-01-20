@@ -12,6 +12,8 @@
 void CampaignArgs::print(std::ostream& os) const {
     os << "Campaign configuration:\n"
        << "  library: " << library << "\n"
+       << "  stage: " << stage<< "\n"
+       << "  bitPerCoeff: " << bitPerCoeff << "\n"
        << "  logN: " << logN << "\n"
        << "  logQ: " << logQ << "\n"
        << "  logDelta: " << logDelta << "\n"
@@ -45,6 +47,7 @@ void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [OPTIONS]\n\n"
               << "Options:\n"
               << "  --stage <name>          Stage to attack: none, encode, encrypt_c0, encrypt_c1, mul_c0, mul_c1, add_c0, add_c1 (default: none)\n"
+              << "  --bitPerCoeff <value>   Max bits per coeff (default: 64)\n"
               << "  --logN <value>          log Ring dimension (default: 3 = 2^3 = 8)\n"
               << "  --logQ <value>          First mod bits (default: 60)\n"
               << "  --logDelta <value>      Scaling factor bits (default: 50)\n"
@@ -71,6 +74,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     static struct option long_options[] = {
         {"stage",          required_argument, 0, 'S'},
+        {"bitPerCoeff",    required_argument, 0, 'c'},
         {"logN",           required_argument, 0, 'N'},
         {"logQ",           required_argument, 0, 'Q'},
         {"logDelta",       required_argument, 0, 'd'},
@@ -96,7 +100,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "S:N:Q:d:s:m:n:r:b:L:x:y:a:t:R:vh",
+        "S:c:N:Q:d:s:m:n:r:b:L:x:y:a:t:R:vh",
         long_options,
         &option_index)) != -1)
     {
@@ -109,16 +113,21 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                 }
                 break;
 
+            case 'c': args.bitPerCoeff = std::stoul(optarg); break;
             case 'N': args.logN = std::stoul(optarg); break;
             case 'Q': args.logQ = std::stoul(optarg); break;
             case 'd': args.logDelta = std::stoul(optarg); break;
-            case 's': args.logSlots = std::stoul(optarg); break;
             case 'm': args.mult_depth = std::stoul(optarg); break;
             case 'r': args.seed = std::stoull(optarg); break;
             case 'b': args.seed_input = std::stoull(optarg); break;
             case 'L': args.num_limbs = std::stoul(optarg); break;
             case 'x': args.logMin = std::stoul(optarg); break;
             case 'y': args.logMax = std::stoul(optarg); break;
+
+            case 's':
+                args.logSlots = std::stoul(optarg);
+                args.logSlots_provided = true;
+                break;
 
             case 'n':  // --withNTT 0/1
                 args.withNTT = std::stoul(optarg) != 0;
@@ -158,6 +167,12 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     if (args.num_limbs == 0)
         args.num_limbs = args.mult_depth + 1;
-
+    if (!args.logSlots_provided) {
+        if (args.logN == 0) {
+            std::cerr << "Error: logN must be set if --logSlots is omitted\n";
+            std::exit(1);
+        }
+        args.logSlots = args.logN - 1;
+    }
     return args;
 }

@@ -45,8 +45,10 @@ int main(int argc, char* argv[]) {
         // Calcular total esperado para progress
         uint32_t N = 1 << args.logN;
         size_t num_coeffs = N / 2;
-        size_t bits_per_coeff = 64;
+        size_t bits_per_coeff = args.bitPerCoeff;
         size_t total_expected = args.num_limbs * num_coeffs * bits_per_coeff ;
+        std::vector<double> norms;
+        norms.reserve(total_expected);
 
         std::cout << "Expected bit flips: " << total_expected << std::endl;
 
@@ -71,6 +73,7 @@ int main(int argc, char* argv[]) {
                             metricsBitFlip.linf_abs_error,
                             res.detected
                         );
+                    norms.push_back(metricsBitFlip.l2_rel_error);
                     total_iterations++;
 
                     // Progress
@@ -92,8 +95,11 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
+    std::sort(norms.begin(), norms.end());
+    double l2_P95 = percentile(norms, 0.95);
+    double l2_P99 = percentile(norms, 0.99);
 
-    registry.register_end({campaign_id, logger.total(), logger.sdc(), 0, timestamp_now()});
+    registry.register_end({campaign_id, logger.total(), logger.sdc(), 0, l2_P95, l2_P99, timestamp_now()});
     } else {
         std::cout << "Input vs output " << input.size() << "\n";
         for(size_t i=0; i<input.size(); i++)

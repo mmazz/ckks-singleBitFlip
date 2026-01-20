@@ -29,6 +29,7 @@ struct CampaignArgs {
     std::string library = "none";
     std::string stage = "none";
 
+    uint32_t bitPerCoeff = 64;
     uint32_t logN = 3;
     uint32_t logQ = 60;
     uint32_t logDelta = 50;
@@ -49,6 +50,7 @@ struct CampaignArgs {
 
     std::optional<AttackModeSKA> openfhe_attack_mode = AttackModeSKA::CompleteInjection;
     std::optional<double> openfhe_threshold_bits = 5.0;
+    bool logSlots_provided = false;
 
     void print(std::ostream& os = std::cout) const;
 };

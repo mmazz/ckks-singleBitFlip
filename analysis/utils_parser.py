@@ -11,14 +11,15 @@ def parse_args():
     parser.add_argument("--stage", type=str, default=None)
 
     # -------- enteros --------
+    parser.add_argument("--bitPerCoeff", type=int, default=64)
     parser.add_argument("--logN", type=int, default=None)
     parser.add_argument("--logQ", type=int, default=None)
     parser.add_argument("--logDelta", type=int, default=None)
     parser.add_argument("--logSlots", type=int, default=None)
     parser.add_argument("--mult_depth", type=int, default=None)
     parser.add_argument("--num_limbs", type=int, default=None)
-    parser.add_argument("--logMin", type=int, default=None)
-    parser.add_argument("--logMax", type=int, default=None)
+    parser.add_argument("--logMin", type=int, default=0)
+    parser.add_argument("--logMax", type=int, default=0)
 
     # -------- bool opcional --------
     parser.add_argument(

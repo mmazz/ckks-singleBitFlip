@@ -16,7 +16,7 @@ CampaignRegistry::CampaignRegistry(const std::string& results_dir) {
 
     if (!fs::exists(start_csv_)) {
         std::ofstream f(start_csv_);
-        f << "campaign_id,library,stage,logN,logQ,logDelta,logSlots,"
+        f << "campaign_id,library,stage,bitPerCoeff,logN,logQ,logDelta,logSlots,"
              "mult_depth,seed,seed_input,withNTT,num_limbs,"
              "logMin,logMax,timestamp_start\n";
     }
@@ -24,7 +24,7 @@ CampaignRegistry::CampaignRegistry(const std::string& results_dir) {
     if (!fs::exists(end_csv_)) {
         std::ofstream f(end_csv_);
         f << "campaign_id,total_bitflips,sdc_count,"
-             "duration_seconds,timestamp_end\n";
+             "duration_seconds,l2_P95, l2_P99, timestamp_end\n";
     }
 }
 
@@ -65,6 +65,7 @@ void CampaignRegistry::register_start(const CampaignStartRecord& r) {
     f << r.campaign_id << ","
       << r.args.library << ","
       << r.args.stage<< ","
+      << r.args.bitPerCoeff<< ","
       << r.args.logN << ","
       << r.args.logQ << ","
       << r.args.logDelta << ","
@@ -90,6 +91,9 @@ void CampaignRegistry::register_end(const CampaignEndRecord& r) {
       << r.total_bitflips << ","
       << r.sdc_count << ","
       << r.duration_seconds << ","
+      << r.duration_seconds << ","
+      << r.l2_P95<< ","
+      << r.l2_P99<< ","
       << r.timestamp_end << "\n";
 
     unlock_file(fd);

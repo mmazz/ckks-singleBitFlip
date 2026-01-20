@@ -15,6 +15,8 @@ struct CampaignEndRecord {
     uint64_t total_bitflips;
     uint64_t sdc_count;
     uint64_t duration_seconds;
+    double l2_P95;
+    double l2_P99;
     std::string timestamp_end;
 };
 
