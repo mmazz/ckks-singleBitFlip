@@ -11,13 +11,16 @@
 int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "openfhe";
+    args.flipType = "exhaustive";
     if (args.verbose) {
         args.print();
     }
 
     BackendContext* ctx = setup_campaign(args);
 
-    const auto& input = get_reference_input(ctx);
+    const auto& input = get_reference_output(ctx);
+
+
     std::cout << "Computing golden output..." << std::endl;
     IterationResult golden = run_iteration(ctx, args);
 
@@ -98,8 +101,12 @@ int main(int argc, char* argv[]) {
     std::sort(norms.begin(), norms.end());
     double l2_P95 = percentile(norms, 0.95);
     double l2_P99 = percentile(norms, 0.99);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
+    uint64_t mins = minutes.count();
 
-    registry.register_end({campaign_id, logger.total(), logger.sdc(), 0, l2_P95, l2_P99, timestamp_now()});
+    registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
     } else {
         std::cout << "Input vs output " << input.size() << "\n";
         for(size_t i=0; i<input.size(); i++)
@@ -112,10 +119,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 // ========== 11. FINALIZAR ==========
-//    auto end_time = std::chrono::high_resolution_clock::now();
-//    auto duration = std::chrono::duration_cast<std::chrono::seconds>(
-//                    end_time - start_time).count();
-//
+
 //    std::cout << "\n=== Campaign " << campaign_id << " Complete ===" << std::endl;
 //    std::cout << "Total bit flips: " << logger.get_total_entries() << std::endl;
 //    std::cout << "SDC detected: " << logger.get_sdc_count()

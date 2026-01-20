@@ -14,7 +14,7 @@ struct BackendContext {
 };
 
 const std::vector<double>&
-get_reference_input(const BackendContext* ctx);
+get_reference_output(const BackendContext* ctx);
 
 BackendContext* setup_campaign(const CampaignArgs& args);
 

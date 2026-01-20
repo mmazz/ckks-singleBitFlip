@@ -1,6 +1,15 @@
 # utils_parser.py
 import argparse
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v in ("1", "true", "True"):
+        return True
+    if v in ("0", "false", "False"):
+        return False
+    raise argparse.ArgumentTypeError("Boolean value expected (0/1, true/false)")
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Filtro de campañas CKKS"
@@ -24,11 +33,21 @@ def parse_args():
     # -------- bool opcional --------
     parser.add_argument(
         "--withNTT",
-        action="store_true",
         default=None,
-        help="Filtra campañas con NTT habilitado"
+        help="Filtra campañas por NTT (1=True, 0=False)"
     )
-
+    parser.add_argument(
+        "--doAdd",
+        type=str2bool,
+        default=False,
+        help="Filtrer campaigns with addition (1=True, 0=False)"
+    )
+    parser.add_argument(
+        "--doMul",
+        type=str2bool,
+        default=False,
+        help="Filtrer campaigns with multiplication (1=True, 0=False)"
+    )
     # -------- openfhe opcionales --------
     parser.add_argument("--openfhe_attack_mode", type=str, default=None)
     parser.add_argument("--openfhe_threshold_bits", type=float, default=None)

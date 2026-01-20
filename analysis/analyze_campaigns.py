@@ -32,7 +32,7 @@ def load_and_filter_campaigns(csv_path, filters):
     int_cols = [
         "campaign_id", "bitPerCoeff", "logN", "logQ", "logDelta", "logSlots",
         "mult_depth", "seed", "seed_input",
-        "withNTT", "num_limbs", "logMin", "logMax"
+        "withNTT", "doAdd", "doMul", "num_limbs", "logMin", "logMax"
     ]
 
     for c in int_cols:

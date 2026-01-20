@@ -9,12 +9,57 @@
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include <random>
+#include <utility>
+#include <stdexcept>
 
 struct CKKSAccuracyMetrics {
     double l2_rel_error;     // ||y - g||₂ / ||g||₂
     double linf_abs_error;   // max |y_i - g_i|
     double bits_precision;  // -log2(l2_rel_error)
 };
+
+inline uint32_t random_int(int a, int b) {
+    static thread_local std::mt19937 rng{std::random_device{}()};
+    std::uniform_int_distribution<int> dist(a, b);
+    return (uint32_t)dist(rng);
+}
+inline std::pair<size_t, size_t>
+bit_zone_bounds(size_t zone,
+                size_t bits_per_coeff,
+                size_t min_zone_size = 1)
+{
+    size_t lo, hi;
+
+    switch (zone) {
+        case 0:
+            lo = 0;
+            hi = bits_per_coeff * 1 / 10;
+            break;
+        case 1:
+            lo = bits_per_coeff * 1 / 10;
+            hi = bits_per_coeff * 3 / 10;
+            break;
+        case 2:
+            lo = bits_per_coeff * 3 / 10;
+            hi = bits_per_coeff * 6 / 10;
+            break;
+        case 3:
+            lo = bits_per_coeff * 6 / 10;
+            hi = bits_per_coeff;
+            break;
+        default:
+            throw std::logic_error("invalid bit zone");
+    }
+
+    // asegurar intervalo válido
+    if (hi <= lo)
+        hi = std::min(bits_per_coeff, lo + min_zone_size);
+
+    return {lo, hi};
+}
+
+
 
 double percentile(std::vector<double>& v, double p);
 

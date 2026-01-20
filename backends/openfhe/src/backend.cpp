@@ -10,13 +10,14 @@ struct OpenFHEContext final : BackendContext {
     CryptoContext<DCRTPoly> cc;
     KeyPair<DCRTPoly> keys;
     std::vector<double> baseInput;
+    std::vector<double> goldenOutput;
     PRNG* prng;
 };
 
-const std::vector<double>& get_reference_input(const BackendContext* bctx)
+const std::vector<double>& get_reference_output(const BackendContext* bctx)
 {
     auto& ctx = static_cast<const OpenFHEContext&>(*bctx);
-    return ctx.baseInput;
+    return ctx.goldenOutput;
 }
 
 static void bitFlip(Ciphertext<DCRTPoly> &c, bool withNTT, size_t k, size_t i, size_t j, size_t bit){
@@ -96,13 +97,44 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     ctx->prng->SetSeed(args.seed);
     ctx->cc = GenCryptoContext(params);
     ctx->cc->Enable(PKE);
+    ctx->cc->Enable(KEYSWITCH);
     ctx->cc->Enable(LEVELEDSHE);
 
     ctx->keys = ctx->cc->KeyGen();
+    if(args.doMul)
+        ctx->cc->EvalMultKeyGen(ctx->keys.secretKey);
 
     ctx->baseInput = uniform_dist(1 << args.logSlots, args.logMin, args.logMax,
                                      args.seed_input, false);
+    ctx->goldenOutput = ctx->baseInput;
 
+    if (args.doAdd && !args.doMul) {
+        // golden = base + base
+        std::transform(ctx->baseInput.begin(),
+                       ctx->baseInput.end(),
+                       ctx->baseInput.begin(),
+                       ctx->goldenOutput.begin(),
+                       std::plus<double>());
+    }
+
+    if (args.doMul && !args.doAdd) {
+        // golden = base * base
+        std::transform(ctx->baseInput.begin(),
+                       ctx->baseInput.end(),
+                       ctx->baseInput.begin(),
+                       ctx->goldenOutput.begin(),
+                       std::multiplies<double>());
+    }
+
+    if (args.doAdd && args.doMul) {
+        // golden = (base + base) * base
+        std::transform(ctx->baseInput.begin(),
+                       ctx->baseInput.end(),
+                       ctx->goldenOutput.begin(),
+                       [](double x) {
+                           return (x + x) * x;
+                       });
+    }
     return ctx;
 }
 
@@ -125,6 +157,9 @@ IterationResult run_iteration(BackendContext* bctx,
     }
 
     Ciphertext<DCRTPoly> c = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt);
+    Ciphertext<DCRTPoly> c_clean;
+    if(args.doAdd || args.doMul)
+        c_clean = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt);
 
     if (iterArgs) {
         if (args.stage == "encrypt_c0") {
@@ -139,6 +174,11 @@ IterationResult run_iteration(BackendContext* bctx,
                     iterArgs->bit);
         }
     }
+
+    if(args.doAdd)
+        ctx.cc->EvalAddInPlace(c,c_clean);
+    if(args.doMul)
+        c = ctx.cc->EvalMult(c,c_clean);
 
     ctx.cc->Decrypt(ctx.keys.secretKey, c, &result_bitFlip);
 

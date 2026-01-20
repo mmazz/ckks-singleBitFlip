@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "heaan";
+    args.flipType = "random";
     args.num_limbs = 1;
     args.mult_depth = 1;
     if (args.verbose) {

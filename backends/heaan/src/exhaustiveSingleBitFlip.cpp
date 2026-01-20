@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "heaan";
+    args.flipType = "exhaustive";
     args.num_limbs = 1;
     args.mult_depth = 1;
     if (args.verbose) {
@@ -22,7 +23,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Computing golden output..." << std::endl;
     IterationResult golden = run_iteration(ctx, args);
 
-    const auto& input = get_reference_input(ctx);
+    const auto& input = get_reference_output(ctx);
 
     auto scheme_metrics = EvaluateCKKSAccuracy(input, golden.values);
 
@@ -62,6 +63,8 @@ int main(int argc, char* argv[]) {
         size_t bits_per_coeff = args.bitPerCoeff;
         size_t total_expected =  num_coeffs * bits_per_coeff ;
 
+        std::vector<double> norms;
+        norms.reserve(total_expected);
         std::cout << "Expected bit flips: " << total_expected << std::endl;
 
         size_t total_iterations = 0;
@@ -83,6 +86,8 @@ int main(int argc, char* argv[]) {
                         metricsBitFlip.linf_abs_error,
                         res.detected
                     );
+
+                norms.push_back(metricsBitFlip.l2_rel_error);
                 total_iterations++;
 
               //  if (total_iterations % progress_interval == 0) {
@@ -102,8 +107,19 @@ int main(int argc, char* argv[]) {
               //  }
             }
         }
-    registry.register_end({campaign_id, logger.total(), logger.sdc(), 0, timestamp_now() });
+    std::sort(norms.begin(), norms.end());
+    double l2_P95 = percentile(norms, 0.95);
+    double l2_P99 = percentile(norms, 0.99);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
+    uint64_t mins = minutes.count();
+
+    registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
     } else {
+        std::cout << "Input vs output " << input.size() << "\n";
+        for(size_t i=0; i<input.size(); i++)
+            std::cout << golden.values[i] << ", " << input[i] << std::endl;
         std::cout << "L2 relative error : " << scheme_metrics.l2_rel_error << "\n";
         std::cout << "Linf abs error   : "  << scheme_metrics.linf_abs_error << "\n";
         std::cout << "Bits precision   : "  << scheme_metrics.bits_precision << "\n";

@@ -24,7 +24,10 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  num_limbs: " << num_limbs << "\n"
        << "  logMin: " << logMin << "\n"
        << "  logMax: " << logMax << "\n"
-       << "  withNTT: " << withNTT << "\n";
+       << "  withNTT: " << withNTT << "\n"
+       << "  doAdd: " << doAdd << "\n"
+       << "  doMul: " << doMul << "\n"
+       << "  flipType: " << flipType << "\n";
            /* -------- OpenFHE-only knobs -------- */
         if (library == "openfhe") {
             os << "  attackModeSKA: ";
@@ -54,6 +57,9 @@ void print_usage(const char* program_name) {
               << "  --logSlots <value>      log Slots used (default: 1)\n"
               << "  --mult-depth <value>    Multiplicative depth (only heaan, default: 5)\n"
               << "  --withNTT <value>       Turn on or off NTT (only heaan, default: 1)\n"
+              << "  --doAdd <value>         The pipeline server has addition (default: 0)\n"
+              << "  --doMul <value>         The pipeline server has Mul (default: 0)\n"
+              << "  --flipType <name>       Type of bit flip campaign (default: exhaustive)\n"
               << "  --seed <value>          Random seed for scheme (default: 42)\n"
               << "  --seed-input <value>    Random seed for input (default: 42)\n"
               << "  --num_limbs <value>     Number of RNS limbs (only heaan, default: 3)\n"
@@ -81,6 +87,9 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"logSlots",       required_argument, 0, 's'},
         {"mult-depth",     required_argument, 0, 'm'},
         {"withNTT",        required_argument, 0, 'n'},
+        {"doAdd",        required_argument, 0, 'A'},
+        {"doMul",        required_argument, 0, 'M'},
+        {"flipType",          required_argument, 0, 'T'},
         {"num_limbs",      required_argument, 0, 'L'},
         {"logMin",         required_argument, 0, 'x'},
         {"logMax",         required_argument, 0, 'y'},
@@ -132,9 +141,20 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'n':  // --withNTT 0/1
                 args.withNTT = std::stoul(optarg) != 0;
                 break;
+            case 'A':  // --withNTT 0/1
+                args.doAdd = std::stoul(optarg) != 0;
+                break;
+
+            case 'M':  // --withNTT 0/1
+                args.doMul = std::stoul(optarg) != 0;
+                break;
 
             case 'S':
                 args.stage = optarg;
+                break;
+
+            case 'T':
+                args.flipType = optarg;
                 break;
 
             case 'a':

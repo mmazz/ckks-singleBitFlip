@@ -43,6 +43,9 @@ struct CampaignArgs {
     uint64_t seed_input = 42;
 
     bool withNTT = true;
+    bool doAdd = false;
+    bool doMul = false;
+    bool flipType = "exhaustive";
     bool verbose = false;
     std::string results_dir = "../../results";
 

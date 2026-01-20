@@ -90,7 +90,8 @@ target_link_libraries(backend_openfhe
 
 set(EXECUTABLES
     testPRNG
-    singleBitFlip    # <-- Asegúrate que este nombre esté aquí
+    randomSingleBitFlip
+    exhaustiveSingleBitFlip
 )
 foreach(exec_name ${EXECUTABLES})
     add_executable(${exec_name} src/${exec_name}.cpp)

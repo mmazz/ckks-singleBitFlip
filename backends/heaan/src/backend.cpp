@@ -13,6 +13,7 @@ struct HEAANContext : BackendContext {
     Scheme scheme;
 
     std::vector<double> baseInput;
+    std::vector<double> goldenOutput;
     NTL::ZZ seed;
 
     HEAANContext(
@@ -32,10 +33,10 @@ struct HEAANContext : BackendContext {
 };
 
 const std::vector<double>&
-get_reference_input(const BackendContext* bctx)
+get_reference_output(const BackendContext* bctx)
 {
     auto& ctx = static_cast<const HEAANContext&>(*bctx);
-    return ctx.baseInput;
+    return ctx.goldenOutput;
 }
 
 BackendContext* setup_campaign(const CampaignArgs& args)
@@ -59,7 +60,35 @@ BackendContext* setup_campaign(const CampaignArgs& args)
         args.seed_input,
         false
     );
+    ctx->goldenOutput = ctx->baseInput;
 
+    if (args.doAdd && !args.doMul) {
+        // golden = base + base
+        std::transform(ctx->baseInput.begin(),
+                       ctx->baseInput.end(),
+                       ctx->baseInput.begin(),
+                       ctx->goldenOutput.begin(),
+                       std::plus<double>());
+    }
+
+    if (args.doMul && !args.doAdd) {
+        // golden = base * base
+        std::transform(ctx->baseInput.begin(),
+                       ctx->baseInput.end(),
+                       ctx->baseInput.begin(),
+                       ctx->goldenOutput.begin(),
+                       std::multiplies<double>());
+    }
+
+    if (args.doAdd && args.doMul) {
+        // golden = (base + base) * base
+        std::transform(ctx->baseInput.begin(),
+                       ctx->baseInput.end(),
+                       ctx->goldenOutput.begin(),
+                       [](double x) {
+                           return (x + x) * x;
+                       });
+    }
     return ctx;
 }
 
@@ -84,18 +113,29 @@ IterationResult run_iteration(
     }
 
     /* ---------------- Encrypt ---------------- */
-    Ciphertext cipher = ctx.scheme.encryptMsg(plain, ctx.seed);
+    Ciphertext c = ctx.scheme.encryptMsg(plain, ctx.seed);
+    Ciphertext c_clean;
+    if(args.doAdd || args.doMul)
+        c_clean = ctx.scheme.encryptMsg(plain, ctx.seed);
+
+
 
     if (iterArgs) {
         if (args.stage == "encrypt_c0") {
-            SwitchBit(cipher.bx[iterArgs->coeff], iterArgs->bit);
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
         } else if (args.stage == "encrypt_c1") {
-            SwitchBit(cipher.ax[iterArgs->coeff], iterArgs->bit);
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
 
+    if(args.doAdd)
+        c = ctx.scheme.add(c, c_clean);
+    if(args.doMul){
+        c = ctx.scheme.mult(c, c_clean);
+        ctx.scheme.reScaleByAndEqual(c, args.logDelta);
+    }
     /* ---------------- Decrypt ---------------- */
-    Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, cipher);
+    Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
 
     if (iterArgs && args.stage == "decrypt") {
         SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit);

@@ -25,9 +25,9 @@ COMMON_OBJECTS := $(patsubst $(COMMON_SRC)/%.cpp,$(OBJ_DIR)/common_%.o,$(COMMON_
 HEAAN_SOURCES := backend.cpp
 HEAAN_OBJECTS := $(OBJ_DIR)/backend.o
 
-MAIN_SOURCE := singleBitFlip.cpp
-MAIN_OBJECT := $(OBJ_DIR)/singleBitFlip.o
-TARGET := $(BIN_DIR)/singleBitFlip
+MAIN_SOURCE := exhaustiveSingleBitFlip.cpp
+MAIN_OBJECT := $(OBJ_DIR)/exhaustiveSingleBitFlip.o
+TARGET := $(BIN_DIR)/exhaustiveSingleBitFlip
 
 # ---------------- Rules ----------------
 
@@ -42,9 +42,11 @@ $(OBJ_DIR)/backend.o: $(SRC_DIR)/backend.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Main
-$(OBJ_DIR)/singleBitFlip.o: $(SRC_DIR)/singleBitFlip.cpp
+$(OBJ_DIR)/exhaustiveSingleBitFlip.o: $(SRC_DIR)/exhaustiveSingleBitFlip.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+$(OBJ_DIR)/randomSingleBitFlip.o: $(SRC_DIR)/randomSingleBitFlip.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 # Link
 $(TARGET): $(MAIN_OBJECT) $(HEAAN_OBJECTS) $(COMMON_OBJECTS)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
