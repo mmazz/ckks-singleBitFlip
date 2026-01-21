@@ -95,7 +95,6 @@ void CampaignRegistry::register_end(const CampaignEndRecord& r) {
       << r.total_bitflips << ","
       << r.sdc_count << ","
       << r.duration_seconds << ","
-      << r.duration_seconds << ","
       << r.l2_P95<< ","
       << r.l2_P99<< ","
       << r.timestamp_end << "\n";

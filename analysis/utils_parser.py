@@ -29,26 +29,12 @@ def parse_args():
     parser.add_argument("--num_limbs", type=int, default=None)
     parser.add_argument("--logMin", type=int, default=0)
     parser.add_argument("--logMax", type=int, default=0)
+    parser.add_argument("--doAdd", type=int, default=0)
+    parser.add_argument("--doMul", type=int, default=0)
     parser.add_argument("--doRot", type=int, default=0)
+    parser.add_argument("--withNTT", type=int, default=0)
 
-    # -------- bool opcional --------
-    parser.add_argument(
-        "--withNTT",
-        default=None,
-        help="Filtra campañas por NTT (1=True, 0=False)"
-    )
-    parser.add_argument(
-        "--doAdd",
-        type=str2bool,
-        default=False,
-        help="Filtrer campaigns with addition (1=True, 0=False)"
-    )
-    parser.add_argument(
-        "--doMul",
-        type=str2bool,
-        default=False,
-        help="Filtrer campaigns with multiplication (1=True, 0=False)"
-    )
+
     # -------- openfhe opcionales --------
     parser.add_argument("--openfhe_attack_mode", type=str, default=None)
     parser.add_argument("--openfhe_threshold_bits", type=float, default=None)

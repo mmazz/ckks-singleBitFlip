@@ -9,82 +9,12 @@ import config
 
 import matplotlib.pyplot as plt
 from utils_parser import parse_args, build_filters
+from campaigns_filter import load_campaign_data, load_and_filter_campaigns,CAMPAIGNS_CSV, DATA_DIR
 
 show = config.show
 width = int(config.width)
 
-CAMPAIGNS_CSV = "../results/campaigns_start.csv"
-DATA_DIR = Path("../results/data")
 
-def load_and_filter_campaigns(csv_path, filters):
-    campaigns = pd.read_csv(csv_path)
-
-    cat_cols = ["library", "stage"]
-    for c in cat_cols:
-        if c in campaigns.columns:
-            campaigns[c] = (
-                campaigns[c]
-                .astype(str)
-                .str.strip()
-                .str.lower()
-            )
-
-    int_cols = [
-        "campaign_id", "bitPerCoeff", "logN", "logQ", "logDelta", "logSlots",
-        "mult_depth", "seed", "seed_input",
-        "withNTT", "doAdd", "doMul", "doRot", "num_limbs", "logMin", "logMax"
-    ]
-
-    for c in int_cols:
-        if c in campaigns.columns:
-            campaigns[c] = pd.to_numeric(campaigns[c], errors="raise")
-
-    mask = np.ones(len(campaigns), dtype=bool)
-
-    print("=== MATCHES POR FILTRO ===")
-    for col, (dtype, value) in filters.items():
-        if col not in campaigns.columns:
-            raise KeyError(f"Columna '{col}' no existe en el CSV")
-
-        if dtype == "str":
-            value = str(value).strip().lower()
-        elif dtype == "int":
-            value = int(value)
-        else:
-            raise ValueError(f"Tipo de filtro desconocido: {dtype}")
-
-        m = campaigns[col] == value
-        print(f"{col} == {value}: {m.sum()}")
-        mask &= m
-
-    selected = campaigns[mask]
-    print(f"\nCampañas seleccionadas: {len(selected)}")
-
-    return selected
-
-
-def load_campaign_data(selected_campaigns, data_dir):
-    dfs = []
-
-    for _, row in selected_campaigns.iterrows():
-        cid = int(row["campaign_id"])
-        filename = f"campaign_{cid:06d}.csv.gz"
-        path = data_dir / filename
-
-        if not path.exists():
-            print(f"WARNING: {path} no existe, se saltea")
-            continue
-
-        df = pd.read_csv(path, compression="gzip")
-        df["campaign_id"] = cid
-        dfs.append(df)
-
-    if not dfs:
-        raise RuntimeError("No se cargó ningún archivo de data")
-
-    data = pd.concat(dfs, ignore_index=True)
-    print("Data total cargada:", data.shape)
-    return data
 
 
 def mean_by_coeff_and_bit(data):
