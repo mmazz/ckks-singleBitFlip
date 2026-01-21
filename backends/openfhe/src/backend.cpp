@@ -46,8 +46,7 @@ static void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bi
         ptxt->GetElement<DCRTPoly>().SwitchFormat();
 }
 
-SecretKeyAttackMode
-to_openfhe_attack_mode(AttackModeSKA mode)
+SecretKeyAttackMode to_openfhe_attack_mode(AttackModeSKA mode)
 {
     using OF = SecretKeyAttackMode;
     switch (mode) {
@@ -104,37 +103,13 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     if(args.doMul)
         ctx->cc->EvalMultKeyGen(ctx->keys.secretKey);
 
-    ctx->baseInput = uniform_dist(1 << args.logSlots, args.logMin, args.logMax,
-                                     args.seed_input, false);
-    ctx->goldenOutput = ctx->baseInput;
-
-    if (args.doAdd && !args.doMul) {
-        // golden = base + base
-        std::transform(ctx->baseInput.begin(),
-                       ctx->baseInput.end(),
-                       ctx->baseInput.begin(),
-                       ctx->goldenOutput.begin(),
-                       std::plus<double>());
+    if(args.doRot>0){
+        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
+        ctx->cc->EvalAtIndexKeyGen(ctx->keys.secretKey, {rotIndex});
     }
 
-    if (args.doMul && !args.doAdd) {
-        // golden = base * base
-        std::transform(ctx->baseInput.begin(),
-                       ctx->baseInput.end(),
-                       ctx->baseInput.begin(),
-                       ctx->goldenOutput.begin(),
-                       std::multiplies<double>());
-    }
+    compute_plain_io(args, ctx->baseInput, ctx->goldenOutput);
 
-    if (args.doAdd && args.doMul) {
-        // golden = (base + base) * base
-        std::transform(ctx->baseInput.begin(),
-                       ctx->baseInput.end(),
-                       ctx->goldenOutput.begin(),
-                       [](double x) {
-                           return (x + x) * x;
-                       });
-    }
     return ctx;
 }
 
@@ -179,7 +154,10 @@ IterationResult run_iteration(BackendContext* bctx,
         ctx.cc->EvalAddInPlace(c,c_clean);
     if(args.doMul)
         c = ctx.cc->EvalMult(c,c_clean);
-
+    if(args.doRot){
+        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
+        c = ctx.cc->EvalRotate(c, rotIndex);
+    }
     ctx.cc->Decrypt(ctx.keys.secretKey, c, &result_bitFlip);
 
     bool detected = SDCConfigHelper::WasSDCDetected(result_bitFlip);

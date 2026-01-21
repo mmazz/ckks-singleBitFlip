@@ -29,6 +29,7 @@ def parse_args():
     parser.add_argument("--num_limbs", type=int, default=None)
     parser.add_argument("--logMin", type=int, default=0)
     parser.add_argument("--logMax", type=int, default=0)
+    parser.add_argument("--doRot", type=int, default=0)
 
     # -------- bool opcional --------
     parser.add_argument(

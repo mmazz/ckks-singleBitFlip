@@ -1,4 +1,5 @@
 #pragma once
+#include "campaign_helper.h"
 #include <random>
 
 #include <iostream>
@@ -24,6 +25,52 @@ inline uint32_t random_int(int a, int b) {
     std::uniform_int_distribution<int> dist(a, b);
     return (uint32_t)dist(rng);
 }
+
+inline std::vector<size_t> bit_attack_list(const CampaignArgs& args)
+{
+    std::vector<size_t> res;
+
+    const size_t logDelta = args.logDelta;
+    const size_t logQ     = args.logQ;
+    const size_t B        = args.bitPerCoeff;
+
+    auto sample_zone = [&](size_t lo, size_t hi, size_t k)
+    {
+        if (hi <= lo || k == 0) return;
+
+        if (hi - lo <= k) {
+            for (size_t b = lo; b < hi; ++b)
+                res.push_back(b);
+            return;
+        }
+
+        double step = double(hi - lo) / double(k);
+        for (size_t i = 0; i < k; ++i) {
+            size_t b = lo + size_t(i * step);
+            res.push_back(b);
+        }
+    };
+
+    size_t k0 = 2;
+    size_t k1 = std::max<size_t>(4, logDelta / 10);
+    size_t k2 = 2;
+
+    // Zona baja
+    sample_zone(0, logDelta, k0);
+
+    // Zona crítica
+    sample_zone(logDelta, logQ, k1);
+
+    // Zona alta
+    sample_zone(logQ, B, k2);
+
+    std::sort(res.begin(), res.end());
+    res.erase(std::unique(res.begin(), res.end()), res.end());
+
+    return res;
+}
+
+
 inline std::pair<size_t, size_t>
 bit_zone_bounds(size_t zone,
                 size_t bits_per_coeff,

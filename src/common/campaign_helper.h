@@ -39,12 +39,13 @@ struct CampaignArgs {
     uint32_t logMin = 0;
     uint32_t logMax = 0;
 
-    uint64_t seed = 42;
-    uint64_t seed_input = 42;
+    uint32_t seed = 42;
+    uint32_t seed_input = 42;
 
     bool withNTT = true;
     bool doAdd = false;
     bool doMul = false;
+    uint32_t doRot = 0;
     bool flipType = "exhaustive";
     bool verbose = false;
     std::string results_dir = "../../results";

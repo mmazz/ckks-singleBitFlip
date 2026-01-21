@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
         // Calcular total esperado para progress
         uint32_t N = 1 << args.logN;
-        size_t num_coeffs = N / 2;
+        size_t num_coeffs = N;
         size_t bits_per_coeff = args.bitPerCoeff;
         size_t total_expected = args.num_limbs * num_coeffs * bits_per_coeff ;
         std::vector<double> norms;

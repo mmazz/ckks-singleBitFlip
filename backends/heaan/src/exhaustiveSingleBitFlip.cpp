@@ -27,9 +27,6 @@ int main(int argc, char* argv[]) {
 
     auto scheme_metrics = EvaluateCKKSAccuracy(input, golden.values);
 
- //   metadata.golden_norm = golden_norm2;
-
-
 
     if(AcceptCKKSResult(scheme_metrics))
     {
@@ -59,7 +56,7 @@ int main(int argc, char* argv[]) {
 
         // Calcular total esperado para progress
         uint32_t N = 1 << args.logN;
-        size_t num_coeffs = N / 2;
+        size_t num_coeffs = N;
         size_t bits_per_coeff = args.bitPerCoeff;
         size_t total_expected =  num_coeffs * bits_per_coeff ;
 

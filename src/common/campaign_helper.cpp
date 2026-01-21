@@ -27,6 +27,7 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  withNTT: " << withNTT << "\n"
        << "  doAdd: " << doAdd << "\n"
        << "  doMul: " << doMul << "\n"
+       << "  doRot: " << doRot << "\n"
        << "  flipType: " << flipType << "\n";
            /* -------- OpenFHE-only knobs -------- */
         if (library == "openfhe") {
@@ -59,6 +60,7 @@ void print_usage(const char* program_name) {
               << "  --withNTT <value>       Turn on or off NTT (only heaan, default: 1)\n"
               << "  --doAdd <value>         The pipeline server has addition (default: 0)\n"
               << "  --doMul <value>         The pipeline server has Mul (default: 0)\n"
+              << "  --doRot <value>         The pipeline server has Rot, the value is how many rot (default: 0)\n"
               << "  --flipType <name>       Type of bit flip campaign (default: exhaustive)\n"
               << "  --seed <value>          Random seed for scheme (default: 42)\n"
               << "  --seed-input <value>    Random seed for input (default: 42)\n"
@@ -84,16 +86,17 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"logN",           required_argument, 0, 'N'},
         {"logQ",           required_argument, 0, 'Q'},
         {"logDelta",       required_argument, 0, 'd'},
-        {"logSlots",       required_argument, 0, 's'},
+        {"logSlots",       required_argument, 0, 'g'},
         {"mult-depth",     required_argument, 0, 'm'},
         {"withNTT",        required_argument, 0, 'n'},
-        {"doAdd",        required_argument, 0, 'A'},
-        {"doMul",        required_argument, 0, 'M'},
-        {"flipType",          required_argument, 0, 'T'},
+        {"doAdd",          required_argument, 0, 'A'},
+        {"doMul",          required_argument, 0, 'M'},
+        {"doRot",          required_argument, 0, 'r'},
+        {"flipType",       required_argument, 0, 'T'},
         {"num_limbs",      required_argument, 0, 'L'},
         {"logMin",         required_argument, 0, 'x'},
         {"logMax",         required_argument, 0, 'y'},
-        {"seed",           required_argument, 0, 'r'},
+        {"seed",           required_argument, 0, 's'},
         {"seed-input",     required_argument, 0, 'b'},
         // only Openfhe
         {"attackModeSKA",  required_argument, 0, 'a'},
@@ -109,7 +112,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "S:c:N:Q:d:s:m:n:r:b:L:x:y:a:t:R:vh",
+        "S:c:N:Q:d:g:m:n:A:M:r:T:L:x:y:s:b:a:t:R:v:h",
         long_options,
         &option_index)) != -1)
     {
@@ -127,13 +130,14 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'Q': args.logQ = std::stoul(optarg); break;
             case 'd': args.logDelta = std::stoul(optarg); break;
             case 'm': args.mult_depth = std::stoul(optarg); break;
-            case 'r': args.seed = std::stoull(optarg); break;
-            case 'b': args.seed_input = std::stoull(optarg); break;
+            case 's': args.seed = std::stoul(optarg); break;
+            case 'b': args.seed_input = std::stoul(optarg); break;
             case 'L': args.num_limbs = std::stoul(optarg); break;
             case 'x': args.logMin = std::stoul(optarg); break;
             case 'y': args.logMax = std::stoul(optarg); break;
+            case 'r': args.doRot = std::stoul(optarg); break;
 
-            case 's':
+            case 'g':
                 args.logSlots = std::stoul(optarg);
                 args.logSlots_provided = true;
                 break;

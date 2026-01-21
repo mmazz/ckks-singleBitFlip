@@ -50,45 +50,15 @@ BackendContext* setup_campaign(const CampaignArgs& args)
         h,          // h
         args.seed
     );
-
+    if(args.doRot){
+        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
+        ctx->scheme.addLeftRotKey(ctx->sk, rotIndex);
+    }
     NTL::SetSeed(ctx->seed);
     std::srand(args.seed);
-    ctx->baseInput = uniform_dist(
-        1 << args.logSlots,
-        args.logMin,
-        args.logMax,
-        args.seed_input,
-        false
-    );
-    ctx->goldenOutput = ctx->baseInput;
 
-    if (args.doAdd && !args.doMul) {
-        // golden = base + base
-        std::transform(ctx->baseInput.begin(),
-                       ctx->baseInput.end(),
-                       ctx->baseInput.begin(),
-                       ctx->goldenOutput.begin(),
-                       std::plus<double>());
-    }
+    compute_plain_io(args, ctx->baseInput, ctx->goldenOutput);
 
-    if (args.doMul && !args.doAdd) {
-        // golden = base * base
-        std::transform(ctx->baseInput.begin(),
-                       ctx->baseInput.end(),
-                       ctx->baseInput.begin(),
-                       ctx->goldenOutput.begin(),
-                       std::multiplies<double>());
-    }
-
-    if (args.doAdd && args.doMul) {
-        // golden = (base + base) * base
-        std::transform(ctx->baseInput.begin(),
-                       ctx->baseInput.end(),
-                       ctx->goldenOutput.begin(),
-                       [](double x) {
-                           return (x + x) * x;
-                       });
-    }
     return ctx;
 }
 
@@ -134,14 +104,17 @@ IterationResult run_iteration(
         c = ctx.scheme.mult(c, c_clean);
         ctx.scheme.reScaleByAndEqual(c, args.logDelta);
     }
-    /* ---------------- Decrypt ---------------- */
+    if(args.doRot){
+        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
+        c = ctx.scheme.leftRotateFast(c, rotIndex);
+    }
+
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
 
     if (iterArgs && args.stage == "decrypt") {
         SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit);
     }
 
-    /* ---------------- Decode ---------------- */
     complex<double>* decoded = ctx.scheme.decode(decrypt_plain);
 
     IterationResult res;
@@ -152,9 +125,9 @@ IterationResult run_iteration(
         res.values[i] = decoded[i].real();
     }
 
-    delete[] decoded;   // 🔴 CRÍTICO: evita memory leak
+    delete[] decoded;
 
-    res.detected = false;  // placeholder (tu lógica SDC va acá)
+    res.detected = false;
 
     return res;
 }
