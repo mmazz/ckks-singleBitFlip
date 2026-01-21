@@ -16,16 +16,17 @@ int main(int argc, char* argv[]) {
     }
 
     BackendContext* ctx = setup_campaign(args);
+    IterationResult goldenCKKS_output = run_iteration(ctx, args);
 
-    const auto& input = get_reference_output(ctx);
-    std::cout << "Computing golden output..." << std::endl;
-    IterationResult golden = run_iteration(ctx, args);
+    const auto& goldenOutput = get_reference_output(ctx);
+    CKKSAccuracyMetrics baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
+    CKKSBaseline baseline{baseline_metrics};
+    ErrorThresholds thr = thresholds_from_baseline(baseline);
 
 
-    auto scheme_metrics = EvaluateCKKSAccuracy(input, golden.values);
 
 
-    if(AcceptCKKSResult(scheme_metrics)){
+    if(AcceptCKKSResult(baseline_metrics)){
         CampaignRegistry registry(args.results_dir);
         uint32_t campaign_id = registry.allocate_campaign_id();
         std::cout << "\n=== Registring Campaign "<< std::endl;
@@ -50,33 +51,25 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Total bit flips: " << num_bitFlips << std::endl;
 
-        size_t num_zones = 4;
-        size_t bits_per_coeff = args.bitPerCoeff;
-
-        std::mt19937 rng(args.seed);
-        for (size_t zone = 0; zone < num_zones; zone++) {
-            auto [bit_lo, bit_hi] = bit_zone_bounds(zone, bits_per_coeff);
-            std::uniform_int_distribution<uint32_t> bit_dist(
-                static_cast<uint32_t>(bit_lo),
-                static_cast<uint32_t>(bit_hi - 1) // IMPORTANTE
-            );
-
-            uint32_t bit = bit_dist(rng);
+        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args);
+        for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
+            uint32_t bit = bits_to_flip[bitIndex];
             for (size_t i = 0; i < num_bitFlips; i++) {
                 uint32_t limb = random_int(0, args.num_limbs-1);
                 uint32_t coeff = random_int(0, N-1);
                 IterationArgs iterArgs(limb, coeff, bit);
                 IterationResult res = run_iteration(ctx, args, iterArgs);
-                auto metricsBitFlip = EvaluateCKKSAccuracy(golden.values, res.values);
-
+                CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
+                auto slot_stats = categorize_slots(goldenCKKS_output.values, res.values, 1 << args.logSlots, thr);
                 logger.log(iterArgs.limb,
                         iterArgs.coeff,
                         iterArgs.bit,
-                        metricsBitFlip.l2_rel_error,     // ||error||_2 / ||golden||_2
-                        metricsBitFlip.linf_abs_error,
-                        res.detected
+                        exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
+                        exp_metrics.linf_abs_error,
+                        res.detected,
+                        slot_stats
                     );
-                norms.push_back(metricsBitFlip.l2_rel_error);
+                norms.push_back(exp_metrics.l2_rel_error);
 
             }
         }
@@ -90,12 +83,12 @@ int main(int argc, char* argv[]) {
 
     registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
     } else {
-        std::cout << "Input vs output " << input.size() << "\n";
-        for(size_t i=0; i<input.size(); i++)
-            std::cout << golden.values[i] << ", " << input[i] << std::endl;
-        std::cout << "L2 relative error : " << scheme_metrics.l2_rel_error << "\n";
-        std::cout << "Linf abs error   : "  << scheme_metrics.linf_abs_error << "\n";
-        std::cout << "Bits precision   : "  << scheme_metrics.bits_precision << "\n";
+        std::cout << "Input vs output " << goldenOutput.size() << "\n";
+        for(size_t i=0; i<goldenOutput.size(); i++)
+            std::cout << goldenCKKS_output.values[i] << ", " << goldenOutput[i] << std::endl;
+        std::cout << "L2 relative error : " << baseline_metrics.l2_rel_error << "\n";
+        std::cout << "Linf abs error   : "  << baseline_metrics.linf_abs_error << "\n";
+        std::cout << "Bits precision   : "  << baseline_metrics.bits_precision << "\n";
         std::cerr << "Error with golden norm, checkout the used parameters" << std::endl;
     }
     return 0;

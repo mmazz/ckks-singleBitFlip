@@ -4,14 +4,16 @@
 namespace fs = std::filesystem;
 
 std::string BitflipResult::header() {
-    return "limb,coeff,bit,l2_norm,rel_error,is_sdc";
+    return "limb,coeff,bit,l2_norm,rel_error,is_sdc,correct,degraded,corrupted,failed";
 }
 
 std::string BitflipResult::row() const {
     std::ostringstream ss;
     ss << limb << "," << coeff << "," << bit << ","
        << norm2 << ","
-       << rel_error << "," << (is_sdc ? 1 : 0);
+       << rel_error << "," << (is_sdc ? 1 : 0) << ","
+       << stats.correct << "," << stats.degraded << ","
+       << stats.corrupted << "," << stats.failed;
     return ss.str();
 }
 
@@ -46,7 +48,7 @@ void CampaignLogger::log(const BitflipResult& r) {
 }
 
 void CampaignLogger::log(uint32_t limb, uint32_t coeff, uint32_t bit,
-          double norm2, double rel_error, bool is_sdc)
+          double norm2, double rel_error, bool is_sdc, SlotErrorStats stats)
     {
         BitflipResult r{
             limb,
@@ -54,7 +56,8 @@ void CampaignLogger::log(uint32_t limb, uint32_t coeff, uint32_t bit,
             bit,
             norm2,
             rel_error,
-            is_sdc
+            is_sdc,
+            stats
         };
         log(r);
     }

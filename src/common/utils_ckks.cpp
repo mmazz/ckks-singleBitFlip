@@ -1,5 +1,148 @@
 #include "utils_ckks.h"
 
+#include <cmath>
+#include <algorithm>
+#include <stdexcept>
+
+
+
+std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
+{
+    std::vector<uint32_t> res;
+    res.reserve(8);
+
+    const uint32_t logQ         = args.logQ;
+    const uint32_t logDelta     = args.logDelta;
+    const uint32_t bitsPerCoeff = args.bitPerCoeff;
+
+    auto push_unique = [&](uint32_t v) {
+        if (std::find(res.begin(), res.end(), v) == res.end())
+            res.push_back(v);
+    };
+
+    push_unique(0);
+    push_unique(logDelta / 2);
+    if (logDelta > 0)
+        push_unique(logDelta - 1);
+
+    push_unique(logQ / 4);
+    push_unique(logQ / 3);
+    push_unique(logQ / 2);
+    push_unique(logQ);
+    push_unique((logQ + bitsPerCoeff) / 2);
+
+    return res;
+}
+
+CKKSAccuracyMetrics EvaluateCKKSAccuracy(
+    const std::vector<double>& golden,
+    const std::vector<double>& ckks,
+    double zero_eps
+) {
+    if (golden.size() != ckks.size())
+        throw std::invalid_argument("EvaluateCKKSAccuracy: size mismatch");
+
+    if (golden.empty())
+        throw std::invalid_argument("EvaluateCKKSAccuracy: empty vectors");
+
+    double l2_diff_sq   = 0.0;
+    double l2_golden_sq = 0.0;
+
+    double linf_abs_error = 0.0;
+    double linf_rel_error = 0.0;
+
+    for (size_t i = 0; i < golden.size(); ++i) {
+        const double g    = golden[i];
+        const double abs_g    = std::abs(g);
+
+        const double diff = ckks[i] - g;
+        const double abs_diff = std::abs(diff);
+
+        l2_diff_sq   += diff * diff;
+        l2_golden_sq += g * g;
+
+        linf_abs_error = std::max(linf_abs_error, abs_diff);
+
+        if (abs_g > zero_eps) {
+            linf_rel_error = std::max(linf_rel_error, abs_diff / abs_g);
+        }
+    }
+
+    const double denom = std::max(std::sqrt(l2_golden_sq), zero_eps);
+
+    const double l2_rel_error =  std::sqrt(l2_diff_sq) / denom;
+
+    const double bits_precision = (l2_rel_error > 0.0) ? -std::log2(l2_rel_error)
+                                    : std::numeric_limits<double>::infinity();
+
+    return {
+        l2_rel_error,
+        linf_rel_error,
+        linf_abs_error,
+        bits_precision
+    };
+}
+
+SlotErrorStats categorize_slots(
+    const std::vector<double>& golden,
+    const std::vector<double>& output,
+    size_t size,
+    const ErrorThresholds& thr
+) {
+    if (golden.size() < size || output.size() < size)
+        throw std::invalid_argument("categorize_slots: size mismatch");
+
+    SlotErrorStats stats;
+
+    for (size_t i = 0; i < size; ++i) {
+        const double g    = golden[i];
+        const double diff = std::abs(output[i] - g);
+
+        // -------------------------
+        // Caso A: golden ~ 0
+        // -------------------------
+        if (std::abs(g) < thr.abs_zero) {
+            if (diff > thr.fail * thr.baseline_abs)
+                stats.failed++;
+            else if (diff > thr.bad * thr.baseline_abs)
+                stats.corrupted++;
+            else
+                stats.correct++;
+
+            continue;
+        }
+
+        // -------------------------
+        // Caso B: golden != 0
+        // -------------------------
+        const double rel_err = diff / std::abs(g);
+
+        if (rel_err > thr.fail * thr.baseline_rel)
+            stats.failed++;
+        else if (rel_err > thr.bad * thr.baseline_rel)
+            stats.corrupted++;
+        else if (rel_err > thr.good * thr.baseline_rel)
+            stats.degraded++;
+        else
+            stats.correct++;
+    }
+
+    return stats;
+}
+
+bool AcceptCKKSResult(
+    const CKKSAccuracyMetrics& m,
+    double max_l2_rel_error,
+    double max_linf_abs_error,
+    double min_bits_precision
+) {
+    return (m.l2_rel_error   <= max_l2_rel_error) &&
+           (m.linf_abs_error <= max_linf_abs_error) &&
+           (m.bits_precision >= min_bits_precision);
+}
+
+
+
 double percentile(std::vector<double>& v, double p) {
     double pos = p * (v.size() - 1);
     size_t idx = static_cast<size_t>(pos);
@@ -11,16 +154,6 @@ double percentile(std::vector<double>& v, double p) {
         return v[idx];
 }
 
-
-bool AcceptCKKSResult(const CKKSAccuracyMetrics& m, double max_rel_error ,
-                      double max_abs_error, double min_bits)
-{
-    return (m.l2_rel_error < max_rel_error) &&
-           (m.linf_abs_error < max_abs_error) &&
-           (m.bits_precision >= min_bits);
-}
-
-
 double compute_rel_norm2(const std::vector<double>& v1,
                          const std::vector<double>& v2)
 {
@@ -31,56 +164,6 @@ double compute_rel_norm2(const std::vector<double>& v1,
         den += v1[i] * v1[i];
     }
     return std::sqrt(num) / std::sqrt(den);
-}
-
-
-SlotErrorStats categorize_slots(
-    const std::vector<double>& input,
-    const std::vector<double>& output,
-    size_t size,
-    double rel_eps,   // 1%
-    double rel_mid,   // 10%
-    double rel_high,   // 1000%
-    double abs_eps // near-zero cutoff
-) {
-    if (input.size() < size || output.size() < size) {
-        throw std::invalid_argument("categorize_slots: vector size mismatch");
-    }
-
-    SlotErrorStats stats;
-
-    for (size_t i = 0; i < size; ++i) {
-        const double x = input[i];
-        const double y = output[i];
-
-        const double diff = std::fabs(x - y);
-        const double abs_x = std::fabs(x);
-
-        // Case 1: reference value is near zero → use absolute error
-        if (abs_x < abs_eps) {
-            if (diff > rel_mid) {
-                stats.undecryptable++;
-            } else {
-                stats.decryptable++;
-            }
-            continue;
-        }
-
-        // Case 2: standard relative error
-        const double rel_err = diff / abs_x;
-
-        if (rel_err > rel_high) {
-            stats.undecryptable++;
-        } else if (rel_err > rel_mid) {
-            stats.maybenot++;
-        } else if (rel_err > rel_eps) {
-            stats.maybe++;
-        } else {
-            stats.decryptable++;
-        }
-    }
-
-    return stats;
 }
 
 

@@ -82,13 +82,10 @@ IterationResult run_iteration(
         SwitchBit(plain.mx[iterArgs->coeff], iterArgs->bit);
     }
 
-    /* ---------------- Encrypt ---------------- */
     Ciphertext c = ctx.scheme.encryptMsg(plain, ctx.seed);
     Ciphertext c_clean;
     if(args.doAdd || args.doMul)
         c_clean = ctx.scheme.encryptMsg(plain, ctx.seed);
-
-
 
     if (iterArgs) {
         if (args.stage == "encrypt_c0") {

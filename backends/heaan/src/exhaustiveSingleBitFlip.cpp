@@ -21,14 +21,15 @@ int main(int argc, char* argv[]) {
     BackendContext* ctx = setup_campaign(args);
 
     std::cout << "Computing golden output..." << std::endl;
-    IterationResult golden = run_iteration(ctx, args);
+    IterationResult goldenCKKS_output = run_iteration(ctx, args);
 
-    const auto& input = get_reference_output(ctx);
+    const auto& goldenOutput = get_reference_output(ctx);
+    CKKSAccuracyMetrics baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
+    CKKSBaseline baseline{baseline_metrics};
+    ErrorThresholds thr = thresholds_from_baseline(baseline);
 
-    auto scheme_metrics = EvaluateCKKSAccuracy(input, golden.values);
 
-
-    if(AcceptCKKSResult(scheme_metrics))
+    if(AcceptCKKSResult(baseline_metrics))
     {
         CampaignRegistry registry(args.results_dir);
         uint32_t campaign_id = registry.allocate_campaign_id();
@@ -64,62 +65,44 @@ int main(int argc, char* argv[]) {
         norms.reserve(total_expected);
         std::cout << "Expected bit flips: " << total_expected << std::endl;
 
-        size_t total_iterations = 0;
-    //    size_t progress_interval = total_expected / 10;  // 10% intervals
-    //    if (progress_interval == 0)
-    //        progress_interval = 10000;
+
         for (size_t coeff = 0; coeff<num_coeffs; coeff++)
         {
             for(size_t bit=0; bit<bits_per_coeff; bit++)
             {
                 IterationArgs iterArgs(0, coeff, bit);
                 IterationResult res = run_iteration(ctx, args, iterArgs);
-                CKKSAccuracyMetrics  metricsBitFlip = EvaluateCKKSAccuracy(golden.values, res.values);
 
+                CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
+                auto slot_stats = categorize_slots(goldenCKKS_output.values, res.values, 1 << args.logSlots, thr);
                 logger.log(iterArgs.limb,
                         iterArgs.coeff,
                         iterArgs.bit,
-                        metricsBitFlip.l2_rel_error,     // ||error||_2 / ||golden||_2
-                        metricsBitFlip.linf_abs_error,
-                        res.detected
+                        exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
+                        exp_metrics.linf_abs_error,
+                        res.detected,
+                        slot_stats
                     );
 
-                norms.push_back(metricsBitFlip.l2_rel_error);
-                total_iterations++;
-
-              //  if (total_iterations % progress_interval == 0) {
-              //      double percent = (double)total_iterations / total_expected * 100.0;
-              //      auto now = std::chrono::high_resolution_clock::now();
-              //      auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-              //          now - start_time
-              //      ).count();
-
-              //      double rate = (elapsed > 0) ? (double)total_iterations / elapsed : 0.0;
-
-              //      std::cout << "Progress: " << std::fixed << std::setprecision(1)
-              //               << percent << "% (" << total_iterations << "/"
-              //               << total_expected << ") - Rate: "
-              //               << std::setprecision(0) << rate << " bf/s"
-              //               << std::endl;
-              //  }
+                norms.push_back(exp_metrics.l2_rel_error);
             }
         }
-    std::sort(norms.begin(), norms.end());
-    double l2_P95 = percentile(norms, 0.95);
-    double l2_P99 = percentile(norms, 0.99);
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
-    uint64_t mins = minutes.count();
+        std::sort(norms.begin(), norms.end());
+        double l2_P95 = percentile(norms, 0.95);
+        double l2_P99 = percentile(norms, 0.99);
+        auto end_time = std::chrono::high_resolution_clock::now();
+        std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
+        uint64_t mins = minutes.count();
 
-    registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
+        registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
     } else {
-        std::cout << "Input vs output " << input.size() << "\n";
-        for(size_t i=0; i<input.size(); i++)
-            std::cout << golden.values[i] << ", " << input[i] << std::endl;
-        std::cout << "L2 relative error : " << scheme_metrics.l2_rel_error << "\n";
-        std::cout << "Linf abs error   : "  << scheme_metrics.linf_abs_error << "\n";
-        std::cout << "Bits precision   : "  << scheme_metrics.bits_precision << "\n";
+        std::cout << "Input vs output " << goldenOutput.size() << "\n";
+        for(size_t i=0; i<goldenOutput.size(); i++)
+            std::cout << goldenCKKS_output.values[i] << ", " << goldenOutput[i] << std::endl;
+        std::cout << "L2 relative error : " << baseline_metrics.l2_rel_error << "\n";
+        std::cout << "Linf abs error   : "  << baseline_metrics.linf_abs_error << "\n";
+        std::cout << "Bits precision   : "  << baseline_metrics.bits_precision << "\n";
         std::cerr << "Error with golden norm, checkout the used parameters" << std::endl;
     }
 

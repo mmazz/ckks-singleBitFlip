@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <iostream>
+#include "utils_ckks.h"
 
 struct BitflipResult {
     uint32_t limb;
@@ -17,6 +18,7 @@ struct BitflipResult {
     double norm2;
     double rel_error;
     bool is_sdc;
+    SlotErrorStats stats;
 
     static std::string header();
     std::string row() const;
@@ -30,7 +32,7 @@ public:
 
     void log(const BitflipResult& r);
     void log(uint32_t limb, uint32_t coeff, uint32_t bit,
-         double norm2, double rel_error, bool is_sdc);
+         double norm2, double rel_error, bool is_sdc, SlotErrorStats stats);
 
     void compress_and_cleanup();
     void flush();
