@@ -5,34 +5,52 @@
 #include <stdexcept>
 
 
-
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 {
     std::vector<uint32_t> res;
-    res.reserve(8);
+    res.reserve(10);
 
     const uint32_t logQ         = args.logQ;
     const uint32_t logDelta     = args.logDelta;
-    const uint32_t bitsPerCoeff = args.bitPerCoeff;
+    const uint32_t maxBits      = args.bitPerCoeff; // bits por coeficiente
+    const uint32_t M            = maxBits - 1;
+
+    auto clamp = [&](uint32_t v) {
+        return std::min(v, M);
+    };
 
     auto push_unique = [&](uint32_t v) {
+        v = clamp(v);
         if (std::find(res.begin(), res.end(), v) == res.end())
             res.push_back(v);
     };
 
+    // --- Región A: ruido puro ---
     push_unique(0);
+    push_unique(logDelta / 4);
+
+    // --- Región B: transición ---
     push_unique(logDelta / 2);
     if (logDelta > 0)
         push_unique(logDelta - 1);
 
-    push_unique(logQ / 4);
-    push_unique(logQ / 3);
-    push_unique(logQ / 2);
+    // --- Región C: mensaje dominante ---
+    push_unique(logDelta);
+    push_unique((logDelta + logQ) / 2);
+
+    // --- Región D: borde del módulo ---
+    if (logQ > 0)
+        push_unique(logQ - 1);
     push_unique(logQ);
-    push_unique((logQ + bitsPerCoeff) / 2);
+
+    // --- Región E: overflow / bits muertos ---
+    push_unique((logQ + M) / 2);
+    push_unique(M);
 
     return res;
 }
+
+
 
 CKKSAccuracyMetrics EvaluateCKKSAccuracy(
     const std::vector<double>& golden,
@@ -83,14 +101,15 @@ CKKSAccuracyMetrics EvaluateCKKSAccuracy(
     };
 }
 
-SlotErrorStats categorize_slots(
+
+SlotErrorStats categorize_slots_relative(
     const std::vector<double>& golden,
     const std::vector<double>& output,
     size_t size,
-    const ErrorThresholds& thr
+    const RelativeErrorThresholds& thr
 ) {
     if (golden.size() < size || output.size() < size)
-        throw std::invalid_argument("categorize_slots: size mismatch");
+        throw std::invalid_argument("categorize_slots_relative: size mismatch");
 
     SlotErrorStats stats;
 
@@ -98,30 +117,26 @@ SlotErrorStats categorize_slots(
         const double g    = golden[i];
         const double diff = std::abs(output[i] - g);
 
-        // -------------------------
-        // Caso A: golden ~ 0
-        // -------------------------
-        if (std::abs(g) < thr.abs_zero) {
-            if (diff > thr.fail * thr.baseline_abs)
-                stats.failed++;
-            else if (diff > thr.bad * thr.baseline_abs)
-                stats.corrupted++;
-            else
-                stats.correct++;
+        double rel_err;
 
-            continue;
+        // -------------------------
+        // Caso A: golden ≈ 0
+        // -------------------------
+        if (std::abs(g) < thr.zero_eps) {
+            // usamos error absoluto normalizado
+            rel_err = diff;
+        } else {
+            rel_err = diff / std::abs(g);
         }
 
         // -------------------------
-        // Caso B: golden != 0
+        // Clasificación
         // -------------------------
-        const double rel_err = diff / std::abs(g);
-
-        if (rel_err > thr.fail * thr.baseline_rel)
+        if (rel_err > thr.failed)
             stats.failed++;
-        else if (rel_err > thr.bad * thr.baseline_rel)
+        else if (rel_err > thr.corrupted)
             stats.corrupted++;
-        else if (rel_err > thr.good * thr.baseline_rel)
+        else if (rel_err > thr.degraded)
             stats.degraded++;
         else
             stats.correct++;

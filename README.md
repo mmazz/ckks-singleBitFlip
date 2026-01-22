@@ -12,8 +12,27 @@ at well-defined pipeline stages:
 - `encode`
 - `encrypt-c0`
 - `encrypt-c1`
+- `decrypt`
 
 The goal is to analyze numerical degradation, error propagation, and Silent Data Corruption (SDC) behavior under precise, low-level faults.
+
+---
+
+## CKKS Libraries
+
+In this work we foucs on two  libraries.
+HEAAN for a vanilla version without RNS and NTT, and OpenFHE as state of the
+art.
+For both we create our own fork with some changes in order to get totally
+control of the PRNG.
+
+The installer clone and compile both.
+For further reading the repositories of each are:
+
+```
+github.com/mmazz/HEAAN-PRNG-Control
+github.com/mmazz/openfhe-PRNG-Control
+```
 
 ---
 

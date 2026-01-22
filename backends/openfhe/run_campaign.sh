@@ -4,7 +4,7 @@ set -euo pipefail
 BIN=./build/bin/exhaustiveSingleBitFlip
 
 START_SEED=1
-END_SEED=100
+END_SEED=1000
 
 for ((SEED=START_SEED; SEED<=END_SEED; SEED++)); do
     echo "=== Running seed ${SEED} ==="

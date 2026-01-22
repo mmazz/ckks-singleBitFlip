@@ -137,6 +137,9 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'y': args.logMax = std::stoul(optarg); break;
             case 'r': args.doRot = std::stoul(optarg); break;
 
+            case 'v':
+                args.verbose = true;
+                break;
             case 'g':
                 args.logSlots = std::stoul(optarg);
                 args.logSlots_provided = true;
@@ -152,6 +155,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'M':  // --withNTT 0/1
                 args.doMul = std::stoul(optarg) != 0;
                 break;
+
 
             case 'S':
                 args.stage = optarg;
@@ -173,10 +177,6 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
             case 'R':
                 args.results_dir = optarg;
-                break;
-
-            case 'v':
-                args.verbose = true;
                 break;
 
             case 'h':

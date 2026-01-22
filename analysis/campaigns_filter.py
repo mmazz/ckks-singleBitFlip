@@ -33,7 +33,6 @@ def load_and_filter_campaigns(csv_path, filters):
             campaigns[c] = pd.to_numeric(campaigns[c], errors="raise")
 
     mask = np.ones(len(campaigns), dtype=bool)
-
     print("=== MATCHES POR FILTRO ===")
     for col, (dtype, value) in filters.items():
         if col not in campaigns.columns:
@@ -50,6 +49,7 @@ def load_and_filter_campaigns(csv_path, filters):
         print(f"{col} == {value}: {m.sum()}")
         mask &= m
 
+    print(mask)
     selected = campaigns[mask]
     print(f"\nCampañas seleccionadas: {len(selected)}")
 

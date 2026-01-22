@@ -14,17 +14,28 @@
 #include <utility>
 #include <stdexcept>
 
+struct RelativeErrorThresholds {
+    double zero_eps   = 1e-15; // qué consideramos "golden = 0"
+    double degraded   = 1e-2;  // 1%
+    double corrupted  = 1e-1;  // 10%
+    double failed     = 10.0;  // ×10
+};
+struct SlotErrorStats {
+    uint64_t failed     = 0;
+    uint64_t corrupted  = 0;
+    uint64_t degraded   = 0;
+    uint64_t correct    = 0;
+
+    uint64_t total() const {
+        return failed + corrupted + degraded + correct;
+    }
+};
 struct CKKSAccuracyMetrics {
     double l2_rel_error;     // ||y - g||₂ / ||g||₂
     double linf_rel_error;   // max_i |y_i - g_i| / |g_i|   (g_i != 0)
     double linf_abs_error;   // max_i |y_i - g_i|
     double bits_precision;   // -log2(l2_rel_error)
 };
-
-struct CKKSBaseline {
-    CKKSAccuracyMetrics metrics;
-};
-
 
 struct ErrorThresholds {
     double abs_zero;        // qué se considera "cero" en golden
@@ -43,16 +54,6 @@ inline uint32_t random_int(int a, int b) {
     return (uint32_t)dist(rng);
 }
 
-struct SlotErrorStats {
-    uint64_t failed     = 0;
-    uint64_t corrupted  = 0;
-    uint64_t degraded   = 0;
-    uint64_t correct    = 0;
-
-    uint64_t total() const {
-        return failed + corrupted + degraded + correct;
-    }
-};
 
 // -----------------------------
 // API
@@ -63,29 +64,13 @@ CKKSAccuracyMetrics EvaluateCKKSAccuracy(
     double zero_eps = 1e-15
 );
 
-inline ErrorThresholds thresholds_from_baseline(
-    const CKKSBaseline& baseline,
-    double abs_zero = 1e-15,
-    double good = 1.5,
-    double bad  = 5.0,
-    double fail = 50.0
-) {
-    return {
-        .abs_zero     = abs_zero,
-        .baseline_abs = baseline.metrics.linf_abs_error,
-        .baseline_rel = baseline.metrics.linf_rel_error,
-        .good         = good,
-        .bad          = bad,
-        .fail         = fail
-    };
-}
-
-SlotErrorStats categorize_slots(
+SlotErrorStats categorize_slots_relative(
     const std::vector<double>& golden,
     const std::vector<double>& output,
     size_t size,
-    const ErrorThresholds& thr
+    const RelativeErrorThresholds& thr = {}
 );
+
 
 bool AcceptCKKSResult(const CKKSAccuracyMetrics& m, double max_rel_error = 1e-6,
                       double max_abs_error = 1e-6, double min_bits = 20.0);

@@ -15,8 +15,6 @@ show = config.show
 width = int(config.width)
 
 
-
-
 def mean_by_coeff_and_bit(data):
     print("coeff únicos en data:", data["coeff"].nunique())
     print("min/max coeff:", data["coeff"].min(), data["coeff"].max())
@@ -91,6 +89,8 @@ def plot_concatenated_coeffs(mean_data, bits_per_coeff=64):
 
     plt.figure(figsize=(12, 5))
     plt.plot(x, y, linewidth=width, color=config.colors["blue"])
+    for i in mean_data.groupby("coeff"):
+        plt.axvline(64*i, linestyle='--')
     plt.yscale('symlog')
     plt.ylabel('$L_2$ norm (Symlog scale)')
     plt.xlabel('Modified Bit Index')
@@ -111,8 +111,9 @@ def main():
         raise RuntimeError("No hay campañas que cumplan los filtros")
 
     data = load_campaign_data(selected, DATA_DIR)
-
     mean_data = mean_by_coeff_and_bit(data)
+    print(mean_data)
+
     norm2 = l2_norm_by_bit(mean_data)
 
     print("\n=== NORMA L2 POR BIT ===")

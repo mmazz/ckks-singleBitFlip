@@ -12,18 +12,17 @@ int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "openfhe";
     args.flipType = "exhaustive";
+    std::cout << "Verbose: " <<  args.verbose << std::endl;
     if (args.verbose) {
         args.print();
     }
 
     BackendContext* ctx = setup_campaign(args);
+    size_t slots =  (size_t)(1 << args.logSlots);
     IterationResult goldenCKKS_output = run_iteration(ctx, args);
 
     const auto& goldenOutput = get_reference_output(ctx);
     CKKSAccuracyMetrics baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
-    CKKSBaseline baseline{baseline_metrics};
-    ErrorThresholds thr = thresholds_from_baseline(baseline);
-
 
 
     if(AcceptCKKSResult(baseline_metrics)){
@@ -60,7 +59,7 @@ int main(int argc, char* argv[]) {
                     IterationArgs iterArgs(limb, coeff, bit);
                     IterationResult res = run_iteration(ctx, args, iterArgs);
                     CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
-                    auto slot_stats = categorize_slots(goldenCKKS_output.values, res.values, 1 << args.logSlots, thr);
+                    auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
                     logger.log(iterArgs.limb,
                             iterArgs.coeff,
                             iterArgs.bit,

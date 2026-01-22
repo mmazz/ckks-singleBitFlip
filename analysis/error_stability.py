@@ -25,7 +25,7 @@ def main():
     selected_ids = selected["campaign_id"].tolist()
     data = load_end_data(selected_ids, CAMPAIGNS_END_CSV)
     cols = ["l2_P95", "l2_P99"]
-    block_sizes = [10, 100]
+    block_sizes = [10, 100 ,300, 500, 800]
 
     for block in block_sizes:
         if len(data) >= block:
