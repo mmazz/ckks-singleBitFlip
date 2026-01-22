@@ -8,47 +8,43 @@ BIN_DIR   := $(BUILD_DIR)/bin
 OBJ_DIR   := $(BUILD_DIR)/obj
 
 CXX := g++
-CXXFLAGS := -std=c++17 -O2 -pthread \
+CXXFLAGS := -std=c++17 -O2 -pthread -MMD -MP \
             -I$(HEAAN_SRC)/src \
             -I$(COMMON_SRC)
 
 LDFLAGS := -L$(HEAAN_SRC)/lib -L/usr/local/lib
-LIBS    := $(HEAAN_SRC)/lib/libHEAAN.a -lntl -lgmp -lm
+LIBS    := -lHEAAN -lntl -lgmp -lm
 
-$(shell mkdir -p $(BIN_DIR) $(OBJ_DIR))
+# ---------- Programs ----------
 
-# ---------------- Sources ----------------
+PROGRAMS := exhaustiveSingleBitFlip randomSingleBitFlip
 
 COMMON_SOURCES := $(wildcard $(COMMON_SRC)/*.cpp)
 COMMON_OBJECTS := $(patsubst $(COMMON_SRC)/%.cpp,$(OBJ_DIR)/common_%.o,$(COMMON_SOURCES))
 
-HEAAN_SOURCES := backend.cpp
-HEAAN_OBJECTS := $(OBJ_DIR)/backend.o
+BACKEND_OBJ := $(OBJ_DIR)/backend.o
 
-MAIN_SOURCE := exhaustiveSingleBitFlip.cpp
-MAIN_OBJECT := $(OBJ_DIR)/exhaustiveSingleBitFlip.o
-TARGET := $(BIN_DIR)/exhaustiveSingleBitFlip
+# ---------- Targets ----------
 
-# ---------------- Rules ----------------
+all: dirs $(PROGRAMS:%=$(BIN_DIR)/%)
 
-all: $(TARGET)
+dirs:
+	mkdir -p $(BIN_DIR) $(OBJ_DIR)
 
-# Common objects
+# Common
 $(OBJ_DIR)/common_%.o: $(COMMON_SRC)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# HEAAN backend object
+# Backend
 $(OBJ_DIR)/backend.o: $(SRC_DIR)/backend.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Main
-$(OBJ_DIR)/exhaustiveSingleBitFlip.o: $(SRC_DIR)/exhaustiveSingleBitFlip.cpp
+# Main objects
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/randomSingleBitFlip.o: $(SRC_DIR)/randomSingleBitFlip.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-# Link
-$(TARGET): $(MAIN_OBJECT) $(HEAAN_OBJECTS) $(COMMON_OBJECTS)
+# Link each binary with its own main
+$(BIN_DIR)/%: $(OBJ_DIR)/%.o $(BACKEND_OBJ) $(COMMON_OBJECTS)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 	@echo "✓ Built $@"
 

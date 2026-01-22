@@ -6,6 +6,7 @@
 #include "utils_ckks.h"
 
 
+size_t NUM_BITFLIPS = 500;
 int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
@@ -55,7 +56,7 @@ int main(int argc, char* argv[]) {
 
         // Calcular total esperado para progress
         uint32_t N = 1 << args.logN;
-        size_t num_bitFlips = 1000;
+        size_t num_bitFlips = NUM_BITFLIPS;
         std::vector<double> norms;
         norms.reserve(num_bitFlips);
 
@@ -65,27 +66,30 @@ int main(int argc, char* argv[]) {
         size_t bits_per_coeff = args.bitPerCoeff;
 
         std::mt19937 rng(args.seed);
-        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args);
+
+        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 10 values
         for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
             uint32_t bit = bits_to_flip[bitIndex];
-            uint32_t coeff = random_int(0, N-1);
-            IterationArgs iterArgs(0, coeff, bit);
-            IterationResult res = run_iteration(ctx, args, iterArgs);
+            std::cout << bit << std::endl;
+            for (size_t i = 0; i < num_bitFlips; i++) {
+                uint32_t coeff = random_int(0, N-1);
+                IterationArgs iterArgs(0, coeff, bit);
+                IterationResult res = run_iteration(ctx, args, iterArgs);
 
-            CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
+                CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
 
-            auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
-            logger.log(iterArgs.limb,
-                    iterArgs.coeff,
-                    iterArgs.bit,
-                    exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
-                    exp_metrics.linf_abs_error,
-                    res.detected,
-                    slot_stats
-                );
+                auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
+                logger.log(iterArgs.limb,
+                        iterArgs.coeff,
+                        iterArgs.bit,
+                        exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
+                        exp_metrics.linf_abs_error,
+                        res.detected,
+                        slot_stats
+                    );
 
-            norms.push_back(exp_metrics.l2_rel_error);
-
+                norms.push_back(exp_metrics.l2_rel_error);
+            }
 
         }
         std::sort(norms.begin(), norms.end());
