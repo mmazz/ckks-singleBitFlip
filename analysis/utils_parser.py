@@ -25,14 +25,15 @@ def parse_args():
     parser.add_argument("--logQ", type=int, default=None)
     parser.add_argument("--logDelta", type=int, default=None)
     parser.add_argument("--logSlots", type=int, default=None)
-    parser.add_argument("--mult_depth", type=int, default=None)
-    parser.add_argument("--num_limbs", type=int, default=None)
+    parser.add_argument("--mult_depth", type=int, default=0)
+    parser.add_argument("--num_limbs", type=int, default=1)
     parser.add_argument("--logMin", type=int, default=0)
     parser.add_argument("--logMax", type=int, default=0)
     parser.add_argument("--doAdd", type=int, default=0)
     parser.add_argument("--doMul", type=int, default=0)
     parser.add_argument("--doRot", type=int, default=0)
     parser.add_argument("--withNTT", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=0)
 
 
     # -------- openfhe opcionales --------
@@ -61,4 +62,39 @@ def build_filters(args):
             raise TypeError(f"Tipo no soportado para {name}: {type(value)}")
 
     return filters
+def bits_to_flip_generator(logQ: int, logDelta: int, bit_per_coeff: int):
+    res = []
 
+    M = bit_per_coeff - 1
+
+    def clamp(v: int) -> int:
+        return min(v, M)
+
+    def push_unique(v: int):
+        v = clamp(v)
+        if v not in res:
+            res.append(v)
+
+    # --- Región A: ruido ---
+    push_unique(0)
+    push_unique(logDelta // 4)
+
+    # --- Región B: transición ---
+    push_unique(logDelta // 2)
+    if logDelta > 0:
+        push_unique(logDelta - 1)
+
+    # --- Región C: mensaje ---
+    push_unique(logDelta)
+    push_unique((logDelta + logQ) // 2)
+
+    # --- Región D: borde módulo ---
+    if logQ > 0:
+        push_unique(logQ - 1)
+    push_unique(logQ)
+
+    # --- Región E: overflow ---
+    push_unique((logQ + M) // 2)
+    push_unique(M)
+
+    return res

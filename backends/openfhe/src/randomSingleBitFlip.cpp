@@ -5,7 +5,7 @@
 #include "backend_interface.h"
 #include "utils_ckks.h"
 
-
+size_t NUM_BITFLIPS = 500;
 
 int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
@@ -42,15 +42,16 @@ int main(int argc, char* argv[]) {
 
         // Calcular total esperado para progress
         uint32_t N = 1 << args.logN;
-        size_t num_bitFlips = 1000;
+        size_t num_bitFlips = NUM_BITFLIPS;
         std::vector<double> norms;
         norms.reserve(num_bitFlips);
 
         std::cout << "Total bit flips: " << num_bitFlips << std::endl;
 
-        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args);
+        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 10 values
         for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
             uint32_t bit = bits_to_flip[bitIndex];
+            std::cout << bit << std::endl;
             for (size_t i = 0; i < num_bitFlips; i++) {
                 uint32_t limb = random_int(0, args.num_limbs-1);
                 uint32_t coeff = random_int(0, N-1);

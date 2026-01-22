@@ -14,6 +14,27 @@ from campaigns_filter import load_campaign_data, load_and_filter_campaigns,CAMPA
 show = config.show
 width = int(config.width)
 
+def stats_by_bit_uniform_coeff(data):
+    # 1) promedio por coeficiente
+    per_coeff = (
+        data
+        .groupby(["bit", "coeff"], as_index=False)
+        .agg(l2_mean=("l2_norm", "mean"))
+    )
+
+    # 2) estadística por bit
+    per_bit = (
+        per_coeff
+        .groupby("bit", as_index=False)
+        .agg(
+            mean_l2=("l2_mean", "mean"),
+            std_l2=("l2_mean", lambda x: x.std(ddof=0)),
+            min_l2=("l2_mean", "min"),
+            max_l2=("l2_mean", "max"),
+            count=("l2_mean", "count"),
+        )
+    )
+    return per_bit
 
 def mean_by_coeff_and_bit(data):
     print("coeff únicos en data:", data["coeff"].nunique())
@@ -25,6 +46,27 @@ def mean_by_coeff_and_bit(data):
     )
     print("coeff únicos en mean_data:", mean_data["coeff"].nunique())
     return mean_data
+
+def mean_by_bit(data):
+    mean_data = (
+        data
+        .groupby(["bit"], as_index=False)
+        .agg(mean_l2=("l2_norm", "mean"))
+    )
+    print("bits únicos en mean_data:", mean_data["bit"].nunique())
+    return mean_data
+
+def mean_std_by_bit(data):
+    stats = (
+        data
+        .groupby("bit", as_index=False)
+        .agg(
+            mean_l2=("l2_norm", "mean"),
+            std_l2=("l2_norm", "std"),
+            count=("l2_norm", "count"),
+        )
+    )
+    return stats
 
 def l2_norm_by_bit(mean_data):
     norm2 = (
@@ -98,6 +140,38 @@ def plot_concatenated_coeffs(mean_data, bits_per_coeff=64):
     plt.tight_layout()
     plt.show()
 
+def plot_bit_stats(stats):
+    x = stats["bit"]
+    mean = stats["mean_l2"]
+    std = stats["std_l2"]
+    ymin = stats["min_l2"]
+    ymax = stats["max_l2"]
+
+    plt.figure(figsize=(12, 5))
+
+    # media
+    plt.plot(x, mean, linewidth=2, label="Mean $L_2$")
+
+    # std
+    plt.fill_between(
+        x,
+        mean - std,
+        mean + std,
+        alpha=0.3,
+        label="±1 std"
+    )
+
+    # min / max
+    plt.plot(x, ymin, linestyle="--", linewidth=1, label="Min")
+    plt.plot(x, ymax, linestyle="--", linewidth=1, label="Max")
+
+    plt.yscale("symlog")
+    plt.xlabel("Bit index")
+    plt.ylabel("$L_2$ norm (symlog)")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 def main():
     args = parse_args()
@@ -111,7 +185,8 @@ def main():
         raise RuntimeError("No hay campañas que cumplan los filtros")
 
     data = load_campaign_data(selected, DATA_DIR)
-    mean_data = mean_by_coeff_and_bit(data)
+    mean_data = stats_by_bit_uniform_coeff(data)
+    #mean_data = mean_by_coeff_and_bit(data)
     print(mean_data)
 
     norm2 = l2_norm_by_bit(mean_data)
@@ -119,7 +194,8 @@ def main():
     print("\n=== NORMA L2 POR BIT ===")
     print(norm2)
     print(args.bitPerCoeff)
-    plot_concatenated_coeffs(mean_data, args.bitPerCoeff)
+    plot_bit_stats(mean_data)
+    #plot_concatenated_coeffs(mean_data, args.bitPerCoeff)
 
 
 if __name__ == "__main__":
