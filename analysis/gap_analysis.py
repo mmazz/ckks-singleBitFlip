@@ -12,10 +12,6 @@ from args import parse_args, build_filters
 from io_utils import load_campaign_data, load_and_filter_campaigns
 
 
-# ============================================================
-# GAP SPLIT
-# ============================================================
-
 def split_by_gap(data, logN, logSlots):
     """
     - remove central coefficient N/2
@@ -37,9 +33,59 @@ def split_by_gap(data, logN, logSlots):
     return data, gap
 
 
-# ============================================================
-# STATS
-# ============================================================
+def plot_bit_stats_aligned_vs_nonaligned(
+    results_aligned,
+    results_non_aligned
+):
+    fig, axes = plt.subplots(
+        1, 2,
+        figsize=(15, 5),
+        sharey=True
+    )
+
+    panels = [
+        ("Aligned coefficients\n(coeff % gap = 0)", results_aligned),
+        ("Non-aligned coefficients\n(coeff % gap ≠ 0)", results_non_aligned),
+    ]
+
+    eps = 1e-18  # clamp mínimo para symlog
+
+    for ax, (title, results) in zip(axes, panels):
+        for logSlots, stats in sorted(results.items()):
+            # asegurar orden por bit
+            stats = stats.sort_values("bit")
+
+            x = stats["bit"].to_numpy()
+            y = stats["mean_l2"].to_numpy()
+            std = stats["std_l2"].to_numpy()
+
+            ax.plot(
+                x, y,
+                linewidth=2,
+                label=f"logSlots = {logSlots}"
+            )
+
+            lower = np.maximum(y - std, eps)
+            upper = y + std
+
+            ax.fill_between(
+                x,
+                lower,
+                upper,
+                alpha=0.25
+            )
+
+        ax.set_title(title)
+        ax.set_xlabel("Bit index")
+        ax.grid(True)
+
+    axes[0].set_ylabel("$L_2$ error (symlog)")
+    axes[0].set_yscale("symlog")
+    axes[0].legend()
+
+    plt.tight_layout()
+    plt.show()
+
 
 def stats_by_bit_per_class(data):
     """
@@ -65,88 +111,7 @@ def stats_by_bit_per_class(data):
             n_coeff=("l2_mean", "count"),
         )
     )
-
     return per_bit
-
-
-def stats_for_logslots(data, logN, logSlots):
-    """
-    Final stats per bit for a given logSlots:
-    averaged over aligned + non_aligned classes
-    """
-
-    data, gap = split_by_gap(data, logN, logSlots)
-    stats = stats_by_bit_per_class(data)
-
-    stats_mean = (
-        stats
-        .groupby("bit", as_index=False)
-        .agg(
-            mean_l2=("mean_l2", "mean"),
-            std_l2=("mean_l2", "std"),
-        )
-    )
-
-    return stats_mean, gap
-
-
-# ============================================================
-# PLOT
-# ============================================================
-def plot_bit_stats_aligned_vs_nonaligned(
-    results_aligned,
-    results_non_aligned
-):
-    fig, axes = plt.subplots(
-        1, 2,
-        figsize=(15, 5),
-        sharey=True
-    )
-
-    panels = [
-            ("Aligned coefficients\n(coeff % gap = 0)", results_aligned),
-("Non-aligned coefficients\n(coeff % gap ≠ 0)", results_non_aligned),
-    ]
-
-    for ax, (title, results) in zip(axes, panels):
-        for logSlots, stats in sorted(results.items()):
-            ax.plot(
-                stats["bit"],
-                stats["mean_l2"],
-                linewidth=2,
-                label=f"logSlots = {logSlots}"
-            )
-
-        ax.set_title(title)
-        ax.set_xlabel("Bit index")
-        ax.grid(True)
-
-    axes[0].set_ylabel("$L_2$ error (symlog)")
-    axes[0].set_yscale("symlog")
-    axes[0].legend()
-
-    plt.tight_layout()
-    plt.show()
-
-def plot_bit_stats_multi_logslots(results, title):
-    plt.figure(figsize=(12, 5))
-
-    for logSlots, stats in sorted(results.items()):
-        plt.plot(
-            stats["bit"],
-            stats["mean_l2"],
-            linewidth=2,
-            label=f"logSlots = {logSlots}"
-        )
-
-    plt.yscale("symlog")
-    plt.xlabel("Bit index")
-    plt.ylabel("$L_2$ error (symlog)")
-    plt.title(title)
-    plt.grid(True)
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
 
 def stats_for_logslots_per_class(data, logN, logSlots):
     data, gap = split_by_gap(data, logN, logSlots)
@@ -157,17 +122,10 @@ def stats_for_logslots_per_class(data, logN, logSlots):
     for cls in ["aligned", "non_aligned"]:
         s = stats[stats["gap_class"] == cls]
 
-        s_mean = (
-            s.groupby("bit", as_index=False)
-             .agg(
-                 mean_l2=("mean_l2", "mean"),
-                 std_l2=("mean_l2", "std"),
-             )
-        )
-
-        out[cls] = s_mean
+        out[cls] = s[["bit", "mean_l2", "std_l2"]]
 
     return out, gap
+
 
 
 def main():
@@ -209,7 +167,6 @@ def main():
 
         results_aligned[ls] = stats_by_class["aligned"]
         results_non_aligned[ls] = stats_by_class["non_aligned"]
-
     if not results_aligned:
         raise RuntimeError("No data loaded")
 
@@ -217,15 +174,5 @@ def main():
         results_aligned,
         results_non_aligned
     )
-#    plot_bit_stats_multi_logslots(
-#        results_aligned,
-#        title="Aligned coefficients (coeff % gap == 0)"
-#    )
-#
-#    plot_bit_stats_multi_logslots(
-#        results_non_aligned,
-#        title="Non-aligned coefficients (coeff % gap != 0)"
-#    )
-
 if __name__ == "__main__":
     main()
