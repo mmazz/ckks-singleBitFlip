@@ -46,7 +46,7 @@ struct CampaignArgs {
     bool doAdd = false;
     bool doMul = false;
     uint32_t doRot = 0;
-    bool flipType = "exhaustive";
+    bool isExhaustive = true;
     bool verbose = false;
     std::string results_dir = "../../results";
 

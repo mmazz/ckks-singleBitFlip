@@ -1,9 +1,18 @@
 import matplotlib.pyplot as plt
+from pathlib import Path
+import sys
+import os
 
-plt.rcParams['font.size'] = 24  # Tamaño de la fuente
-plt.rcParams['figure.figsize'] = (10, 6)  # Tamaño de la figura
-plt.rcParams['axes.titlesize'] = 24  # Tamaño del título de los ejes
-plt.rcParams['axes.labelsize'] = 24  # Tamaño de las etiquetas de los ejes
+sys.path.append(os.path.abspath('./'))
+CAMPAIGNS_CSV = "../results/campaigns_start.csv"
+CAMPAIGNS_END_CSV = "../results/campaigns_end.csv"
+DATA_DIR = Path("../results/data")
+
+
+plt.rcParams['font.size']       = 24  # Tamaño de la fuente
+plt.rcParams['figure.figsize']  = (10, 6)  # Tamaño de la figura
+plt.rcParams['axes.titlesize']  = 24  # Tamaño del título de los ejes
+plt.rcParams['axes.labelsize']  = 24  # Tamaño de las etiquetas de los ejes
 plt.rcParams['xtick.labelsize'] = 24  # Tamaño de las etiquetas del eje x
 plt.rcParams['ytick.labelsize'] = 24  # Tamaño de las etiquetas del eje y
 plt.rcParams['legend.fontsize'] = 24 # Tamaño de la fuente de la leyenda

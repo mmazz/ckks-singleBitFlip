@@ -4,16 +4,32 @@ from pathlib import Path
 import sys
 import os
 
-sys.path.append(os.path.abspath('./'))
-CAMPAIGNS_CSV = "../results/campaigns_start.csv"
-CAMPAIGNS_END_CSV = "../results/campaigns_end.csv"
-DATA_DIR = Path("../results/data")
+REQUIRED_FILTERS = {"library", "stage"}
+
+OPTIONAL_DEFAULTS = {
+    "withNTT": 0,
+    "logN": 6,
+    "logSlots": 5,
+    "logQ": 60,
+    "logDelta": 50,
+    "num_limbs": 1,
+    "mult_depth": 0,
+    "logMin": 0,
+    "logMax": 0,
+    "doAdd": 0,
+    "doMul": 0,
+    "doRot": 0,
+    "bitPerCoeff": 64,
+}
+
+OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive"}
+
 
 def load_and_filter_campaigns(csv_path, filters):
     campaigns = pd.read_csv(csv_path)
 
-    cat_cols = ["library", "stage"]
-    for c in cat_cols:
+    # --- Normalización ---
+    for c in ["library", "stage"]:
         if c in campaigns.columns:
             campaigns[c] = (
                 campaigns[c]
@@ -22,19 +38,41 @@ def load_and_filter_campaigns(csv_path, filters):
                 .str.lower()
             )
 
-    int_cols = [
-        "campaign_id", "bitPerCoeff", "logN", "logQ", "logDelta", "logSlots",
-        "mult_depth", "seed", "seed_input", "withNTT"
-        "nums_limbs", "logMin", "logMax", "doAdd", "doMul", "doRot", "fileType"
-    ]
+    for c in campaigns.columns:
+        if c not in ["library", "stage"]:
+            campaigns[c] = pd.to_numeric(campaigns[c], errors="ignore")
 
-    for c in int_cols:
-        if c in campaigns.columns:
-            campaigns[c] = pd.to_numeric(campaigns[c], errors="raise")
+    # --- Validar obligatorios ---
+    missing = REQUIRED_FILTERS - filters.keys()
+    if missing:
+        raise ValueError(
+            f"Faltan filtros obligatorios: {sorted(missing)}"
+        )
 
+    # --- Construir filtros efectivos ---
+    effective_filters = {}
+
+    # obligatorios (siempre)
+    for k in REQUIRED_FILTERS:
+        effective_filters[k] = filters[k]
+
+    # opcionales con default
+    for k, default in OPTIONAL_DEFAULTS.items():
+        if k in filters:
+            effective_filters[k] = filters[k]
+        elif default is not None:
+            effective_filters[k] = ("int", default)
+
+    # opcionales sin default: solo si vienen
+    for k in OPTIONAL_NO_FILTER:
+        if k in filters:
+            effective_filters[k] = filters[k]
+
+    # --- Aplicar filtros ---
     mask = np.ones(len(campaigns), dtype=bool)
+
     print("=== MATCHES POR FILTRO ===")
-    for col, (dtype, value) in filters.items():
+    for col, (dtype, value) in effective_filters.items():
         if col not in campaigns.columns:
             raise KeyError(f"Columna '{col}' no existe en el CSV")
 
@@ -49,12 +87,10 @@ def load_and_filter_campaigns(csv_path, filters):
         print(f"{col} == {value}: {m.sum()}")
         mask &= m
 
-    print(mask)
     selected = campaigns[mask]
     print(f"\nCampañas seleccionadas: {len(selected)}")
 
     return selected
-
 
 def load_campaign_data(selected_campaigns, data_dir):
     dfs = []

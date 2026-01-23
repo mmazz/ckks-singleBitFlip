@@ -34,17 +34,6 @@ def bit_labels(logDelta, logQ, bitPerCoeff):
         M: r"$M$",
     }
 
-def bit_region(bit, logDelta, logQ, M):
-    if bit <= logDelta // 4:
-        return "A"   # ruido
-    if bit <= logDelta:
-        return "B"   # transición
-    if bit <= (logDelta + logQ) // 2:
-        return "C"   # mensaje
-    if bit <= logQ:
-        return "D"   # borde módulo
-    return "E"       # overflow
-
 def stats_by_bit_uniform_coeff_split(data, args, drop_dc=True):
     """
     Calcula estadísticas por bit separando coeficientes en dos grupos:
@@ -95,6 +84,28 @@ def stats_by_bit_uniform_coeff_split(data, args, drop_dc=True):
     return stats_A, stats_B
 
 def stats_by_bit_uniform_coeff(data, drop_dc=True):
+    if drop_dc:
+        data = data[data["coeff"] != 0]
+    data = data[data["coeff"] != 0]
+    per_coeff = (
+        data
+        .groupby(["bit", "coeff"], as_index=False)
+        .agg(l2_mean=("l2_norm", "mean"))
+    )
+
+    # 2) estadística por bit
+    per_bit = (
+        per_coeff
+        .groupby("bit", as_index=False)
+        .agg(
+            mean_l2=("l2_mean", "mean"),
+            std_l2=("l2_mean", lambda x: x.std(ddof=0)),
+            min_l2=("l2_mean", "min"),
+            max_l2=("l2_mean", "max"),
+            count=("l2_mean", "count"),
+        )
+    )
+    return per_bitef stats_by_bit_uniform_coeff(data, drop_dc=True):
     if drop_dc:
         data = data[data["coeff"] != 0]
     data = data[data["coeff"] != 0]

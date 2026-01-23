@@ -18,7 +18,7 @@ CampaignRegistry::CampaignRegistry(const std::string& results_dir) {
         std::ofstream f(start_csv_);
         f << "campaign_id,library,stage,bitPerCoeff,logN,logQ,logDelta,logSlots,"
              "mult_depth,seed,seed_input,withNTT,num_limbs,"
-             "logMin,logMax,doAdd,doMul,doRot,flipType,timestamp_start\n";
+             "logMin,logMax,doAdd,doMul,doRot,isExhaustive,timestamp_start\n";
     }
 
     if (!fs::exists(end_csv_)) {
@@ -80,7 +80,7 @@ void CampaignRegistry::register_start(const CampaignStartRecord& r) {
       << (r.args.doAdd? 1 : 0) << ","
       << (r.args.doMul? 1 : 0) << ","
       << r.args.doRot << ","
-      << r.args.flipType << ","
+      << r.args.isExhaustive << ","
       << r.timestamp_start << "\n";
 
     unlock_file(fd);

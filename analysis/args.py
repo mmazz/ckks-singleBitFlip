@@ -15,16 +15,12 @@ def parse_args():
         description="Filtro de campañas CKKS"
     )
 
-    # -------- strings --------
+    # -------- obligatorios (conceptualmente) --------
     parser.add_argument("--library", type=str, default=None)
     parser.add_argument("--stage", type=str, default=None)
 
-    # -------- enteros --------
+    # -------- opcionales con default --------
     parser.add_argument("--bitPerCoeff", type=int, default=64)
-    parser.add_argument("--logN", type=int, default=None)
-    parser.add_argument("--logQ", type=int, default=None)
-    parser.add_argument("--logDelta", type=int, default=None)
-    parser.add_argument("--logSlots", type=int, default=None)
     parser.add_argument("--mult_depth", type=int, default=0)
     parser.add_argument("--num_limbs", type=int, default=1)
     parser.add_argument("--logMin", type=int, default=0)
@@ -33,10 +29,17 @@ def parse_args():
     parser.add_argument("--doMul", type=int, default=0)
     parser.add_argument("--doRot", type=int, default=0)
     parser.add_argument("--withNTT", type=int, default=0)
-    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--logN", type=int, default=6)
+    parser.add_argument("--logSlots", type=int, default=5)
+    parser.add_argument("--logQ", type=int, default=60)
+    parser.add_argument("--logDelta", type=int, default=50)
 
+    # -------- opcionales sin default (no filtran) --------
+    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--seed_input", type=int, default=None)
+    parser.add_argument("--isExhaustive", type=int, default=None)
 
-    # -------- openfhe opcionales --------
+    # -------- openfhe --------
     parser.add_argument("--openfhe_attack_mode", type=str, default=None)
     parser.add_argument("--openfhe_threshold_bits", type=float, default=None)
 
@@ -62,39 +65,5 @@ def build_filters(args):
             raise TypeError(f"Tipo no soportado para {name}: {type(value)}")
 
     return filters
-def bits_to_flip_generator(logQ: int, logDelta: int, bit_per_coeff: int):
-    res = []
 
-    M = bit_per_coeff - 1
 
-    def clamp(v: int) -> int:
-        return min(v, M)
-
-    def push_unique(v: int):
-        v = clamp(v)
-        if v not in res:
-            res.append(v)
-
-    # --- Región A: ruido ---
-    push_unique(0)
-    push_unique(logDelta // 4)
-
-    # --- Región B: transición ---
-    push_unique(logDelta // 2)
-    if logDelta > 0:
-        push_unique(logDelta - 1)
-
-    # --- Región C: mensaje ---
-    push_unique(logDelta)
-    push_unique((logDelta + logQ) // 2)
-
-    # --- Región D: borde módulo ---
-    if logQ > 0:
-        push_unique(logQ - 1)
-    push_unique(logQ)
-
-    # --- Región E: overflow ---
-    push_unique((logQ + M) // 2)
-    push_unique(M)
-
-    return res
