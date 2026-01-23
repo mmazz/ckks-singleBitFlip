@@ -37,7 +37,6 @@ seeds_analysis:
 			--stage encrypt_c0 --logSlots 5 --seed $$s --seed_input $$s_input --withNTT 0 ; \
 	done
 
-
 mul_analysis:
 	@cd heaan && \
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 3 && \
@@ -46,6 +45,37 @@ mul_analysis:
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 2 && \
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 2 && \
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 2 --doMul 2 && \
-	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 1 && \
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 1 && \
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 2 --doMul 1
+
+	@cd heaan && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 4 --doMul 3 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 3 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 2 --doMul 3 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 4 --doMul 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 2 --doMul 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 4 --doMul 1 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 1 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 2 --doMul 1
+
+
+
+## Faltan analizar!
+d_analysis:
+	@cd oenfhe && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 60 --logDelta 50 --stage encrypt_c0  --logSlots 4 --doAdd 1
+
+add_analysis:
+	@cd heaan && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 60 --logDelta 30 --stage encrypt_c0  --logSlots 4 --doAdd 1
+
+rot_analysis:
+	@cd heaan && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 60 --logDelta 30 --stage encrypt_c0  --logSlots 4 --doRot 1 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 60 --logDelta 30 --stage encrypt_c0  --logSlots 4 --doRot 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 60 --logDelta 30 --stage encrypt_c0  --logSlots 4 --doRot 3
+
+clean:
+	rm -rf ../results
