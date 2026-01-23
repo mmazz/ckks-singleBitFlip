@@ -14,3 +14,7 @@ seeds_analysis:
 gap_analysis:
 	python3 gap_analysis.py --logN 6 --logQ 60 --logDelta 40 --library heaan --stage encrypt_c0 --bitPerCoeff 64 --logSlots 5
 
+mul_analysis:
+	python3 gap_analysis.py --library heaan --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 3
+	python3 gap_analysis.py --library heaan --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 2
+	python3 gap_analysis.py --library heaan --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 1

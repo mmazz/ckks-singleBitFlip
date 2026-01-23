@@ -37,3 +37,15 @@ seeds_analysis:
 			--stage encrypt_c0 --logSlots 5 --seed $$s --seed_input $$s_input --withNTT 0 ; \
 	done
 
+
+mul_analysis:
+	@cd heaan && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 3 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 3 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 2 --doMul 3 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 2 --doMul 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 2 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 1 && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 2 --doMul 1

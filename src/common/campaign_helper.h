@@ -44,7 +44,7 @@ struct CampaignArgs {
     uint32_t seed = 0;
     uint32_t seed_input = 0;
 
-    bool withNTT = true;
+    bool withNTT = false;
     bool doAdd = false;
     uint32_t doMul = 0;
     uint32_t doRot = 0;
