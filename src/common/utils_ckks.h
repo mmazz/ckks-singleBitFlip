@@ -54,7 +54,40 @@ inline uint32_t random_int(int a, int b) {
     return (uint32_t)dist(rng);
 }
 
+void printVector(const std::vector<double>& v,
+                 const std::string& name = "",
+                 size_t max_elems = SIZE_MAX);
 
+
+template <typename T>
+void printBaselineComparison(
+    const std::vector<T>& goldenOutput,
+    const std::vector<T>& goldenCKKSValues,
+    const CKKSAccuracyMetrics& baseline_metrics,
+    bool print_elements = true
+) {
+    std::cout << "GoldenCKKSOutput vs output "
+              << goldenOutput.size() << "\n";
+
+    if (print_elements) {
+        for (size_t i = 0; i < goldenOutput.size(); i++) {
+            std::cout << goldenCKKSValues[i]
+                      << ", "
+                      << goldenOutput[i]
+                      << std::endl;
+        }
+    }
+
+    std::cout << "L2 relative error : "
+              << baseline_metrics.l2_rel_error << "\n";
+    std::cout << "Linf abs error   : "
+              << baseline_metrics.linf_abs_error << "\n";
+    std::cout << "Bits precision   : "
+              << baseline_metrics.bits_precision << "\n";
+
+    std::cerr << "Error with golden norm, checkout the used parameters"
+              << std::endl;
+}
 // -----------------------------
 // API
 // -----------------------------

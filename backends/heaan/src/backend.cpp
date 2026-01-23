@@ -97,10 +97,12 @@ IterationResult run_iteration(
 
     if(args.doAdd)
         c = ctx.scheme.add(c, c_clean);
-    if(args.doMul){
+
+    for (uint32_t i = 0; i < args.doMul; ++i) {
         c = ctx.scheme.mult(c, c_clean);
         ctx.scheme.reScaleByAndEqual(c, args.logDelta);
     }
+
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
         c = ctx.scheme.leftRotateFast(c, rotIndex);

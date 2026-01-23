@@ -78,7 +78,7 @@ void CampaignRegistry::register_start(const CampaignStartRecord& r) {
       << r.args.logMin << ","
       << r.args.logMax << ","
       << (r.args.doAdd? 1 : 0) << ","
-      << (r.args.doMul? 1 : 0) << ","
+      << r.args.doMul << ","
       << r.args.doRot << ","
       << r.args.isExhaustive << ","
       << r.timestamp_start << "\n";

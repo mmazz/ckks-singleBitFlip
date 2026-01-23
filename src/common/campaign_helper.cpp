@@ -28,7 +28,7 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  doAdd: " << doAdd << "\n"
        << "  doMul: " << doMul << "\n"
        << "  doRot: " << doRot << "\n"
-       << "  flipType: " << flipType << "\n";
+       << "  isExhaustive: " << isExhaustive << "\n";
            /* -------- OpenFHE-only knobs -------- */
         if (library == "openfhe") {
             os << "  attackModeSKA: ";
@@ -92,7 +92,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"doAdd",          required_argument, 0, 'A'},
         {"doMul",          required_argument, 0, 'M'},
         {"doRot",          required_argument, 0, 'r'},
-        {"flipType",       required_argument, 0, 'T'},
+        {"isExhaustive",       required_argument, 0, 'T'},
         {"num_limbs",      required_argument, 0, 'L'},
         {"logMin",         required_argument, 0, 'x'},
         {"logMax",         required_argument, 0, 'y'},
@@ -148,13 +148,11 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'n':  // --withNTT 0/1
                 args.withNTT = std::stoul(optarg) != 0;
                 break;
-            case 'A':  // --withNTT 0/1
+            case 'A':
                 args.doAdd = std::stoul(optarg) != 0;
                 break;
 
-            case 'M':  // --withNTT 0/1
-                args.doMul = std::stoul(optarg) != 0;
-                break;
+            case 'M': args.doMul = std::stoul(optarg); break;
 
 
             case 'S':
@@ -162,7 +160,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                 break;
 
             case 'T':
-                args.flipType = optarg;
+                args.isExhaustive = optarg;
                 break;
 
             case 'a':

@@ -152,7 +152,7 @@ IterationResult run_iteration(BackendContext* bctx,
 
     if(args.doAdd)
         ctx.cc->EvalAddInPlace(c,c_clean);
-    if(args.doMul)
+    for (uint32_t i = 0; i < args.doMul; ++i)
         c = ctx.cc->EvalMult(c,c_clean);
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));

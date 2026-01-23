@@ -101,10 +101,11 @@ int main(int argc, char* argv[]) {
 
         registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
     } else {
-        std::cout << "L2 relative error : " << baseline_metrics.l2_rel_error << "\n";
-        std::cout << "Linf abs error   : "  << baseline_metrics.linf_abs_error << "\n";
-        std::cout << "Bits precision   : "  << baseline_metrics.bits_precision << "\n";
-        std::cerr << "Error with golden norm, checkout the used parameters" << std::endl;
+        printBaselineComparison(
+            goldenOutput,
+            goldenCKKS_output.values,
+            baseline_metrics
+        );
     }
 
     return 0;

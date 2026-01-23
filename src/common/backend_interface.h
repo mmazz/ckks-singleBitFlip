@@ -25,35 +25,38 @@ inline void compute_plain_io(const CampaignArgs& args,
         args.seed_input,
         false
     );
+    if(args.verbose)
+        printVector(base, "Flat input", 10);
 
     golden = base;
-
-    if (args.doAdd && !args.doMul) {
-        std::transform(base.begin(), base.end(),
-                       base.begin(),
-                       golden.begin(),
-                       std::plus<double>());
+    if (args.doAdd) {
+        std::transform(
+            golden.begin(), golden.end(),
+            base.begin(),
+            golden.begin(),
+            std::plus<double>()
+        );
     }
 
-    if (args.doMul && !args.doAdd) {
-        std::transform(base.begin(), base.end(),
-                       base.begin(),
-                       golden.begin(),
-                       std::multiplies<double>());
+    /* MUL: multiplicative depth */
+    for (uint32_t i = 0; i < args.doMul; ++i) {
+        std::transform(
+            golden.begin(), golden.end(),
+            base.begin(),
+            golden.begin(),
+            std::multiplies<double>()
+        );
     }
 
-    if (args.doAdd && args.doMul) {
-        std::transform(base.begin(), base.end(),
-                       golden.begin(),
-                       [](double x) {
-                           return (x + x) * x;
-                       });
-    }
 
     if (args.doRot > 0) {
         size_t rot = 1ULL << (args.doRot - 1);
         rotate_left(golden, rot);
     }
+    if(args.verbose)
+        printVector(golden, "Golden output", 10);
+
+
 }
 
 struct IterationResult {

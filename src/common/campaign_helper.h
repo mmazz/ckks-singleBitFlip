@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <optional>
+#include <vector>
 
 inline std::string timestamp_now() {
     auto t = std::chrono::system_clock::to_time_t(
@@ -23,6 +24,7 @@ struct IterationArgs{
     IterationArgs(uint64_t l, uint64_t c, uint64_t b)
         : limb(l), coeff(c), bit(b) {}
 };
+
 
 
 struct CampaignArgs {
@@ -44,7 +46,7 @@ struct CampaignArgs {
 
     bool withNTT = true;
     bool doAdd = false;
-    bool doMul = false;
+    uint32_t doMul = 0;
     uint32_t doRot = 0;
     bool isExhaustive = true;
     bool verbose = false;
