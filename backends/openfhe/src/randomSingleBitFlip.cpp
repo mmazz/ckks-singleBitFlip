@@ -10,7 +10,7 @@ size_t NUM_BITFLIPS = 500;
 int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "openfhe";
-    args.flipType = "random";
+    args.isExhaustive= false;
     if (args.verbose) {
         args.print();
     }

@@ -11,7 +11,7 @@
 int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "openfhe";
-    args.flipType = "exhaustive";
+    args.isExhaustive= true;
     std::cout << "Verbose: " <<  args.verbose << std::endl;
     if (args.verbose) {
         args.print();
