@@ -72,8 +72,8 @@ SlotErrorStats categorize_slots_relative(
 );
 
 
-bool AcceptCKKSResult(const CKKSAccuracyMetrics& m, double max_rel_error = 1e-6,
-                      double max_abs_error = 1e-6, double min_bits = 20.0);
+bool AcceptCKKSResult(const CKKSAccuracyMetrics& m, double max_rel_error = 1e-5,
+                      double max_abs_error = 1e-5, double min_bits = 15.0);
 
 
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args);

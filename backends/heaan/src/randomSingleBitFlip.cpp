@@ -1,12 +1,11 @@
-
 #include "campaign_helper.h"
 #include "campaign_logger.h"
 #include "campaign_registry.h"
 #include "backend_interface.h"
 #include "utils_ckks.h"
 
-
 size_t NUM_BITFLIPS = 500;
+
 int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
