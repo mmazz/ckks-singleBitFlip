@@ -40,7 +40,7 @@ seeds_analysis:
 
 mul_analysis:
 	@cd $(LIBRARY) && \
-	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 3 --mult_depth 3  && \
+	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 3 --mult_depth 3 && \
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 3 --mult_depth 3 && \
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 2 --doMul 3 --mult_depth 3 && \
 	$(BIN_EXHAUSTIVE) --logN 5 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 4 --doMul 2 --mult_depth 3 && \
@@ -64,7 +64,7 @@ mul_analysis:
 
 limb_analysis:
 	@cd $(LIBRARY) && \
-	$(BIN_EXHAUSTIVE) --logN 6  --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 5 --mult_depth 5 --seed 1 --withNTT 0
+	$(BIN_EXHAUSTIVE) --logN 6  --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 4 --mult_depth 5 --seed 1 --withNTT 0
 
 ## Faltan analizar!
 d_analysis:

@@ -49,6 +49,8 @@ struct CampaignArgs {
     uint32_t doRot = 0;
     bool isExhaustive = true;
     bool verbose = false;
+    uint32_t dnum = 3;
+    std::string scaleTech = "FIXEDMANUAL";
     std::string results_dir = "../../results";
 
 // OpenFHE-only

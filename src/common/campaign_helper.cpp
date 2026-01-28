@@ -27,7 +27,9 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  doAdd: " << doAdd << "\n"
        << "  doMul: " << doMul << "\n"
        << "  doRot: " << doRot << "\n"
-       << "  isExhaustive: " << isExhaustive << "\n";
+       << "  isExhaustive: " << isExhaustive << "\n"
+       << "  dnum: " << dnum << "\n"
+       << "  scaleTech: " << scaleTech << "\n";
            /* -------- OpenFHE-only knobs -------- */
         if (library == "openfhe") {
             os << "  attackModeSKA: ";
@@ -67,6 +69,8 @@ void print_usage(const char* program_name) {
               << "  --logMax <value>        logMax value (default: 0= sample up to ,1])\n"
               << "  --attackModeSKA <value> Type of error injection for SKA (only heaan, default: complete)\n"
               << "  --thresholdSKA <value>  Bits for threshold for SKA (only heaan, default: 5.0)\n"
+              << "  --dnum <value>          Digit number (default: 3)\n"
+              << "  --scaleTech <value>     Scaling technique (default: FIXEDMANUAL)\n"
               << "  --results_dir <path>    Results directory (default: results)\n"
               << "  --verbose, -v           Verbose output\n"
               << "  --help, -h              Show this help\n\n"
@@ -90,7 +94,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"doAdd",          required_argument, 0, 'A'},
         {"doMul",          required_argument, 0, 'M'},
         {"doRot",          required_argument, 0, 'r'},
-        {"isExhaustive",       required_argument, 0, 'T'},
+        {"isExhaustive",   required_argument, 0, 'T'},
         {"logMin",         required_argument, 0, 'x'},
         {"logMax",         required_argument, 0, 'y'},
         {"seed",           required_argument, 0, 's'},
@@ -98,7 +102,8 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         // only Openfhe
         {"attackModeSKA",  required_argument, 0, 'a'},
         {"thresholdSKA",   required_argument, 0, 't'},
-
+        {"dnum",           required_argument, 0, 'D'},
+        {"scaleTech",      required_argument, 0, 'C'},
         {"results_dir",    required_argument, 0, 'R'},
         {"verbose",        no_argument,       0, 'v'},
         {"help",           no_argument,       0, 'h'},
@@ -109,7 +114,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "S:c:N:Q:d:g:m:n:A:M:r:T:x:y:s:b:a:t:R:v:h",
+        "S:c:N:Q:d:g:m:n:A:M:r:T:x:y:s:b:a:t:D:C:R:v:h",
         long_options,
         &option_index)) != -1)
     {
@@ -131,6 +136,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'b': args.seed_input = std::stoul(optarg); break;
             case 'x': args.logMin = std::stoul(optarg); break;
             case 'y': args.logMax = std::stoul(optarg); break;
+            case 'D': args.dnum= std::stoul(optarg); break;
             case 'r': args.doRot = std::stoul(optarg); break;
 
             case 'v':
@@ -167,6 +173,10 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 't':
                 args.openfhe_threshold_bits =
                     std::stod(optarg);
+                break;
+
+            case 'C':
+                args.scaleTech= optarg;
                 break;
 
             case 'R':
