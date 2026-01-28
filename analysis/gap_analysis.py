@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 import copy
 
 sys.path.append(os.path.abspath("./"))
-import config
+from utils import config
 
-from args import parse_args, build_filters
-from io_utils import load_campaign_data, load_and_filter_campaigns
+from utils.args import parse_args, build_filters
+from utils.io_utils import load_campaign_data, load_and_filter_campaigns
 
 
 def split_by_gap(data, logN, logSlots):

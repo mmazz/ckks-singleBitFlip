@@ -5,11 +5,11 @@ import sys
 import os
 
 sys.path.append(os.path.abspath('./'))
-import config
+from utils import config
 
 import matplotlib.pyplot as plt
-from utils_parser import parse_args, build_filters
-from campaigns_filter import load_and_filter_campaigns,load_end_data,CAMPAIGNS_CSV,CAMPAIGNS_END_CSV
+from utils.args import parse_args, build_filters
+from utils.io_utils import load_and_filter_campaigns,load_end_data
 
 def main():
     args = parse_args()
@@ -17,13 +17,13 @@ def main():
 
     print("Filtros activos:", filters)
 
-    selected = load_and_filter_campaigns(CAMPAIGNS_CSV, filters)
+    selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
 
     if selected.empty:
         raise RuntimeError("No hay campañas que cumplan los filtros")
 
     selected_ids = selected["campaign_id"].tolist()
-    data = load_end_data(selected_ids, CAMPAIGNS_END_CSV)
+    data = load_end_data(selected_ids, config.CAMPAIGNS_END_CSV)
     cols = ["l2_P95", "l2_P99"]
     block_sizes = [10, 100 ,300, 500, 800]
 

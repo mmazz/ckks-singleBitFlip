@@ -12,7 +12,6 @@ OPTIONAL_DEFAULTS = {
     "logSlots": 5,
     "logQ": 60,
     "logDelta": 50,
-    "num_limbs": 1,
     "mult_depth": 0,
     "logMin": 0,
     "logMax": 0,

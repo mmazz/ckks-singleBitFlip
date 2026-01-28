@@ -53,7 +53,8 @@ int main(int argc, char* argv[]) {
             uint32_t bit = bits_to_flip[bitIndex];
             std::cout << bit << std::endl;
             for (size_t i = 0; i < num_bitFlips; i++) {
-                uint32_t limb = random_int(0, args.num_limbs-1);
+                // -1 is because is inclusive.
+                uint32_t limb = random_int(0, args.mult_depth-1);
                 uint32_t coeff = random_int(0, N-1);
                 IterationArgs iterArgs(limb, coeff, bit);
                 IterationResult res = run_iteration(ctx, args, iterArgs);

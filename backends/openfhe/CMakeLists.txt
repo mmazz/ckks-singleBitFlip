@@ -92,6 +92,7 @@ set(EXECUTABLES
     testPRNG
     randomSingleBitFlip
     exhaustiveSingleBitFlip
+    ckks_qi
 )
 foreach(exec_name ${EXECUTABLES})
     add_executable(${exec_name} src/${exec_name}.cpp)

@@ -9,7 +9,6 @@ int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "heaan";
     args.isExhaustive= true;
-    args.num_limbs = 1;
     args.mult_depth = 0;
     if (args.verbose) {
         args.print();

@@ -6,12 +6,12 @@ import sys
 import os
 
 sys.path.append(os.path.abspath('./'))
-import config
+from utils import config
 
 import matplotlib.pyplot as plt
-from args import parse_args, build_filters
-from  bitflip_utils import bits_to_flip_generator
-from io_utils import load_campaign_data, load_and_filter_campaigns
+from utils.args import parse_args, build_filters
+from  utils.bitflip_utils import bits_to_flip_generator
+from utils.io_utils import load_campaign_data, load_and_filter_campaigns
 
 show = config.show
 width = int(config.width)

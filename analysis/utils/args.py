@@ -65,5 +65,3 @@ def build_filters(args):
             raise TypeError(f"Tipo no soportado para {name}: {type(value)}")
 
     return filters
-
-

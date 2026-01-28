@@ -44,13 +44,13 @@ int main(int argc, char* argv[]) {
         uint32_t N = 1 << args.logN;
         size_t num_coeffs = N;
         size_t bits_per_coeff = args.bitPerCoeff;
-        size_t total_expected = args.num_limbs * num_coeffs * bits_per_coeff ;
+        size_t total_expected = args.mult_depth * num_coeffs * bits_per_coeff ;
         std::vector<double> norms;
         norms.reserve(total_expected);
 
         std::cout << "Expected bit flips: " << total_expected << std::endl;
 
-        for (size_t limb = 0; limb < args.num_limbs; limb++)
+        for (size_t limb = 0; limb < args.mult_depth; limb++)
         {
             for (size_t coeff = 0; coeff < num_coeffs; coeff++)
             {
@@ -73,15 +73,15 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-    std::sort(norms.begin(), norms.end());
-    double l2_P95 = percentile(norms, 0.95);
-    double l2_P99 = percentile(norms, 0.99);
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
-    uint64_t mins = minutes.count();
+        std::sort(norms.begin(), norms.end());
+        double l2_P95 = percentile(norms, 0.95);
+        double l2_P99 = percentile(norms, 0.99);
+        auto end_time = std::chrono::high_resolution_clock::now();
+        std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
+        uint64_t mins = minutes.count();
 
-    registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
+        registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
     } else {
         printBaselineComparison(
             goldenOutput,

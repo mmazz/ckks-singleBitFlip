@@ -21,7 +21,6 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  mult_depth: " << mult_depth << "\n"
        << "  seed: " << seed << "\n"
        << "  seed_input: " << seed_input << "\n"
-       << "  num_limbs: " << num_limbs << "\n"
        << "  logMin: " << logMin << "\n"
        << "  logMax: " << logMax << "\n"
        << "  withNTT: " << withNTT << "\n"
@@ -56,20 +55,19 @@ void print_usage(const char* program_name) {
               << "  --logQ <value>          First mod bits (default: 60)\n"
               << "  --logDelta <value>      Scaling factor bits (default: 50)\n"
               << "  --logSlots <value>      log Slots used (default: 1)\n"
-              << "  --mult-depth <value>    Multiplicative depth (only openfhe, default: 0)\n"
+              << "  --mult_depth <value>    Multiplicative depth (only openfhe, default: 0)\n"
               << "  --withNTT <value>       Turn on or off NTT (only heaan, default: 0)\n"
               << "  --doAdd <value>         The pipeline server has addition (default: 0)\n"
               << "  --doMul <value>         The pipeline server has that much Muls (default: 0)\n"
               << "  --doRot <value>         The pipeline server has Rot, the value is how many rot (default: 0)\n"
               << "  --flipType <name>       Type of bit flip campaign (default: exhaustive)\n"
               << "  --seed <value>          Random seed for scheme (default: 0)\n"
-              << "  --seed-input <value>    Random seed for input (default: 0)\n"
-              << "  --num_limbs <value>     Number of RNS limbs (only heaan, default: 3)\n"
+              << "  --seed_input <value>    Random seed for input (default: 0)\n"
               << "  --logMin <value>        logMin value (default: 0= sample from [-1,)\n"
               << "  --logMax <value>        logMax value (default: 0= sample up to ,1])\n"
               << "  --attackModeSKA <value> Type of error injection for SKA (only heaan, default: complete)\n"
               << "  --thresholdSKA <value>  Bits for threshold for SKA (only heaan, default: 5.0)\n"
-              << "  --results-dir <path>    Results directory (default: results)\n"
+              << "  --results_dir <path>    Results directory (default: results)\n"
               << "  --verbose, -v           Verbose output\n"
               << "  --help, -h              Show this help\n\n"
               << "Examples:\n"
@@ -87,22 +85,21 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"logQ",           required_argument, 0, 'Q'},
         {"logDelta",       required_argument, 0, 'd'},
         {"logSlots",       required_argument, 0, 'g'},
-        {"mult-depth",     required_argument, 0, 'm'},
+        {"mult_depth",     required_argument, 0, 'm'},
         {"withNTT",        required_argument, 0, 'n'},
         {"doAdd",          required_argument, 0, 'A'},
         {"doMul",          required_argument, 0, 'M'},
         {"doRot",          required_argument, 0, 'r'},
         {"isExhaustive",       required_argument, 0, 'T'},
-        {"num_limbs",      required_argument, 0, 'L'},
         {"logMin",         required_argument, 0, 'x'},
         {"logMax",         required_argument, 0, 'y'},
         {"seed",           required_argument, 0, 's'},
-        {"seed-input",     required_argument, 0, 'b'},
+        {"seed_input",     required_argument, 0, 'b'},
         // only Openfhe
         {"attackModeSKA",  required_argument, 0, 'a'},
         {"thresholdSKA",   required_argument, 0, 't'},
 
-        {"results-dir",    required_argument, 0, 'R'},
+        {"results_dir",    required_argument, 0, 'R'},
         {"verbose",        no_argument,       0, 'v'},
         {"help",           no_argument,       0, 'h'},
         {0, 0, 0, 0}
@@ -112,7 +109,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "S:c:N:Q:d:g:m:n:A:M:r:T:L:x:y:s:b:a:t:R:v:h",
+        "S:c:N:Q:d:g:m:n:A:M:r:T:x:y:s:b:a:t:R:v:h",
         long_options,
         &option_index)) != -1)
     {
@@ -132,7 +129,6 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'm': args.mult_depth = std::stoul(optarg); break;
             case 's': args.seed = std::stoul(optarg); break;
             case 'b': args.seed_input = std::stoul(optarg); break;
-            case 'L': args.num_limbs = std::stoul(optarg); break;
             case 'x': args.logMin = std::stoul(optarg); break;
             case 'y': args.logMax = std::stoul(optarg); break;
             case 'r': args.doRot = std::stoul(optarg); break;
@@ -187,8 +183,6 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         }
     }
 
-    if (args.num_limbs == 0)
-        args.num_limbs = args.mult_depth + 1;
     if (!args.logSlots_provided) {
         if (args.logN == 0) {
             std::cerr << "Error: logN must be set if --logSlots is omitted\n";
