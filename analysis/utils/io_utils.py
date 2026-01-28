@@ -19,17 +19,18 @@ OPTIONAL_DEFAULTS = {
     "doMul": 0,
     "doRot": 0,
     "bitPerCoeff": 64,
+    "dnum": 3,
 }
 
-OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive"}
+OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive", "scaleTech"}
 
 
 def load_and_filter_campaigns(csv_path, filters):
     campaigns = pd.read_csv(csv_path)
 
     # --- Normalización ---
-    for c in ["library", "stage"]:
-        if c in campaigns.columns:
+    for c in campaigns.columns:
+        if campaigns[c].dtype == object:
             campaigns[c] = (
                 campaigns[c]
                 .astype(str)

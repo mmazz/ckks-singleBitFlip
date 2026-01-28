@@ -56,9 +56,9 @@ def main():
 
     data = load_campaign_data(selected, config.DATA_DIR)
 
-    limb2= data[data["limb"]==2]
-    plot_l2_per_coeff_bit(limb2)
     limb0= data[data["limb"]==0]
     plot_l2_per_coeff_bit(limb0)
+
+
 if __name__ == "__main__":
     main()

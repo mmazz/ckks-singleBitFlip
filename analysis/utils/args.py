@@ -33,6 +33,8 @@ def parse_args():
     parser.add_argument("--logSlots", type=int, default=5)
     parser.add_argument("--logQ", type=int, default=60)
     parser.add_argument("--logDelta", type=int, default=50)
+    parser.add_argument("--dnum", type=int, default=3)
+    parser.add_argument("--scaleTech", type=str, default="fixedmanual")
 
     # -------- opcionales sin default (no filtran) --------
     parser.add_argument("--seed", type=int, default=None)

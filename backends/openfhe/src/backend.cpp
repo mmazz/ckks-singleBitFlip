@@ -61,58 +61,6 @@ SecretKeyAttackMode to_openfhe_attack_mode(AttackModeSKA mode)
     }
     throw std::logic_error("Invalid AttackModeSKA");
 }
-BackendContext* setup_campaign_extras(const CampaignArgs& args, ScalingTechnique scaleTech=FIXEDMANUAL, uint32_t dnum=3)
-{
-
-    if (args.openfhe_attack_mode || args.openfhe_threshold_bits)
-    {
-        auto attackModeOF =
-            args.openfhe_attack_mode
-                ? to_openfhe_attack_mode(*args.openfhe_attack_mode)
-                : SecretKeyAttackMode::CompleteInjection;
-
-        double threshold = args.openfhe_threshold_bits.value_or(5.0);
-
-        auto cfg = SDCConfigHelper::MakeConfig(
-            false, // Disable execption
-            attackModeOF,
-            threshold
-        );
-
-        SDCConfigHelper::SetGlobalConfig(cfg);
-    }
-    CCParams<CryptoContextCKKSRNS> params;
-    params.SetMultiplicativeDepth(args.mult_depth);
-    params.SetScalingModSize(args.logDelta);
-    params.SetFirstModSize(args.logQ);
-    params.SetBatchSize(1 << args.logSlots);
-    params.SetRingDim(1 << args.logN);
-    params.SetScalingTechnique(scaleTech);
-    params.SetNumLargeDigits(dnum);
-    params.SetSecurityLevel(HEStd_NotSet);
-    auto* ctx = new OpenFHEContext();
-
-    ctx->prng = &lbcrypto::PseudoRandomNumberGenerator::GetPRNG();
-    ctx->prng->SetSeed(args.seed);
-    ctx->cc = GenCryptoContext(params);
-    ctx->cc->Enable(PKE);
-    ctx->cc->Enable(KEYSWITCH);
-    ctx->cc->Enable(LEVELEDSHE);
-
-    ctx->keys = ctx->cc->KeyGen();
-    if(args.doMul)
-        ctx->cc->EvalMultKeyGen(ctx->keys.secretKey);
-
-    if(args.doRot>0){
-        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
-        ctx->cc->EvalAtIndexKeyGen(ctx->keys.secretKey, {rotIndex});
-    }
-
-    compute_plain_io(args, ctx->baseInput, ctx->goldenOutput);
-
-    return ctx;
-}
-
 
 BackendContext* setup_campaign(const CampaignArgs& args)
 {
