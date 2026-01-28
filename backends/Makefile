@@ -5,12 +5,18 @@ SEEDS := 1 2 3 4 5
 
 .PHONY: logN_analysis
 
+encode_analysis:
+	@cd heaan && \
+	$(BIN_EXHAUSTIVE) --logN 3 --logQ 60 --logDelta 40 --bitPerCoeff 130 --stage encode --logSlots 2 --seed 1 --withNTT 0 && \
+	cd ../openfhe && \
+	$(BIN_EXHAUSTIVE) --logN 3 --logQ 60 --logDelta 40  --stage encode --logSlots 2 --seed 1 --withNTT 0
+
 logQ_analysis:
 	@cd $(LIBRARY) && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 40  --bitPerCoeff 50  --logN 6 --logDelta 30 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60  --bitPerCoeff 75  --logN 6 --logDelta 45 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 80  --bitPerCoeff 100 --logN 6 --logDelta 60 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 100 --bitPerCoeff 125 --logN 6 --logDelta 75 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 40  --bitPerCoeff 50   --logDelta 30 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60  --bitPerCoeff 75   --logDelta 45 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 80  --bitPerCoeff 100  --logDelta 60 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 100 --bitPerCoeff 125  --logDelta 75 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0
 
 logN_analysis:
 	@cd $(LIBRARY) && \

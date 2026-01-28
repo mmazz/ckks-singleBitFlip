@@ -1,3 +1,5 @@
+encode_analysis:
+	python3 encode_analysis.py --library heaan --logN 3 --logQ 60 --logDelta 40 --bitPerCoeff 130 --stage encode --logSlots 2 --seed 1 --withNTT 0
 
 logN_analysis:
 	python3 logN_analysis.py --logN 16 --logQ 60 --logDelta 50 --library heaan --stage encrypt_c0 --bitPerCoeff 64 --logSlots 15

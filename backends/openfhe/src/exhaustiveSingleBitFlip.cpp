@@ -44,13 +44,13 @@ int main(int argc, char* argv[]) {
         uint32_t N = 1 << args.logN;
         size_t num_coeffs = N;
         size_t bits_per_coeff = args.bitPerCoeff;
-        size_t total_expected = args.mult_depth * num_coeffs * bits_per_coeff ;
+        size_t total_expected = (args.mult_depth + 1) * num_coeffs * bits_per_coeff ;
         std::vector<double> norms;
         norms.reserve(total_expected);
 
         std::cout << "Expected bit flips: " << total_expected << std::endl;
 
-        for (size_t limb = 0; limb < args.mult_depth; limb++)
+        for (size_t limb = 0; limb < (args.mult_depth + 1); limb++)
         {
             for (size_t coeff = 0; coeff < num_coeffs; coeff++)
             {
