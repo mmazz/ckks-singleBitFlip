@@ -32,5 +32,6 @@ colors = {
 }
 
 width=8
+size = 80
 alpha=0.7
 show=True

@@ -5,6 +5,16 @@ SEEDS := 1 2 3 4 5
 
 .PHONY: logN_analysis
 
+seeds_analysis:
+	@cd $(LIBRARY) && \
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --bitPerCoeff 64 --logDelta 40 \
+			--stage encrypt_c0 --logSlots 5 --seed $$s --seed_input $$s_input --withNTT 0 ; \
+		done; \
+	done
+
+
 encode_analysis:
 	@cd heaan && \
 	$(BIN_EXHAUSTIVE) --logN 3 --logQ 60 --logDelta 40 --bitPerCoeff 130 --stage encode --logSlots 2 --seed 1 --withNTT 0 && \
@@ -35,14 +45,6 @@ gap_analysis:
 	$(BIN_EXHAUSTIVE) --logN 6  --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
 	$(BIN_EXHAUSTIVE) --logN 6  --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 4 --seed 1 --withNTT 0 && \
 	$(BIN_EXHAUSTIVE) --logN 6  --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 3 --seed 1 --withNTT 0
-
-seeds_analysis:
-	@cd $(LIBRARY) && \
-	for s in $(SEEDS); do \
-		for s_input in $(SEEDS); do \
-		$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --bitPerCoeff 64 --logDelta 40 \
-			--stage encrypt_c0 --logSlots 5 --seed $$s --seed_input $$s_input --withNTT 0 ; \
-	done
 
 mul_analysis:
 	@cd $(LIBRARY) && \

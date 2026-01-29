@@ -13,8 +13,13 @@ from utils.io_utils import load_campaign_data, load_and_filter_campaigns
 
 show = config.show
 width = int(config.width)
+colors = config.colors
+s = config.size
 
-def plot_bit(stats, Q, Delta, ax=None, label_prefix="", scatter=False):
+dir = "img/"
+savename = "encode"
+
+def plot_bit(stats, Q, Delta, ax=None, label_prefix="", color=config.colors["red"], scatter=False):
 
     if ax is None:
         ax = plt.gca()
@@ -32,10 +37,10 @@ def plot_bit(stats, Q, Delta, ax=None, label_prefix="", scatter=False):
     if scatter:
         ax.scatter(
             x_norm,
-            mean, color=config.colors["red"],
-            s=80,                # 👈 tamaño del punto
+            mean, color=color,
+            s=s,                # 👈 tamaño del punto
             zorder=4,            # 👈 arriba del plot
-            label=f"{label_prefix}Mean $L_2$"
+            label=f"{label_prefix} Mean $L_2$"
         )
     else:
         ax.plot(
@@ -44,12 +49,13 @@ def plot_bit(stats, Q, Delta, ax=None, label_prefix="", scatter=False):
             linewidth=2,
             marker="o",
             markersize=6,
+            color=color,
             zorder=2,            # 👈 abajo del scatter
-            label=f"{label_prefix}Mean $L_2$"
+            label=f"{label_prefix} Mean $L_2$"
         )
 
     ax.set_yscale("symlog")
-    ax.set_xlabel("Bit index")
+    ax.set_xlabel("Normalize Bit index")
     ax.set_ylabel("$L_2$ norm (symlog)")
     ax.grid(True, which="both")
 
@@ -89,9 +95,9 @@ def main():
     selected_openfhe = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters_openfhe)
 
     if selected_openfhe.empty:
-        raise RuntimeError("No hay campañas que cumplan los filtros")
+        raise RuntimeError("There is no campaigns with those filters")
     if selected_heaan.empty:
-        raise RuntimeError("No hay campañas que cumplan los filtros")
+        raise RuntimeError("There is no campaigns with those filters")
 
     data_openfhe = load_campaign_data(selected_openfhe, config.DATA_DIR)
     data_heaan = load_campaign_data(selected_heaan, config.DATA_DIR)
@@ -107,11 +113,15 @@ def main():
 
     fig, ax = plt.subplots(figsize=(12, 5))
 
-    plot_bit(openfhe, Q_openfhe, Delta_openfhe, ax=ax, label_prefix=f"openfhe")
-    plot_bit(heaan, Q_HEAAN, Delta_HEAAN, ax=ax, label_prefix=f"heaan")
+    plot_bit(openfhe, Q_openfhe, Delta_openfhe, ax=ax, label_prefix=f"OpenFHE", color=colors["red"], scatter=True)
+    plot_bit(heaan, Q_HEAAN, Delta_HEAAN, ax=ax, label_prefix=f"HEAAN", color=colors["blue"], scatter=True)
     ax.legend()
     plt.tight_layout()
-    plt.show()
+
+    plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
+    plt.savefig(dir+f"{savename}.png", bbox_inches='tight')
+    if show:
+        plt.show()
 
 
 if __name__ == "__main__":
