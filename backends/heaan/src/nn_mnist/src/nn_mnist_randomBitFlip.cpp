@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
             for (size_t i = 0; i < num_bitFlips; i++) {
                 uint32_t coeff = random_int(0, N-1);
                 IterationArgs iterArgs(0, coeff, bit);
-                IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue);
+                IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, iterArgs);
                 SlotErrorStats  stats;
                 logger.log(iterArgs.limb,
                         iterArgs.coeff,
