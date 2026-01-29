@@ -9,11 +9,10 @@ from utils import config
 
 show = config.show
 width = int(config.width)
-s = config.size
 colors = config.colors
+alpha = config.alpha
 
-
-def plot_bits(stats, ax=None, label_prefix="", color=colors["red"], scatter=False):
+def plot_bits(stats, ax=None, label_prefix="", color=config.colors["red"], scatter=False, size=40):
 
     if ax is None:
         ax = plt.gca()
@@ -26,7 +25,8 @@ def plot_bits(stats, ax=None, label_prefix="", color=colors["red"], scatter=Fals
         ax.scatter(
             x,
             mean, color=color,
-            s=s,                # 👈 tamaño del punto
+            s=size,                # 👈 tamaño del punto
+            alpha=alpha,
             zorder=4,            # 👈 arriba del plot
             label=f"Encrypt {label_prefix} Mean $L_2$"
         )
@@ -47,7 +47,7 @@ def plot_bits(stats, ax=None, label_prefix="", color=colors["red"], scatter=Fals
     ax.set_ylabel("$L_2$ norm (symlog)")
     ax.grid(True, which="both")
 
-def plot_bit(stats, Q=None, Delta=None, ax=None, label_prefix="", color=colors["red"], scatter=False, ylabel="Bit index"):
+def plot_bit(stats, Q=None, Delta=None, ax=None, label_prefix="", color=colors["red"], scatter=False, ylabel="Bit index", size=40):
 
     if ax is None:
         ax = plt.gca()
@@ -69,7 +69,7 @@ def plot_bit(stats, Q=None, Delta=None, ax=None, label_prefix="", color=colors["
         ax.scatter(
             x_norm,
             mean, color=color,
-            s=s,                # 👈 tamaño del punto
+            s=size,                # 👈 tamaño del punto
             zorder=4,            # 👈 arriba del plot
             label=f"{label_prefix} Mean $L_2$"
         )

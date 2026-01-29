@@ -75,8 +75,8 @@ def main():
 
     fig, ax = plt.subplots(figsize=(12, 5))
 
-    plot_bit(openfhe, Q_openfhe, Delta_openfhe, ax=ax, label_prefix=f"OpenFHE", color=colors["red"], scatter=True, ylabel="Normalize Bit index")
-    plot_bit(heaan, Q_HEAAN, Delta_HEAAN, ax=ax, label_prefix=f"HEAAN", color=colors["blue"], scatter=True, ylabel="Normalize Bit index")
+    plot_bit(openfhe, Q_openfhe, Delta_openfhe, ax=ax, label_prefix=f"OpenFHE", color=colors["red"], scatter=True, ylabel="Normalize Bit index", size=80)
+    plot_bit(heaan, Q_HEAAN, Delta_HEAAN, ax=ax, label_prefix=f"HEAAN", color=colors["blue"], scatter=True, ylabel="Normalize Bit index", size=50)
     ax.legend()
     plt.tight_layout()
 

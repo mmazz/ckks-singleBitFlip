@@ -12,40 +12,77 @@ CXX := g++
 CXXFLAGS := -std=c++17 -O2 -pthread -MMD -MP \
             -I$(HEAAN_SRC)/src \
             -I$(COMMON_SRC) \
-            -I./src
+            -Isrc
 
 LDFLAGS := -L$(HEAAN_SRC)/lib -L/usr/local/lib
 LIBS    := -lHEAAN -lntl -lgmp -lm
 
+
 # ------------------------------------------------
-# Programs
+# Detect mains automatically
+# (todo archivo que NO empiece con utils)
 # ------------------------------------------------
 
-PROGRAMS := nn_mnist
+MAINS := $(filter-out src/utils%.cpp,$(wildcard src/*.cpp))
 
-TARGETS := $(addprefix $(BIN_DIR)/,$(PROGRAMS))
-SRC := $(wildcard *.cpp)
-OBJ := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRC))
+PROGRAMS := $(notdir $(MAINS:.cpp=))
+TARGETS  := $(addprefix $(BIN_DIR)/,$(PROGRAMS))
 
-DEP := $(OBJ:.o=.d)
+
+# ------------------------------------------------
+# Utils / shared code
+# ------------------------------------------------
+
+UTILS_SRC := $(filter src/utils%.cpp,$(wildcard src/*.cpp)) \
+             $(wildcard $(COMMON_SRC)/*.cpp)
+
+UTILS_OBJ := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(UTILS_SRC))
+
 
 # ------------------------------------------------
 
 all: dirs $(TARGETS)
 
 dirs:
-	@mkdir -p $(BIN_DIR) $(OBJ_DIR)
+	@mkdir -p $(BIN_DIR)
 
-# Link
-$(BIN_DIR)/nn_mnist: $(OBJ)
-	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+
+# ------------------------------------------------
+# Link rule PER TARGET
+# solo linkea SU main + utils
+# ------------------------------------------------
+
+$(BIN_DIR)/%: src/%.cpp $(UTILS_OBJ)
+	@mkdir -p $(dir $@)
+
+	$(CXX) $(CXXFLAGS) -c $< -o $(OBJ_DIR)/$<.o
+
+	$(CXX) \
+	    $(OBJ_DIR)/$<.o \
+	    $(UTILS_OBJ) \
+	    -o $@ \
+	    $(LDFLAGS) $(LIBS)
+
 	@echo "✓ Built $@"
 
 
+# ------------------------------------------------
+# Compile utils
+# ------------------------------------------------
+
 $(OBJ_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-# Auto dependency include
--include $(DEP)
+
+
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+.PHONY: all clean dirs
+
+run_bitflips:
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 1 --withNTT 0
 
 run:
 	build/bin/nn_mnist 6 0 >> log.txt
@@ -55,7 +92,4 @@ run:
 	build/bin/nn_mnist 10 0 >> log.txt
 	build/bin/nn_mnist 11 0 >> log.txt
 
-clean:
-	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean dirs

@@ -1,34 +1,5 @@
-#include "HEAAN.h"
-#include <NTL/ZZ.h>
-#include <vector>
-#include <algorithm>
-
-struct HEEnv {
-    Context context;
-    SecretKey sk;
-    Scheme scheme;
-    vector<long> rotIdx;
-
-    HEEnv(long logN, long logQ, long h)
-        : context(logN, logQ),
-          sk(logN, h),
-          scheme(sk, context)
-    {
-        for (long p = 1; p <= 512; p <<= 1) {
-            rotIdx.push_back(p);
-            scheme.addLeftRotKey(sk, p);
-        }
-    }
-};
-
-struct EncodedWeights {
-    vector<ZZX> W1;
-    vector<double> b1;
-
-    vector<vector<ZZX>> W2;
-    vector<double> b2;
-};
-
+#include "utils_nn.h"
+#include "backend_interface.h"
 
 EncodedWeights encodeWeights(
     HEEnv& he,
@@ -257,56 +228,6 @@ bool loadMnistNormRowByIndex(const std::string &csvPath, size_t rowIndex,
     return false;
 }
 
-bool loadMnistRowByIndex(const std::string &csvPath, size_t rowIndex,
-                         size_t &outLabel, std::vector<double> &pixelsOut)
-{
-    std::ifstream file(csvPath);
-    if (!file.is_open()) {
-        std::cerr << "Error: no se pudo abrir " << csvPath << "\n";
-        return false;
-    }
-
-    std::string line;
-    size_t currentRow = 0;
-
-    while (std::getline(file, line)) {
-        if (currentRow == rowIndex) {
-            std::stringstream ss(line);
-            std::string cell;
-
-            // Leer label (primera columna)
-            if (!std::getline(ss, cell, ',')) {
-                std::cerr << "Error: fila vacía en índice " << rowIndex << "\n";
-                return false;
-            }
-            outLabel = std::stoi(cell);
-
-            // Leer 784 píxeles
-            pixelsOut.clear();
-            pixelsOut.reserve(784);
-
-            while (std::getline(ss, cell, ',')) {
-                int pixel = std::stoi(cell);
-                pixel = std::clamp(pixel, 0, 255);  // C++17
-                pixelsOut.push_back(static_cast<double>(pixel));
-            }
-
-            if (pixelsOut.size() != 784) {
-                std::cerr << "Error: fila " << rowIndex
-                          << " tiene " << pixelsOut.size()
-                          << " píxeles (esperado: 784)\n";
-                return false;
-            }
-
-            return true;
-        }
-        currentRow++;
-    }
-
-    std::cerr << "Error: índice " << rowIndex
-              << " fuera de rango (total filas: " << currentRow << ")\n";
-    return false;
-}
 
 
 std::vector<std::vector<double>> loadCSVMatrix(const std::string& path, size_t rows, size_t cols) {
@@ -360,78 +281,40 @@ std::vector<double> loadCSVVector(const std::string& path, size_t size) {
 }
 
 
-const size_t INPUT_DIM = 784;
-const size_t HIDDEN_DIM = 64;
-const size_t OUTPUT_DIM = 10;
-const double PIXEL_MAX = 255.0;
-const std::string path = "data/mnist_train.csv";
+IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs){
 
-int main(int argc, char* argv[]) {
-
-    long logQ = 220;
-    long logP = 30;
-    long logN = 12;
-    long logSlots = 10;
-    long slots = 1 << logSlots;
-    long h = 64;
-
-    size_t targetRow =  std::stoi(argv[1]);;
-    size_t verbose =  std::stoi(argv[2]);;
-    assert(INPUT_DIM <= slots);
-    if(verbose)
-        cout << "Initializing HE..." << endl;
-
-    HEEnv he(logN, logQ, h);
-
-    if(verbose)
-        cout << "Loading weights..." << endl;
-
-    auto W1  = loadCSVMatrix("data/weights/W1.csv", HIDDEN_DIM, INPUT_DIM);
-    auto b1  = loadCSVVector("data/weights/b1.csv", HIDDEN_DIM);
-
-    auto W2  = loadCSVMatrix("data/weights/W2.csv", OUTPUT_DIM, HIDDEN_DIM);
-    auto b2  = loadCSVVector("data/weights/b2.csv", OUTPUT_DIM);
-    assert(W1[0].size() == INPUT_DIM);
-    assert(W2[0].size() == HIDDEN_DIM);
+    size_t logSlots = args.logSlots;
+    size_t slots = 1 << logSlots;
+    size_t logP = args.logDelta;
+    size_t logQ = args.logQ;
+    size_t verbose = args.verbose;
 
 
+    vector<complex<double>> arr(slots, {0,0});
 
-    if(verbose)
-        cout << "Encoding weights..." << endl;
+    for(size_t i=0;i<vals.size();++i)
+        arr[i] = {vals[i],0};
 
-    EncodedWeights encoded =
-        encodeWeights(he, W1, b1, W2, b2, slots, logP);
+    Plaintext plain = he.scheme.encode(arr.data(), slots, logP, logQ);
 
-    if(verbose)
-        cout << "Ready for inference.\n" << endl;
+    if (iterArgs && args.stage == "encode") {
+        SwitchBit(plain.mx[iterArgs->coeff], iterArgs->bit);
+    }
+    Ciphertext c = he.scheme.encryptMsg(plain, ZZ(args.seed));
 
-    vector<double> vals;
-    size_t targetValue;
-
-    bool ok = loadMnistNormRowByIndex(
-        path,
-        targetRow,
-        targetValue,
-        vals
-    );
-
-    if(!ok){
-        cerr << "Error loading MNIST image\n";
-        return 1;
+    if (iterArgs) {
+        if (args.stage == "encrypt_c0") {
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+        } else if (args.stage == "encrypt_c1") {
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
     }
 
-
-    if(verbose)
-        cout << "Encrypting input..." << endl;
-
-    Ciphertext x = encryptInput(he, vals, slots, logP, logQ);
-
-    if(verbose)
+    if(args.verbose)
         cout << "Running encrypted inference..." << endl;
-
     auto outputs = forward(
         he,
-        x,
+        c,
         encoded,
         logSlots,
         logP
@@ -452,7 +335,8 @@ int main(int argc, char* argv[]) {
             pred = i;
         }
     }
-
+    IterationResult res;
+    res.detected = (pred == targetValue);
     if(verbose){
         cout << "\nPrediction: " << pred
              << "\nTarget:     " << targetValue
@@ -469,4 +353,5 @@ int main(int argc, char* argv[]) {
         else
             cout << 0 << std::endl;
     }
+    return res;
 }

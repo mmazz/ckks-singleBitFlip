@@ -37,6 +37,8 @@ encrypt_analysis:
 logN_analysis:
 	@cd $(LIBRARY) && \
 		$(BIN_RANDOM)     --logN 16 --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 15 --seed 1 --withNTT 0 && \
+		$(BIN_RANDOM)     --logN 13 --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 15 --seed 1 --withNTT 0 && \
+		$(BIN_RANDOM)     --logN 10 --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 15 --seed 1 --withNTT 0 && \
 		$(BIN_EXHAUSTIVE) --logN 6  --logQ 60  --bitPerCoeff 64  --logDelta 40 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0
 
 logQ_analysis:
