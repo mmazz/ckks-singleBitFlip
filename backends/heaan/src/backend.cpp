@@ -134,4 +134,72 @@ IterationResult run_iteration(
 void destroy_campaign(BackendContext* ctx) {
     delete ctx;
 }
+IterationResult run_NN(
+    BackendContext* bctx,
+    const CampaignArgs& args,
+    std::optional<IterationArgs> iterArgs)
+{
+    // Backend cerrado: cast seguro por contrato
+    auto& ctx = static_cast<HEAANContext&>(*bctx);
+
+    /* ---------------- Encode ---------------- */
+    Plaintext plain = ctx.scheme.encode(
+        ctx.baseInput.data(),
+        ctx.baseInput.size(),
+        args.logDelta,
+        args.logQ
+    );
+
+    if (iterArgs && args.stage == "encode") {
+        SwitchBit(plain.mx[iterArgs->coeff], iterArgs->bit);
+    }
+
+    Ciphertext c = ctx.scheme.encryptMsg(plain, ctx.seed);
+    Ciphertext c_clean;
+    if(args.doAdd || args.doMul)
+        c_clean = ctx.scheme.encryptMsg(plain, ctx.seed);
+
+    if (iterArgs) {
+        if (args.stage == "encrypt_c0") {
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+        } else if (args.stage == "encrypt_c1") {
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
+    }
+
+    if(args.doAdd)
+        c = ctx.scheme.add(c, c_clean);
+
+    for (uint32_t i = 0; i < args.doMul; ++i) {
+        c = ctx.scheme.mult(c, c_clean);
+        ctx.scheme.reScaleByAndEqual(c, args.logDelta);
+    }
+
+    if(args.doRot){
+        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
+        c = ctx.scheme.leftRotateFast(c, rotIndex);
+    }
+
+    Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
+
+    if (iterArgs && args.stage == "decrypt") {
+        SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit);
+    }
+
+    complex<double>* decoded = ctx.scheme.decode(decrypt_plain);
+
+    IterationResult res;
+    const size_t slots = 1u << args.logSlots;
+    res.values.resize(slots);
+
+    for (size_t i = 0; i < slots; i++) {
+        res.values[i] = decoded[i].real();
+    }
+
+    delete[] decoded;
+
+    res.detected = false;
+
+    return res;
+}
 

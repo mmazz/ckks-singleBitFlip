@@ -1,9 +1,10 @@
-backends/openfhe/build/
-backends/heaan/build/
+build/
+img/
+data/
 src/openfhe-PRNG-Control
 src/HEAAN-PRNG-Control
 __pycache__
 results/
 .cache/
-
+*.txt
 compile_commands.json
