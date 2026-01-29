@@ -15,14 +15,36 @@ from utils.io_utils import load_campaign_data, load_and_filter_campaigns
 
 show = config.show
 width = int(config.width)
+colors = config.colors
+s = config.size
+
+dir = "img/"
+savename = "logDelta"
+
+
 
 BASELINE_LOGN = 3
 BASELINE_LOGSLOTS = 2
 BASELINE_LIBRARY = "heaan"
 BASELINE_STAGE = "encrypt_c0"
-LOGDELTA_VALUES = [20, 30, 40, 50]
+LOGDELTA_VALUES = [25, 35, 45, 55]
 
 
+
+
+
+def stats_by_bit_per_coeff(data_avg: pd.DataFrame) -> pd.DataFrame:
+    return (
+        data_avg
+        .groupby(["logDelta", "bit"], as_index=False)
+        .agg(
+            mean_l2=("l2_mean", "mean"),
+            std_l2=("l2_mean", lambda x: x.std(ddof=0)),
+            min_l2=("l2_mean", "min"),
+            max_l2=("l2_mean", "max"),
+            n_coeff=("l2_mean", "count"),
+        )
+    )
 
 def stats_by_bit_and_coeff_avg_campaigns(data: pd.DataFrame) -> pd.DataFrame:
     """
@@ -46,34 +68,32 @@ def plot_by_logdelta(stats: pd.DataFrame, logdeltas: list[int]):
         sub = stats[stats["logDelta"] == logDelta].copy()
 
         # ordenar para que la concatenación sea correcta
-        sub = sub.sort_values(["coeff", "bit"])
+        sub = sub.sort_values("bit")
 
         # índice X concatenado
-        sub["x"] = sub["coeff"] * B + sub["bit"]
+        #sub["x"] = sub["coeff"] * B + sub["bit"]
 
-        plt.plot(
-            sub["x"],
-            sub["l2_mean"],
-            linewidth=1.5,
+        plt.scatter(
+            sub["bit"],
+            sub["mean_l2"],
+            s=s,
             label=f"logΔ = {logDelta}"
         )
 
     plt.yscale("symlog")
-    plt.xlabel("Concatenated (coeff, bit) index")
-    plt.ylabel("$L_2$ error")
+    plt.xlabel("Bit index")
+    plt.ylabel("$L_2$ norm (symlog)")
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
-    plt.show()
-
 
 def main():
     args = parse_args()
     base_filters = build_filters(args)
 
     logdeltas = LOGDELTA_VALUES
-
     all_stats = []
+
     for ld in logdeltas:
         filters = dict(base_filters)
         filters["logDelta"] = ("int", ld)
@@ -87,8 +107,12 @@ def main():
 
         data = load_campaign_data(selected, config.DATA_DIR)
         data["logDelta"] = ld
+        # 1️⃣ promedio sobre campañas (crea l2_mean)
+        data_avg = stats_by_bit_and_coeff_avg_campaigns(data)
 
-        stats = stats_by_bit_and_coeff_avg_campaigns(data)
+        # 2️⃣ estadística entre coeficientes
+        stats = stats_by_bit_per_coeff(data_avg)
+
         all_stats.append(stats)
 
     if not all_stats:
@@ -96,8 +120,13 @@ def main():
 
     stats = pd.concat(all_stats, ignore_index=True)
     plot_by_logdelta(stats, logdeltas)
+    plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
+    plt.savefig(dir+f"{savename}.png", bbox_inches='tight')
+    if show:
+        plt.show()
 
 
 if __name__ == "__main__":
     main()
+
 

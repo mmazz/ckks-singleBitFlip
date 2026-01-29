@@ -15,6 +15,14 @@ from utils.io_utils import load_campaign_data, load_and_filter_campaigns
 
 show = config.show
 width = int(config.width)
+colors = config.colors
+s = config.size
+
+dir = "img/"
+savename = "logQ"
+
+
+
 
 BASELINE_LOGN = 6
 BASELINE_LOGSLOTS = 5
@@ -166,19 +174,19 @@ def main():
 
         plt.plot(x_scaled, y, marker='o', label=f"logQ={logQ}")
 
-    plt.axvline(1.0, linestyle="--",color="green", linewidth=2, label="logQ")
-    plt.axvline(.74, linestyle="--",color="orange", linewidth=2, label="logDelta")
+ #   plt.axvline(1.0, linestyle="--",color=colors["green"], linewidth=2, label="logQ")
+    #plt.axvline(.74, linestyle="--",color=colors["orange"], linewidth=2, label="logDelta")
     plt.yscale("symlog")
     plt.ylim(0)
     plt.xlabel("Bit position / logQ")
     plt.ylabel("Mean L2 error")
     plt.legend()
     plt.grid(True)
-
-    if config.show:
+    plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
+    plt.savefig(dir+f"{savename}.png", bbox_inches='tight')
+    if show:
         plt.show()
-    else:
-        plt.savefig("logQ_scaled_analysis.pdf", bbox_inches="tight")
+
 
 
 if __name__ == "__main__":

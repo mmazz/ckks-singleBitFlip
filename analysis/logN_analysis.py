@@ -1,7 +1,5 @@
-import numpy as np
 import pandas as pd
 import numpy as np
-from pathlib import Path
 import sys
 import os
 
@@ -12,9 +10,15 @@ import matplotlib.pyplot as plt
 from utils.args import parse_args, build_filters
 from  utils.bitflip_utils import bits_to_flip_generator
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
+from utils.plotters import plot_bit
 
 show = config.show
 width = int(config.width)
+s = config.size
+colors = config.colors
+
+dir = "img/"
+savename = "logN"
 
 BASELINE_SMALL_LOGN = 6
 BASELINE_SMALL_LOGSLOTS = 5
@@ -43,36 +47,6 @@ def stats_by_bit_uniform_coeff(data, drop_dc=True):
     )
     return per_bit
 
-def plot_bit(stats, ax=None, label_prefix="", scatter=False):
-    if ax is None:
-        ax = plt.gca()
-
-    x = stats["bit"].to_numpy()
-    mean = stats["mean_l2"].to_numpy()
-
-    if scatter:
-        ax.scatter(
-            x,
-            mean, color=config.colors["red"],
-            s=80,                # 👈 tamaño del punto
-            zorder=4,            # 👈 arriba del plot
-            label=f"{label_prefix}Mean $L_2$"
-        )
-    else:
-        ax.plot(
-            x,
-            mean,
-            linewidth=2,
-            marker="o",
-            markersize=6,
-            zorder=2,            # 👈 abajo del scatter
-            label=f"{label_prefix}Mean $L_2$"
-        )
-
-    ax.set_yscale("symlog")
-    ax.set_xlabel("Bit index")
-    ax.set_ylabel("$L_2$ norm (symlog)")
-    ax.grid(True, which="both")
 
 def prepare_stats(data, bit_list=None):
     df = stats_by_bit_uniform_coeff(data)
@@ -91,6 +65,7 @@ def prepare_stats(data, bit_list=None):
 
     # Si bit_list es None → dejar todos los bits, orden natural
     return df
+
 def main():
     args = parse_args()
     filters_large = build_filters(args)
@@ -125,11 +100,14 @@ def main():
 
     fig, ax = plt.subplots(figsize=(12, 5))
 
-    plot_bit(df_small, ax=ax, label_prefix=f"logN={BASELINE_SMALL_LOGN} – ")
-    plot_bit(df_large, ax=ax, label_prefix=f"logN={args.logN} – ", scatter=True)
+    plot_bit(df_small, ax=ax, color=colors["blue"], label_prefix=f"logN={BASELINE_SMALL_LOGN} – ")
+    plot_bit(df_large, ax=ax, color=colors["red"],label_prefix=f"logN={args.logN} – ", scatter=True)
     ax.legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig(dir + f"{savename}.pdf", bbox_inches="tight")
+    plt.savefig(dir + f"{savename}.png", bbox_inches="tight")
+    if show:
+        plt.show()
 
 if __name__ == "__main__":
     main()

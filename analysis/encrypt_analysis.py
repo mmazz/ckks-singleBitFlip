@@ -10,16 +10,19 @@ from utils import config
 import matplotlib.pyplot as plt
 from utils.args import parse_args, build_filters
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
-from utils.plotters import plot_bit
+from utils.plotters import plot_bits
 show = config.show
 width = int(config.width)
 colors = config.colors
 s = config.size
 
 dir = "img/"
-savename = "encode"
+savename = "encrypt"
 
-
+def shift_bits(df, offset):
+    df = df.copy()
+    df["bit"] = df["bit"] + offset
+    return df
 
 def stats_by_bit_uniform_coeff(data, drop_dc=True):
     if drop_dc:
@@ -47,36 +50,36 @@ def stats_by_bit_uniform_coeff(data, drop_dc=True):
 
 def main():
     args = parse_args()
-    filters_heaan = build_filters(args)
-    print("Filtros activos:", filters_heaan)
+    filters_c0 = build_filters(args)
+    print("Filtros activos:", filters_c0)
 
-    filters_openfhe = filters_heaan.copy()
-    filters_openfhe["library"] = ("str", "openfhe")
-    filters_openfhe["bitPerCoeff"] = ("int", 64)
-    selected_heaan = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters_heaan)
-    selected_openfhe = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters_openfhe)
+    filters_c1 = filters_c0.copy()
+    filters_c1["stage"] = ("str", "encrypt_c1")
+    selected_c0 = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters_c0)
+    selected_c1 = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters_c1)
 
-    if selected_openfhe.empty:
+    if selected_c1.empty:
         raise RuntimeError("There is no campaigns with those filters")
-    if selected_heaan.empty:
+    if selected_c0.empty:
         raise RuntimeError("There is no campaigns with those filters")
 
-    data_openfhe = load_campaign_data(selected_openfhe, config.DATA_DIR)
-    data_heaan = load_campaign_data(selected_heaan, config.DATA_DIR)
-    print(data_openfhe.head())
-    print(data_heaan.head())
-    openfhe = stats_by_bit_uniform_coeff(data_openfhe)
-    heaan = stats_by_bit_uniform_coeff(data_heaan)
-    print(openfhe)
-    Q_openfhe = filters_openfhe["logQ"][1]
-    Delta_openfhe = filters_openfhe["logDelta"][1]
-    Q_HEAAN= 2*filters_heaan["logQ"][1]
-    Delta_HEAAN =  filters_heaan["logDelta"][1] + filters_heaan["logQ"][1]
+    data_c0 = load_campaign_data(selected_c0, config.DATA_DIR)
+    data_c1 = load_campaign_data(selected_c1, config.DATA_DIR)
+    print(data_c0.head())
+    print(data_c1.head())
+    c0 = data_c0.copy()
+    c0["bit"] = c0["coeff"] * args.bitPerCoeff + c0["bit"]
+    c1 = data_c1.copy()
+    c1["bit"] = c1["coeff"] * args.bitPerCoeff + c1["bit"]
+
 
     fig, ax = plt.subplots(figsize=(12, 5))
 
-    plot_bit(openfhe, Q_openfhe, Delta_openfhe, ax=ax, label_prefix=f"OpenFHE", color=colors["red"], scatter=True, ylabel="Normalize Bit index")
-    plot_bit(heaan, Q_HEAAN, Delta_HEAAN, ax=ax, label_prefix=f"HEAAN", color=colors["blue"], scatter=True, ylabel="Normalize Bit index")
+    offset = c0["bit"].max() + 1
+    c1_shifted = shift_bits(c1, offset)
+
+    plot_bits(c0, ax=ax, label_prefix=f"C0", color=colors["blue"], scatter=True)
+    plot_bits(c1_shifted, ax=ax, label_prefix=f"C1", color=colors["red"], scatter=True)
     ax.legend()
     plt.tight_layout()
 

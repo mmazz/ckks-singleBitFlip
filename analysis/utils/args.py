@@ -18,6 +18,7 @@ def parse_args():
     # -------- obligatorios (conceptualmente) --------
     parser.add_argument("--library", type=str, default=None)
     parser.add_argument("--stage", type=str, default=None)
+    parser.add_argument("--title", type=str, default=None)
 
     # -------- opcionales con default --------
     parser.add_argument("--bitPerCoeff", type=int, default=64)

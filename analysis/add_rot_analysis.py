@@ -16,12 +16,9 @@ colors = config.colors
 s = config.size
 
 dir = "img/"
-savename = "gap"
+savename = "rot_add"
 
 c = [colors["red"], colors["blue"], colors["orange"], colors["green"], colors["green"], colors["green"]]
-
-
-
 
 
 def split_by_gap(data, logN, logSlots):
@@ -44,10 +41,9 @@ def split_by_gap(data, logN, logSlots):
 
     return data, gap
 
-
 def plot_bit_stats_aligned_vs_nonaligned(
-    results_aligned,
-    results_non_aligned
+    results_aligned: pd.DataFrame,
+    results_non_aligned: pd.DataFrame,
 ):
     fig, axes = plt.subplots(
         1, 2,
@@ -60,23 +56,18 @@ def plot_bit_stats_aligned_vs_nonaligned(
         ("Non-aligned coefficients\n(coeff % gap ≠ 0)", results_non_aligned),
     ]
 
-    eps = 1e-18  # clamp mínimo para symlog
-    count = 0
-    for ax, (title, results) in zip(axes, panels):
-        for logSlots, stats in sorted(results.items()):
-            # asegurar orden por bit
-            stats = stats.sort_values("bit")
+    for ax, (title, stats) in zip(axes, panels):
+        # asegurar orden por bit
+        stats = stats.sort_values("bit")
 
-            x = stats["bit"].to_numpy()
-            y = stats["mean_l2"].to_numpy()
+        x = stats["bit"].to_numpy()
+        y = stats["mean_l2"].to_numpy()
 
-            ax.scatter(
-                x, y,
-                s=s,
-                color=c[count],
-                label=f"logSlots = {logSlots}"
-            )
-            count+=1
+        ax.scatter(
+            x,
+            y,
+            s=s,
+        )
 
         ax.set_title(title)
         ax.set_xlabel("Bit index")
@@ -84,9 +75,9 @@ def plot_bit_stats_aligned_vs_nonaligned(
 
     axes[0].set_ylabel("$L_2$ error (symlog)")
     axes[0].set_yscale("symlog")
-    axes[0].legend()
 
     plt.tight_layout()
+
 
 
 def stats_by_bit_per_class(data):
@@ -133,44 +124,29 @@ def stats_for_logslots_per_class(data, logN, logSlots):
 def main():
     base_args = parse_args()
 
-    logslots_values = [
-        base_args.logSlots,
-        base_args.logSlots - 1,
-        base_args.logSlots - 2,
-    ]
+    args = copy.deepcopy(base_args)
 
-    results_aligned = {}
-    results_non_aligned = {}
+    filters = build_filters(args)
 
-    for ls in logslots_values:
-        args = copy.deepcopy(base_args)
-        args.logSlots = ls
+    selected = load_and_filter_campaigns(
+        config.CAMPAIGNS_CSV, filters
+    )
 
-        filters = build_filters(args)
+    if selected.empty:
+        print(f"[WARN] No campaigns for doMul")
 
-        print(f"\n=== logSlots = {ls} ===")
+    data = load_campaign_data(selected, config.DATA_DIR)
+    print(f"Loaded data shape: {data.shape}")
 
-        selected = load_and_filter_campaigns(
-            config.CAMPAIGNS_CSV, filters
-        )
+    stats_by_class, gap = stats_for_logslots_per_class(
+        data, args.logN, args.logSlots
+    )
 
-        if selected.empty:
-            print(f"[WARN] No campaigns for logSlots = {ls}")
-            continue
+    print(f"gap = {gap}")
 
-        data = load_campaign_data(selected, config.DATA_DIR)
-        print(f"Loaded data shape: {data.shape}")
-
-        stats_by_class, gap = stats_for_logslots_per_class(
-            data, args.logN, ls
-        )
-
-        print(f"gap = {gap}")
-
-        results_aligned[ls] = stats_by_class["aligned"]
-        results_non_aligned[ls] = stats_by_class["non_aligned"]
-    if not results_aligned:
-        raise RuntimeError("No data loaded")
+    results_aligned = stats_by_class["aligned"]
+    results_non_aligned = stats_by_class["non_aligned"]
+    print(results_aligned)
 
     plot_bit_stats_aligned_vs_nonaligned(
         results_aligned,

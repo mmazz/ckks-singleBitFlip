@@ -21,7 +21,9 @@ plt.rcParams['legend.fontsize'] = 24 # Tamaño de la fuente de la leyenda
 colors = {
     'blue': '#6BAED6',  # azul
     'orange': '#EE7733',  # naranja
-    'green': '#31A354',  # verde
+    'green': '#83f28f',  # verde
+    'green_light': '#31A354',  # verde
+    'green_dark': '#013220',  # verde
     'red': '#E31A1C',  # rojo
     'violet': '#AA3377',  # púrpura
     'brown': '#663333',  # marrón

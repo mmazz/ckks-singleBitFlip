@@ -16,12 +16,9 @@ colors = config.colors
 s = config.size
 
 dir = "img/"
-savename = "gap"
+savename = "mul"
 
-c = [colors["red"], colors["blue"], colors["orange"], colors["green"], colors["green"], colors["green"]]
-
-
-
+c = [colors["red"], colors["blue"], colors["orange"], colors["green"], colors["green_light"], colors["green_dark"]]
 
 
 def split_by_gap(data, logN, logSlots):
@@ -63,7 +60,7 @@ def plot_bit_stats_aligned_vs_nonaligned(
     eps = 1e-18  # clamp mínimo para symlog
     count = 0
     for ax, (title, results) in zip(axes, panels):
-        for logSlots, stats in sorted(results.items()):
+        for doMul, stats in sorted(results.items()):
             # asegurar orden por bit
             stats = stats.sort_values("bit")
 
@@ -74,7 +71,7 @@ def plot_bit_stats_aligned_vs_nonaligned(
                 x, y,
                 s=s,
                 color=c[count],
-                label=f"logSlots = {logSlots}"
+                label=f"Mul depth= {doMul}"
             )
             count+=1
 
@@ -85,6 +82,7 @@ def plot_bit_stats_aligned_vs_nonaligned(
     axes[0].set_ylabel("$L_2$ error (symlog)")
     axes[0].set_yscale("symlog")
     axes[0].legend()
+    axes[1].legend()
 
     plt.tight_layout()
 
@@ -133,36 +131,36 @@ def stats_for_logslots_per_class(data, logN, logSlots):
 def main():
     base_args = parse_args()
 
-    logslots_values = [
-        base_args.logSlots,
-        base_args.logSlots - 1,
-        base_args.logSlots - 2,
+    mulDepth_values= [
+        base_args.doMul,
+        base_args.doMul - 1,
+        base_args.doMul - 2,
     ]
 
     results_aligned = {}
     results_non_aligned = {}
 
-    for ls in logslots_values:
+    for ls in mulDepth_values:
         args = copy.deepcopy(base_args)
-        args.logSlots = ls
+        args.doMul = ls
 
         filters = build_filters(args)
 
-        print(f"\n=== logSlots = {ls} ===")
+        print(f"\n=== doMul = {ls} ===")
 
         selected = load_and_filter_campaigns(
             config.CAMPAIGNS_CSV, filters
         )
 
         if selected.empty:
-            print(f"[WARN] No campaigns for logSlots = {ls}")
+            print(f"[WARN] No campaigns for doMul= {ls}")
             continue
 
         data = load_campaign_data(selected, config.DATA_DIR)
         print(f"Loaded data shape: {data.shape}")
 
         stats_by_class, gap = stats_for_logslots_per_class(
-            data, args.logN, ls
+            data, args.logN, args.logSlots
         )
 
         print(f"gap = {gap}")

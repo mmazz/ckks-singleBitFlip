@@ -11,7 +11,8 @@ int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "heaan";
     args.isExhaustive= false;
-    args.mult_depth = 1;
+    args.mult_depth = 0;
+
     if (args.verbose) {
         args.print();
     }
