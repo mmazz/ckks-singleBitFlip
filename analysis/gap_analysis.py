@@ -7,8 +7,8 @@ sys.path.append(os.path.abspath("./"))
 from utils import config
 from utils.args import parse_args, build_filters
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
-from utils.df_utils import split_by_gap, stats_for_logslots_per_class, stats_by_bit_per_class
-from utils.plotters import plot_bit_aligned_vs_nonaligned
+from utils.df_utils import split_by_gap, stats_for_logslots_per_class, stats_by_bit
+from utils.plotters import plot_bit
 
 show = config.show
 width = int(config.width)
@@ -36,15 +36,12 @@ def main():
     if base_args.title:
         savename = base_args.title
 
-    logslots_values = [
-        base_args.logSlots,
-        base_args.logSlots - 1,
-        base_args.logSlots - 2,
-    ]
+    logslots_values = [base_args.logSlots, base_args.logSlots - 1, base_args.logSlots - 2]
 
-    results_aligned = {}
-    results_non_aligned = {}
-
+    fig, ax = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
+    i = 0
+    s = config.size
+    alpha = config.alpha
     for logSlot in logslots_values:
         args = copy.deepcopy(base_args)
         args.logSlots = logSlot
@@ -59,20 +56,22 @@ def main():
         data = load_campaign_data(selected, config.DATA_DIR)
 
     ########################## STATS ###############################
-        stats_by_class, gap = stats_for_logslots_per_class(data, args.logN, logSlot)
+        stats_gaps, gap   = split_by_gap(data, args.logN, logSlot)
+        stats_aligned     = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="aligned"])
+        stats_non_aligned = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="non_aligned"])
 
-        results_aligned[logSlot] = stats_by_class["aligned"]
-        results_non_aligned[logSlot] = stats_by_class["non_aligned"]
-    if not results_aligned:
-        raise RuntimeError("No data loaded")
+        plot_bit(stats_aligned,     ax=ax[0], label_prefix="", color=c[i], size=s-i*20, alpha=alpha)
+        plot_bit(stats_non_aligned, ax=ax[1], label_prefix="", color=c[i],  size=s-i*20, alpha=alpha)
+        i+=1
 
     ########################## PLOT ################################
-    fig, axes = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
 
-    plot_bit_aligned_vs_nonaligned(results_aligned, results_non_aligned, axes)
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
     plt.savefig(dir+f"{savename}.png", bbox_inches='tight')
+    plt.tight_layout()
+    plt.gca()
+
     if show:
         plt.show()
 

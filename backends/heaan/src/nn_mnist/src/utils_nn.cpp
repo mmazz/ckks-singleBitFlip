@@ -75,12 +75,12 @@ Ciphertext chebyTanh3(
     Ciphertext x3 = he.scheme.mult(x2, x);
     he.scheme.reScaleByAndEqual(x3, logP);
 
-    // 0.14*x^3
-    he.scheme.multByConstAndEqual(x3, 0.14, logP);
+    // -0.23*x^3
+    he.scheme.multByConstAndEqual(x3, -0.23, logP);
     he.scheme.reScaleByAndEqual(x3, logP);
 
-    // 0.86*x
-    he.scheme.multByConstAndEqual(x, 0.86, logP);
+    // 0.98*x
+    he.scheme.multByConstAndEqual(x, 0.98, logP);
     he.scheme.reScaleByAndEqual(x, logP);
 
     he.scheme.addAndEqual(x3, x);
@@ -101,7 +101,7 @@ void reduceSum(
 
 vector<Ciphertext> forward(
     HEEnv& he,
-    Ciphertext x,
+    Ciphertext c,
     EncodedWeights& ew,
     long logSlots,
     long logP
@@ -113,7 +113,7 @@ vector<Ciphertext> forward(
     vector<Ciphertext> layer1(HIDDEN);
     for(size_t j=0;j<HIDDEN;++j){
 
-        Ciphertext s = he.scheme.multByPoly(x, ew.W1[j], logP);
+        Ciphertext s = he.scheme.multByPoly(c, ew.W1[j], logP);
         he.scheme.reScaleByAndEqual(s, logP);
 
         reduceSum(he, s, logSlots);

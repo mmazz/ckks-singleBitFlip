@@ -60,8 +60,8 @@ def main():
     ########################## PLOT ################################
     fig, ax = plt.subplots(figsize=(12, 5))
 
-    plot_bit(openfhe_norm, ax=ax, label_prefix="OpenFHE", color=colors["red"],  scatter=True, ylabel="Normalize Bit index", size=80)
-    plot_bit(heaan_norm,   ax=ax, label_prefix="HEAAN",   color=colors["blue"], scatter=True, ylabel="Normalize Bit index", size=50)
+    plot_bit(openfhe_norm, ax=ax, label_prefix="OpenFHE", color=colors["red"],  scatter=True, xlabel="Normalize Bit index", size=80)
+    plot_bit(heaan_norm,   ax=ax, label_prefix="HEAAN",   color=colors["blue"], scatter=True, xlabel="Normalize Bit index", size=50)
 
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')

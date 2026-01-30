@@ -10,151 +10,58 @@ from utils import config
 
 from utils.args import parse_args, build_filters
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
+from utils.df_utils import split_by_gap, stats_by_bit_sdc
+from utils.plotters import plot_bit_cat
 show = config.show
 width = int(config.width)
 colors = config.colors
 s = config.size
+c = [colors["red"], colors["blue"]]
 
 dir = "img/"
 
-c = [colors["red"], colors["blue"]]
+SAVENAME = "heaan_NN"
 
-
-def split_by_gap(data, logN, logSlots):
-    """
-    - remove central coefficient N/2
-    - classify coefficients by gap alignment
-    """
-    N = 1 << logN
-    target_coeff = N // 2
-
-    data = data[data["coeff"] != target_coeff].copy()
-
-    gap = (1 << (logN - 1)) // (1 << logSlots)
-
-    data["gap_class"] = np.where(
-        data["coeff"] % gap == 0,
-        "aligned",
-        "non_aligned"
-    )
-
-    return data, gap
-
-
-
-def stats_by_bit_per_class_is_sdc(data):
-    """
-    Two-stage averaging:
-    - mean over campaigns per (gap_class, bit, coeff)
-    - stats over coefficients per bit
-    """
-
-    per_coeff = (
-        data
-        .groupby(["gap_class", "bit", "coeff"], as_index=False)
-        .agg(sdc_rate=("is_sdc", "mean"))
-    )
-
-    per_bit = (
-        per_coeff
-        .groupby(["gap_class", "bit"], as_index=False)
-        .agg(
-            mean_sdc=("sdc_rate", "mean"),
-            std_sdc=("sdc_rate", lambda x: x.std(ddof=0)),
-            min_sdc=("sdc_rate", "min"),
-            max_sdc=("sdc_rate", "max"),
-            n_coeff=("sdc_rate", "count"),
-        )
-    )
-
-    return per_bit
-
-def stats_for_logslots_per_class(data, logN, logSlots):
-    data, gap = split_by_gap(data, logN, logSlots)
-    stats = stats_by_bit_per_class_is_sdc(data)
-
-    out = {}
-
-    for cls in ["aligned", "non_aligned"]:
-        s = stats[stats["gap_class"] == cls]
-
-        out[cls] = s[["bit", "mean_sdc", "std_sdc"]]
-
-    return out, gap
-def plot_bit_stats_aligned_vs_nonaligned(
-    results_aligned: pd.DataFrame,
-    results_non_aligned: pd.DataFrame,
-):
-    fig, axes = plt.subplots(
-        1, 2,
-        figsize=(15, 5),
-        sharey=True
-    )
-
-    panels = [
-        ("Aligned coefficients\n(coeff % gap = 0)", results_aligned),
-        ("Non-aligned coefficients\n(coeff % gap ≠ 0)", results_non_aligned),
-    ]
-
-    for ax, (title, stats) in zip(axes, panels):
-        # asegurar orden por bit
-        stats = stats.sort_values("bit")
-
-        x = stats["bit"].to_numpy()
-        y = stats["mean_sdc"].to_numpy()
-
-        ax.scatter(
-            x,
-            y,
-            s=s,
-        )
-
-        ax.set_title(title)
-        ax.set_xlabel("Bit index")
-        ax.grid(True)
-
-    axes[0].set_ylabel("$L_2$ error (symlog)")
-    axes[0].set_yscale("symlog")
-
-    plt.tight_layout()
 
 
 
 def main():
     args = parse_args()
-    savename = args.title
+    savename =  SAVENAME
+    if args.title:
+        savename = args.title
 
 
     filters = build_filters(args)
 
-    selected = load_and_filter_campaigns(
-        config.CAMPAIGNS_CSV, filters
-    )
+    selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
 
     if selected.empty:
         print(f"[WARN] No campaigns for doMul")
 
     data = load_campaign_data(selected, config.DATA_DIR)
-    print(f"Loaded data shape: {data.shape}")
+    fig, ax = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
+    i = 0
+    s = config.size
+    alpha = config.alpha
 
-    stats_by_class, gap = stats_for_logslots_per_class(
-        data, args.logN, args.logSlots
-    )
+    ########################## DATA ################################
+    selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
+    data = load_campaign_data(selected, config.DATA_DIR)
 
-    print(f"gap = {gap}")
+    ########################## STATS ###############################
+    stats_gaps, gap = split_by_gap(data, args.logN, args.logSlots)
+    stats_aligned   = stats_by_bit_sdc(stats_gaps[stats_gaps["gap_class"] =="aligned"])
+    stats_non_aligned = stats_by_bit_sdc(stats_gaps[stats_gaps["gap_class"] =="non_aligned"])
 
-    results_aligned = stats_by_class["aligned"]
-    results_non_aligned = stats_by_class["non_aligned"]
-    print(results_aligned)
+    plot_bit_cat(stats_aligned,     ax=ax[0], label_prefix="", color=c[1],  size=s)
+    plot_bit_cat(stats_non_aligned, ax=ax[1], label_prefix="", color=c[1],  size=s)
 
-    plot_bit_stats_aligned_vs_nonaligned(
-        results_aligned,
-        results_non_aligned
-    )
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
     plt.savefig(dir+f"{savename}.png", bbox_inches='tight')
     if show:
         plt.show()
+
 if __name__ == "__main__":
     main()

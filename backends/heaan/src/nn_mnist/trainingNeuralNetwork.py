@@ -48,7 +48,7 @@ class HomomorphicMLP(nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        x = 0.86*x + 0.14*x**3              # ACTIVACIÓN x²  ←  clave para CKKS
+        x = 0.98*x - 0.23*x**3              # ACTIVACIÓN x²  ←  clave para CKKS
         x = self.fc2(x)
         return x                # Output logits (Softmax lo hacemos en loss)
 

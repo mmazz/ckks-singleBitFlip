@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath('./'))
 from utils import config
 from utils.args import parse_args, build_filters
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
-from utils.plotters import plot_bits
+from utils.plotters import plot_bit
 from utils.df_utils import shift_bits
 
 show = config.show
@@ -52,9 +52,10 @@ def main():
 
     offset = c0["bit"].max() + 1
     c1_shifted = shift_bits(c1, offset)
-
-    plot_bits(c0, ax=ax, label_prefix=f"C0", color=colors["blue"], scatter=True)
-    plot_bits(c1_shifted, ax=ax, label_prefix=f"C1", color=colors["red"], scatter=True)
+    c0 = c0.rename(columns={"l2_norm": "mean_l2"})
+    c1 = c1_shifted.rename(columns={"l2_norm": "mean_l2"})
+    plot_bit(c0, ax=ax, label_prefix=f"C0", color=colors["blue"], plot_std=False, label="" )
+    plot_bit(c1, ax=ax, label_prefix=f"C1", color=colors["red"], plot_std=False, label="")
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
     plt.savefig(dir+f"{savename}.png", bbox_inches='tight')

@@ -28,7 +28,7 @@ def normalizer(data, logQ=None, logDelta=None):
     data["bit"] = x_norm
     return data
 
-def split_by_gap(data, logN, logSlots):
+def split_by_gap(data, logN, logSlot):
     """
     - remove central coefficient N/2
     - classify coefficients by gap alignment
@@ -38,7 +38,7 @@ def split_by_gap(data, logN, logSlots):
 
     data = data[data["coeff"] != target_coeff].copy()
 
-    gap = (1 << (logN - 1)) // (1 << logSlots)
+    gap = (1 << (logN - 1)) // (1 << logSlot)
 
     data["gap_class"] = np.where(
         data["coeff"] % gap == 0,
@@ -73,6 +73,32 @@ def filter_coeff_by_library(data, library=None, logN=1):
         data = data[data["coeff"] != target_coeff]
     return data
 
+def stats_by_bit_sdc(data):
+    """
+    Two-stage averaging:
+    - mean over campaigns per (gap_class, bit, coeff)
+    - stats over coefficients per bit
+    """
+
+    per_coeff = (
+        data
+        .groupby(["gap_class", "bit", "coeff"], as_index=False)
+        .agg(sdc_rate=("is_sdc", "mean"))
+    )
+
+    per_bit = (
+        per_coeff
+        .groupby(["gap_class", "bit"], as_index=False)
+        .agg(
+            mean_sdc=("sdc_rate", "mean"),
+            std_sdc=("sdc_rate", lambda x: x.std(ddof=0)),
+            min_sdc=("sdc_rate", "min"),
+            max_sdc=("sdc_rate", "max"),
+            n_coeff=("sdc_rate", "count"),
+        )
+    )
+
+    return per_bit
 
 
 def stats_by_bit(data):

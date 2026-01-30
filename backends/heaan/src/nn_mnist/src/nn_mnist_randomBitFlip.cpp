@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
         std::vector<double> norms;
         norms.reserve(num_bitFlips);
 
-        std::cout << "Total bit flips: " << num_bitFlips*10 << std::endl;
+        std::cout << "Total bit flips: " << num_bitFlips*14 << std::endl;
 
         size_t bits_per_coeff = args.bitPerCoeff;
 
