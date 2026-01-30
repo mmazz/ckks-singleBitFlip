@@ -10,7 +10,7 @@ const size_t HIDDEN_DIM = 64;
 const size_t OUTPUT_DIM = 10;
 const double PIXEL_MAX = 255.0;
 const std::string path = "data/mnist_train.csv";
-size_t NUM_BITFLIPS = 5;
+size_t NUM_BITFLIPS = 50;
 
 int main(int argc, char* argv[]) {
 
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
                         iterArgs.coeff,
                         iterArgs.bit,
                         0.0, 0.0,
-                        res.detected,     // predict correct or not
+                        !res.detected,     // is_sdc: predict correct or not, we need to negate. 1 will be sdc, bad. 0 will be mask, good.
                         stats
                         );
             }

@@ -41,3 +41,12 @@ add_analysis_RNS:
 
 rot_analysis:
 	python3 rot_analysis.py --library $(LIBRARY) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c0  --logSlots 3 --doRot 3
+
+
+
+heaanNN:
+	python3 heaanNN.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0
+
+
+logDelta_analysisBIG:
+	python3 logDelta_analysis.py --logN 6 --logQ 160  --library $(LIBRARY) --stage encrypt_c0 --bitPerCoeff 180 --logSlots 5

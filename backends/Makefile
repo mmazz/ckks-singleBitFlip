@@ -103,3 +103,11 @@ rot_analysis:
 
 clean:
 	rm -rf ../results
+
+
+logDelta_analysisBIG:
+	@cd $(LIBRARY) && \
+	$(BIN_EXHAUSTIVE) --logN 6  --logQ 160   --logDelta 25 --bitPerCoeff 180 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
+	$(BIN_EXHAUSTIVE) --logN 6  --logQ 160   --logDelta 35 --bitPerCoeff 180 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
+	$(BIN_EXHAUSTIVE) --logN 6  --logQ 160   --logDelta 45 --bitPerCoeff 180 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0 && \
+	$(BIN_EXHAUSTIVE) --logN 6  --logQ 160   --logDelta 55 --bitPerCoeff 180 --stage encrypt_c0 --logSlots 5 --seed 1 --withNTT 0

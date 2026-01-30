@@ -31,7 +31,7 @@ std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 
     const uint32_t logQ         = args.logQ;
     const uint32_t logDelta     = args.logDelta;
-    const uint32_t maxBits      = args.bitPerCoeff; // bits por coeficiente
+    const uint32_t maxBits      = args.bitPerCoeff;
     const uint32_t M            = maxBits - 1;
 
     auto clamp = [&](uint32_t v) {
@@ -43,26 +43,27 @@ std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
         if (std::find(res.begin(), res.end(), v) == res.end())
             res.push_back(v);
     };
-
-    // --- Región A: ruido puro ---
+    // zone 1
     push_unique(0);
     push_unique(logDelta / 4);
-
-    // --- Región B: transición ---
     push_unique(logDelta / 2);
     if (logDelta > 0)
         push_unique(logDelta - 1);
 
-    // --- Región C: mensaje dominante ---
+    // zone 2
     push_unique(logDelta);
+    if(logQ>=120){
+        push_unique((logDelta + logQ) / 6);
+        push_unique((logDelta + logQ) / 4);
+        push_unique((logDelta + logQ) / 3);
+        push_unique(logQ-logDelta);
+    }
     push_unique((logDelta + logQ) / 2);
 
-    // --- Región D: borde del módulo ---
     if (logQ > 0)
-        push_unique(logQ - 1);
-    push_unique(logQ);
+        push_unique(logQ);
+    push_unique(logQ+1);
 
-    // --- Región E: overflow / bits muertos ---
     push_unique((logQ + M) / 2);
     push_unique(M);
 
