@@ -11,25 +11,25 @@ def bits_to_flip_generator(logQ: int, logDelta: int, bit_per_coeff: int):
         if v not in res:
             res.append(v)
 
-    # --- Región A: ruido ---
     push_unique(0)
     push_unique(logDelta // 4)
 
-    # --- Región B: transición ---
     push_unique(logDelta // 2)
     if logDelta > 0:
         push_unique(logDelta - 1)
 
-    # --- Región C: mensaje ---
+    if logQ>=120:
+        push_unique((logDelta + logQ) // 6);
+        push_unique((logDelta + logQ) // 4);
+        push_unique((logDelta + logQ) // 3);
+        push_unique(logQ-logDelta);
     push_unique(logDelta)
     push_unique((logDelta + logQ) // 2)
 
-    # --- Región D: borde módulo ---
     if logQ > 0:
         push_unique(logQ - 1)
     push_unique(logQ)
 
-    # --- Región E: overflow ---
     push_unique((logQ + M) // 2)
     push_unique(M)
 

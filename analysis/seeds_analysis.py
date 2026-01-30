@@ -17,6 +17,7 @@ dir = "img/"
 SAVENAME = "encode"
 
 
+
 def main():
     ########################## ARGS ################################
     args = parse_args()
@@ -36,7 +37,7 @@ def main():
 
     data = load_campaign_data(selected, config.DATA_DIR)
 
-    ########################## STATS ################################
+    ########################## STATS ###############################
     data_filter = filter_coeff_by_library(data, "heaan", args.logN)
     stats = stats_by_bit(data_filter)
 
