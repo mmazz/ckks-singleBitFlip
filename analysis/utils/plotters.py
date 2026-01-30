@@ -10,6 +10,43 @@ from utils import config
 width = int(config.width)
 colors = config.colors
 
+def plot_bit_aligned_vs_nonaligned(results_aligned, results_non_aligned, ax=ax):
+    if ax is None:
+        ax = plt.gca()
+    panels = [
+        ("Aligned coefficients\n(coeff % gap = 0)", results_aligned),
+        ("Non-aligned coefficients\n(coeff % gap ≠ 0)", results_non_aligned),
+    ]
+
+    eps = 1e-18  # clamp mínimo para symlog
+    count = 0
+    for axi, (title, results) in zip(ax, panels):
+        for logSlots, stats in sorted(results.items()):
+            # asegurar orden por bit
+            stats = stats.sort_values("bit")
+
+            x = stats["bit"].to_numpy()
+            y = stats["mean_l2"].to_numpy()
+
+            axi.scatter(
+                x, y,
+                s=s,
+                color=c[count],
+                label=f"logSlots = {logSlots}"
+            )
+            count+=1
+
+        axi.set_title(title)
+        axi.set_xlabel("Bit index")
+        axi.grid(True)
+
+    ax[0].set_ylabel("$L_2$ error (symlog)")
+    ax[0].set_yscale("symlog")
+    ax[0].legend()
+
+    plt.tight_layout()
+
+
 def plot_bits(stats, ax=None, label_prefix="", color=config.colors["red"], scatter=False, size=40, alpha=1):
 
     if ax is None:
