@@ -28,7 +28,7 @@ OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive", "scaleTech"}
 def load_and_filter_campaigns(csv_path, filters):
     campaigns = pd.read_csv(csv_path)
 
-    # --- Normalización ---
+    # --- Normalization ---
     for c in campaigns.columns:
         if campaigns[c].dtype == object:
             campaigns[c] = (
@@ -42,53 +42,46 @@ def load_and_filter_campaigns(csv_path, filters):
         if c not in ["library", "stage"]:
             campaigns[c] = pd.to_numeric(campaigns[c], errors="ignore")
 
-    # --- Validar obligatorios ---
     missing = REQUIRED_FILTERS - filters.keys()
     if missing:
         raise ValueError(
-            f"Faltan filtros obligatorios: {sorted(missing)}"
+            f"Missing mandatory filters: {sorted(missing)}"
         )
 
-    # --- Construir filtros efectivos ---
     effective_filters = {}
-
-    # obligatorios (siempre)
     for k in REQUIRED_FILTERS:
         effective_filters[k] = filters[k]
 
-    # opcionales con default
     for k, default in OPTIONAL_DEFAULTS.items():
         if k in filters:
             effective_filters[k] = filters[k]
         elif default is not None:
             effective_filters[k] = ("int", default)
 
-    # opcionales sin default: solo si vienen
     for k in OPTIONAL_NO_FILTER:
         if k in filters:
             effective_filters[k] = filters[k]
 
-    # --- Aplicar filtros ---
     mask = np.ones(len(campaigns), dtype=bool)
 
-    print("=== MATCHES POR FILTRO ===")
+    print("=== MATCHES BY FILTERS ===")
     for col, (dtype, value) in effective_filters.items():
         if col not in campaigns.columns:
-            raise KeyError(f"Columna '{col}' no existe en el CSV")
+            raise KeyError(f"The column '{col}' does not exist in the CSV")
 
         if dtype == "str":
             value = str(value).strip().lower()
         elif dtype == "int":
             value = int(value)
         else:
-            raise ValueError(f"Tipo de filtro desconocido: {dtype}")
+            raise ValueError(f"Unknown filter type: {dtype}")
 
         m = campaigns[col] == value
         print(f"{col} == {value}: {m.sum()}")
         mask &= m
 
     selected = campaigns[mask]
-    print(f"\nCampañas seleccionadas: {len(selected)}")
+    print(f"\nSelected campaigns: {len(selected)}")
 
     return selected
 
@@ -101,7 +94,7 @@ def load_campaign_data(selected_campaigns, data_dir):
         path = data_dir / filename
 
         if not path.exists():
-            print(f"WARNING: {path} no existe, se saltea")
+            print(f"WARNING: {path} does not exist, is skipped")
             continue
 
         df = pd.read_csv(path, compression="gzip")
@@ -109,10 +102,10 @@ def load_campaign_data(selected_campaigns, data_dir):
         dfs.append(df)
 
     if not dfs:
-        raise RuntimeError("No se cargó ningún archivo de data")
+        raise RuntimeError("No data file was uploaded")
 
     data = pd.concat(dfs, ignore_index=True)
-    print("Data total cargada:", data.shape)
+    print("Total data uploaded:", data.shape)
     return data
 
 def load_end_data(selected_campaigns, csv_file, id_col="campaign_id"):
@@ -130,7 +123,7 @@ def load_end_data(selected_campaigns, csv_file, id_col="campaign_id"):
 
     if filtered_df.empty:
         raise ValueError(
-            f"No se encontraron campañas para los IDs seleccionados "
+            f"No campaigns were found for the selected IDs"
             f"(IDs={len(selected_campaigns)}, CSV rows={len(df)})"
         )
 

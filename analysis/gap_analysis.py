@@ -7,42 +7,19 @@ import copy
 
 sys.path.append(os.path.abspath("./"))
 from utils import config
-
 from utils.args import parse_args, build_filters
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
+from utils.df_utils import split_by_gap, stats_for_logslots_per_class, stats_by_bit_per_class
+
 show = config.show
 width = int(config.width)
 colors = config.colors
 s = config.size
 
 dir = "img/"
-savename = "gap"
+SAVENAME = "gap"
 
 c = [colors["red"], colors["blue"], colors["orange"], colors["green"], colors["green"], colors["green"]]
-
-
-
-
-
-def split_by_gap(data, logN, logSlots):
-    """
-    - remove central coefficient N/2
-    - classify coefficients by gap alignment
-    """
-    N = 1 << logN
-    target_coeff = N // 2
-
-    data = data[data["coeff"] != target_coeff].copy()
-
-    gap = (1 << (logN - 1)) // (1 << logSlots)
-
-    data["gap_class"] = np.where(
-        data["coeff"] % gap == 0,
-        "aligned",
-        "non_aligned"
-    )
-
-    return data, gap
 
 
 def plot_bit_stats_aligned_vs_nonaligned(
@@ -89,50 +66,14 @@ def plot_bit_stats_aligned_vs_nonaligned(
     plt.tight_layout()
 
 
-def stats_by_bit_per_class(data):
-    """
-    Two-stage averaging:
-    - mean over campaigns per (gap_class, bit, coeff)
-    - stats over coefficients per bit
-    """
-
-    per_coeff = (
-        data
-        .groupby(["gap_class", "bit", "coeff"], as_index=False)
-        .agg(l2_mean=("l2_norm", "mean"))
-    )
-
-    per_bit = (
-        per_coeff
-        .groupby(["gap_class", "bit"], as_index=False)
-        .agg(
-            mean_l2=("l2_mean", "mean"),
-            std_l2=("l2_mean", lambda x: x.std(ddof=0)),
-            min_l2=("l2_mean", "min"),
-            max_l2=("l2_mean", "max"),
-            n_coeff=("l2_mean", "count"),
-        )
-    )
-    return per_bit
-
-def stats_for_logslots_per_class(data, logN, logSlots):
-    data, gap = split_by_gap(data, logN, logSlots)
-    stats = stats_by_bit_per_class(data)
-
-    out = {}
-
-    for cls in ["aligned", "non_aligned"]:
-        s = stats[stats["gap_class"] == cls]
-
-        out[cls] = s[["bit", "mean_l2", "std_l2"]]
-
-    return out, gap
-
 
 
 def main():
     base_args = parse_args()
 
+    savename =  SAVENAME
+    if base_args.title:
+        savename = base_args.title
     logslots_values = [
         base_args.logSlots,
         base_args.logSlots - 1,

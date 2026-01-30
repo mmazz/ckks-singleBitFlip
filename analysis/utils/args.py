@@ -1,4 +1,3 @@
-# utils_parser.py
 import argparse
 
 def str2bool(v):

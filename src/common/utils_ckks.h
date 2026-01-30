@@ -113,8 +113,6 @@ std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args);
 
 double percentile(std::vector<double>& v, double p);
 
-
-
 double compute_rel_norm2(const std::vector<double>& v1, const std::vector<double>& v2);
 
 std::vector<double> uniform_dist(uint32_t batchSize, int64_t  logMin, int64_t logMax, uint64_t seed, bool verbose=false);

@@ -82,7 +82,7 @@ clean:
 .PHONY: all clean dirs
 
 run_bitflips:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 1 --withNTT 0
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 3 --withNTT 0
 
 run:
 	build/bin/nn_mnist 6 0 >> log.txt
