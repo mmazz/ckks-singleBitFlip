@@ -19,19 +19,19 @@ s = config.size
 colors = config.colors
 
 dir = "img/"
-savename = "logN"
+SAVENAME = "logN"
 
 BASELINE_SMALL_LOGN = 6
 BASELINE_SMALL_LOGSLOTS = 5
-    ########################## ARGS ################################
-    ########################## DATA ################################
-    ########################## STATS ###############################
-    ########################## PLOT ################################
+
 
 
 def main():
     ########################## ARGS ################################
     args = parse_args()
+    savename =  SAVENAME
+    if args.title:
+        savename = args.title
     filters_large = build_filters(args)
     print("Filtros activos:", filters_large)
 

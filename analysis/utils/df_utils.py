@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 
 
+def shift_bits(df, offset):
+    df = df.copy()
+    df["bit"] = df["bit"] + offset
+    return df
+
 def normalizer(data, logQ=None, logDelta=None):
     x = data["bit"].to_numpy(dtype=float)
 

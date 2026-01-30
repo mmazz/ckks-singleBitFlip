@@ -9,9 +9,8 @@ from utils import config
 
 width = int(config.width)
 colors = config.colors
-alpha = config.alpha
 
-def plot_bits(stats, ax=None, label_prefix="", color=config.colors["red"], scatter=False, size=40):
+def plot_bits(stats, ax=None, label_prefix="", color=config.colors["red"], scatter=False, size=40, alpha=1):
 
     if ax is None:
         ax = plt.gca()
@@ -85,7 +84,7 @@ def plot_bit_max_min(stats, ax=None, label_prefix="",  size=40):
     plt.tight_layout()
 
 
-def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=False, ylabel="Bit index", size=40, plot_std=False):
+def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=True, ylabel="Bit index", size=40, plot_std=False, alpha=1):
 
     if ax is None:
         ax = plt.gca()
@@ -97,6 +96,7 @@ def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=False
         ax.scatter(
             x,
             mean, color=color,
+            alpha=alpha,
             s=size,                # 👈 tamaño del punto
             zorder=4,            # 👈 arriba del plot
             label=f"{label_prefix} Mean $L_2$"

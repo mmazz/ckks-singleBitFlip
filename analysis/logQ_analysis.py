@@ -1,27 +1,24 @@
+import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import sys
 import os
 
 sys.path.append(os.path.abspath('./'))
 from utils import config
-
-import matplotlib.pyplot as plt
 from utils.args import parse_args, build_filters
-from  utils.bitflip_utils import bits_to_flip_generator
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
+from utils.df_utils import stats_by_bit
+from utils.plotters import plot_bit
 
 show = config.show
 width = int(config.width)
 colors = config.colors
+alpha = config.alpha
+c = [colors["red"], colors["blue"], colors["green"], colors["orange"], colors["violet"]]
 s = config.size
 
 dir = "img/"
-savename = "logQ"
-
-
+SAVENAME = "logQ"
 
 
 BASELINE_LOGN = 6
@@ -42,146 +39,55 @@ BIT_PER_COEFF = {
     80: 100,
     100: 125,
 }
-def minmax_normalize_per_campaign(data):
-    """
-    Min-max normalize l2_norm to [0, 1] independently per campaign.
-    """
-    data = data.copy()
-
-    grouped = data.groupby("campaign_id")["l2_norm"]
-
-    min_val = grouped.transform("min")
-    max_val = grouped.transform("max")
-
-    denom = (max_val - min_val).replace(0, 1.0)
-
-    data["l2_norm_norm"] = (data["l2_norm"] - min_val) / denom
-    return data
-
-def normalize_l2_per_campaign(data, method="p95"):
-    """
-    Normalize l2_norm independently per campaign.
-    """
-    data = data.copy()
-
-    if method == "p95":
-        scale = (
-            data
-            .groupby("campaign_id")["l2_norm"]
-            .transform(lambda x: x.quantile(0.95))
-        )
-
-    elif method == "median":
-        scale = (
-            data
-            .groupby("campaign_id")["l2_norm"]
-            .transform("median")
-        )
-
-    else:
-        raise ValueError(f"Unknown normalization method: {method}")
-
-    data["l2_norm_norm"] = data["l2_norm"] / scale
-    return data
 
 
-def load_logq_campaigns(logQ):
-    """
-    Load campaigns for a fixed logQ configuration.
-    """
-    filters = {
-        "library": ("str", BASELINE_LIBRARY),
-        "stage": ("str", BASELINE_STAGE),
-        "logN": ("int", BASELINE_LOGN),
-        "logSlots": ("int", BASELINE_LOGSLOTS),
-        "logQ": ("int", logQ),
-        "logDelta": ("int", LOGDELTA_VALUES[logQ]),
-        "bitPerCoeff": ("int", BIT_PER_COEFF[logQ]),
-    }
-
-    return load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
-
-def stats_by_bit_uniform_coeff(data, drop_dc=True):
-    """
-    Aggregate L2 error statistics per bit, averaging uniformly over coefficients.
-    """
-
-    if drop_dc:
-        data = data[data["coeff"] != 0]
-
-    # 1) promedio por coeficiente (evita sesgo por multiplicidad)
-    per_coeff = (
-        data
-        .groupby(["bit", "coeff"], as_index=False)
-        .agg(l2_mean=("l2_norm", "mean"))
-    )
-
-    # 2) estadística por bit
-    per_bit = (
-        per_coeff
-        .groupby("bit", as_index=False)
-        .agg(
-            mean_l2=("l2_mean", "mean"),
-            std_l2=("l2_mean", lambda x: x.std(ddof=0)),
-            min_l2=("l2_mean", "min"),
-            max_l2=("l2_mean", "max"),
-            count=("l2_mean", "count"),
-        )
-    )
-
-    return per_bit
 
 def main():
+    ########################## ARGS ################################
+    args = parse_args()
+    savename =  SAVENAME
+    if args.title:
+        savename = args.title
+
+    base_filters = build_filters(args)
     all_stats = {}
-
     for logQ in LOGQ_VALUES:
-        filters = {
-            "library": ("str", BASELINE_LIBRARY),
-            "stage": ("str", BASELINE_STAGE),
-            "logN": ("int", BASELINE_LOGN),
-            "logSlots": ("int", BASELINE_LOGSLOTS),
-            "logQ": ("int", logQ),
-            "logDelta": ("int", LOGDELTA_VALUES[logQ]),
-            "bitPerCoeff": ("int", BIT_PER_COEFF[logQ]),
-        }
+        filters = base_filters.copy()
+        filters["library"]    =  ("str", BASELINE_LIBRARY)
+        filters["stage"]      =  ("str", BASELINE_STAGE)
+        filters["logN"]       =  ("int", BASELINE_LOGN)
+        filters["logSlots"]   =  ("int", BASELINE_LOGSLOTS)
+        filters["logQ"]       =  ("int", logQ)
+        filters["logDelta"]   =  ("int", LOGDELTA_VALUES[logQ])
+        filters["bitPerCoeff"]= ("int", BIT_PER_COEFF[logQ])
 
+    ########################## DATA ################################
         selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
 
         if selected.empty:
             print(f"[WARN] No campaigns for logQ={logQ}")
             continue
 
-        print(f"[OK] logQ={logQ}, campaigns={len(selected)}")
-
         data = load_campaign_data(selected, config.DATA_DIR)
-       # data = minmax_normalize_per_campaign(data)
         if data.empty:
             print(f"[WARN] No bitflip data for logQ={logQ}")
             continue
-        stats = stats_by_bit_uniform_coeff(data)
-
+    ########################## STATS ###############################
+        stats = stats_by_bit(data)
         all_stats[logQ] = stats
 
-    # ----------------------------
-    # Plot
-    # ----------------------------
-    plt.figure(figsize=(8, 5))
+    if not all_stats:
+        raise RuntimeError("No data loaded for any logQ")
 
+    ########################## PLOT ################################
+    fig, ax = plt.subplots(figsize=(12, 5))
+    i = 0
+    s = config.size
     for logQ, df in all_stats.items():
-        bit_idx = df["bit"].to_numpy()
-        x_scaled = bit_idx / logQ
-        y = df["mean_l2"].to_numpy()
+        df["bit"] = df["bit"]/logQ
+        plot_bit(df, ax=ax, label_prefix=f"logQ={logQ}", color=c[i], size=s-i*20, alpha=alpha)
+        i+=1
 
-        plt.plot(x_scaled, y, marker='o', label=f"logQ={logQ}")
-
- #   plt.axvline(1.0, linestyle="--",color=colors["green"], linewidth=2, label="logQ")
-    #plt.axvline(.74, linestyle="--",color=colors["orange"], linewidth=2, label="logDelta")
-    plt.yscale("symlog")
-    plt.ylim(0)
-    plt.xlabel("Bit position / logQ")
-    plt.ylabel("Mean L2 error")
-    plt.legend()
-    plt.grid(True)
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
     plt.savefig(dir+f"{savename}.png", bbox_inches='tight')
     if show:
