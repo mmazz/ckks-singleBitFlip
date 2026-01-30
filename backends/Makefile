@@ -75,16 +75,26 @@ add_rot_analysis:
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 64 --logSlots 3 --doRot 1 --doAdd 1  --mult_depth 3
 
 mul_analysis:
-	@cd $(LIBRARY) && \
+	@cd heaan && \
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 3 --mult_depth 3 && \
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 1 --mult_depth 3 && \
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 2 --mult_depth 3
 
-	@cd $(LIBRARY)&& \
+	@cd heaan && \
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 3 --mult_depth 3 && \
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 1 --mult_depth 3 && \
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 2 --mult_depth 3
 
+mul_analysis_RNS:
+	@cd openfhe && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 50 --stage encrypt_c0 --bitPerCoeff 64 --logSlots 3 --doMul 3 --mult_depth 3 && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 50 --stage encrypt_c0 --bitPerCoeff 64 --logSlots 3 --doMul 1 --mult_depth 3 && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 50 --stage encrypt_c0 --bitPerCoeff 64 --logSlots 3 --doMul 2 --mult_depth 3
+
+	@cd openfhe && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 50 --stage encrypt_c1 --bitPerCoeff 64 --logSlots 3 --doMul 3 --mult_depth 3 && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 50 --stage encrypt_c1 --bitPerCoeff 64 --logSlots 3 --doMul 1 --mult_depth 3 && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 50 --stage encrypt_c1 --bitPerCoeff 64 --logSlots 3 --doMul 2 --mult_depth 3
 
 limb_analysis:
 	@cd $(LIBRARY) && \
@@ -97,9 +107,9 @@ add_analysis:
 
 rot_analysis:
 	@cd $(LIBRARY)&& \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c0  --logSlots 3 --doRot 3 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c0  --logSlots 3 --doRot 2 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c0  --logSlots 3 --doRot 1
+	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 3 --mult_depth 3&& \
+	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 2 --mult_depth 3&& \
+	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 1 --mult_depth 3
 
 clean:
 	rm -rf ../results

@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath("./"))
 from utils import config
 from utils.args import parse_args, build_filters
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
-from utils.df_utils import split_by_gap, stats_for_logslots_per_class, stats_by_bit
+from utils.df_utils import split_by_gap,  stats_by_bit
 from utils.plotters import plot_bit
 
 show = config.show
@@ -60,11 +60,11 @@ def main():
         stats_aligned     = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="aligned"])
         stats_non_aligned = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="non_aligned"])
 
+    ########################## PLOT ################################
         plot_bit(stats_aligned,     ax=ax[0], label_prefix="", color=c[i], size=s-i*20, alpha=alpha)
         plot_bit(stats_non_aligned, ax=ax[1], label_prefix="", color=c[i],  size=s-i*20, alpha=alpha)
         i+=1
 
-    ########################## PLOT ################################
 
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')

@@ -1,179 +1,71 @@
+import matplotlib.pyplot as plt
 import sys
 import os
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import copy
 
 sys.path.append(os.path.abspath("./"))
 from utils import config
-
 from utils.args import parse_args, build_filters
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
+from utils.df_utils import split_by_gap, stats_by_bit
+from utils.plotters import plot_bit
+
 show = config.show
 width = int(config.width)
 colors = config.colors
 s = config.size
 
 dir = "img/"
-savename = "rot"
+SAVENAME = "rot"
 
 c = [colors["red"], colors["blue"], colors["orange"], colors["green"], colors["green_light"], colors["green_dark"]]
 
 
-def split_by_gap(data, logN, logSlots):
-    """
-    - remove central coefficient N/2
-    - classify coefficients by gap alignment
-    """
-    N = 1 << logN
-    target_coeff = N // 2
-
-    data = data[data["coeff"] != target_coeff].copy()
-
-    gap = (1 << (logN - 1)) // (1 << logSlots)
-
-    data["gap_class"] = np.where(
-        data["coeff"] % gap == 0,
-        "aligned",
-        "non_aligned"
-    )
-
-    return data, gap
-
-
-def plot_bit_stats_aligned_vs_nonaligned(
-    results_aligned,
-    results_non_aligned
-):
-    fig, axes = plt.subplots(
-        1, 2,
-        figsize=(15, 5),
-        sharey=True
-    )
-
-    panels = [
-        ("Aligned coefficients\n(coeff % gap = 0)", results_aligned),
-        ("Non-aligned coefficients\n(coeff % gap ≠ 0)", results_non_aligned),
-    ]
-
-    eps = 1e-18  # clamp mínimo para symlog
-    count = 0
-    for ax, (title, results) in zip(axes, panels):
-        for doRot, stats in sorted(results.items()):
-            # asegurar orden por bit
-            stats = stats.sort_values("bit")
-
-            x = stats["bit"].to_numpy()
-            y = stats["mean_l2"].to_numpy()
-
-            ax.scatter(
-                x, y,
-                s=s,
-                color=c[count],
-                label=f"Rotations = {doRot}"
-            )
-            count+=1
-
-        ax.set_title(title)
-        ax.set_xlabel("Bit index")
-        ax.grid(True)
-
-    axes[0].set_ylabel("$L_2$ error (symlog)")
-    axes[0].set_yscale("symlog")
-    axes[0].legend()
-    axes[1].legend()
-
-    plt.tight_layout()
-
-
-def stats_by_bit_per_class(data):
-    """
-    Two-stage averaging:
-    - mean over campaigns per (gap_class, bit, coeff)
-    - stats over coefficients per bit
-    """
-
-    per_coeff = (
-        data
-        .groupby(["gap_class", "bit", "coeff"], as_index=False)
-        .agg(l2_mean=("l2_norm", "mean"))
-    )
-
-    per_bit = (
-        per_coeff
-        .groupby(["gap_class", "bit"], as_index=False)
-        .agg(
-            mean_l2=("l2_mean", "mean"),
-            std_l2=("l2_mean", lambda x: x.std(ddof=0)),
-            min_l2=("l2_mean", "min"),
-            max_l2=("l2_mean", "max"),
-            n_coeff=("l2_mean", "count"),
-        )
-    )
-    return per_bit
-
-def stats_for_logslots_per_class(data, logN, logSlots):
-    data, gap = split_by_gap(data, logN, logSlots)
-    stats = stats_by_bit_per_class(data)
-
-    out = {}
-
-    for cls in ["aligned", "non_aligned"]:
-        s = stats[stats["gap_class"] == cls]
-
-        out[cls] = s[["bit", "mean_l2", "std_l2"]]
-
-    return out, gap
-
-
-
 def main():
+    ########################## ARGS ################################
     base_args = parse_args()
 
-    mulDepth_values= [
+    savename =  SAVENAME
+    if base_args.title:
+        savename = base_args.title
+
+
+    rot_values= [
         base_args.doRot,
         base_args.doRot - 1,
         base_args.doRot - 2,
     ]
+    fig, ax = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
+    i = 0
+    s = config.size
+    alpha = config.alpha
 
-    results_aligned = {}
-    results_non_aligned = {}
-
-    for ls in mulDepth_values:
+    for rot in rot_values:
         args = copy.deepcopy(base_args)
-        args.doRot = ls
+        args.doRot = rot
 
         filters = build_filters(args)
-
-        print(f"\n=== doRot = {ls} ===")
-
-        selected = load_and_filter_campaigns(
-            config.CAMPAIGNS_CSV, filters
-        )
+    ########################## DATA ################################
+        selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
 
         if selected.empty:
-            print(f"[WARN] No campaigns for doRot = {ls}")
+            print(f"[WARN] No campaigns for doRot = {rot}")
             continue
 
         data = load_campaign_data(selected, config.DATA_DIR)
         print(f"Loaded data shape: {data.shape}")
 
-        stats_by_class, gap = stats_for_logslots_per_class(
-            data, args.logN, args.logSlots
-        )
+    ########################## STATS ###############################
+        stats_gaps, gap   = split_by_gap(data, args.logN, args.logSlots)
 
-        print(f"gap = {gap}")
+        stats_aligned     = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="aligned"])
+        stats_non_aligned = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="non_aligned"])
 
-        results_aligned[ls] = stats_by_class["aligned"]
-        results_non_aligned[ls] = stats_by_class["non_aligned"]
-    if not results_aligned:
-        raise RuntimeError("No data loaded")
+    ########################## PLOT ################################
+        plot_bit(stats_aligned,     ax=ax[0], label_prefix="Rotations=", label=rot, color=c[i], size=s-i*20, alpha=alpha)
+        plot_bit(stats_non_aligned, ax=ax[1], label_prefix="Rotations=", label=rot, color=c[i],  size=s-i*20, alpha=alpha)
+        i+=1
 
-    plot_bit_stats_aligned_vs_nonaligned(
-        results_aligned,
-        results_non_aligned
-    )
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
     plt.savefig(dir+f"{savename}.png", bbox_inches='tight')

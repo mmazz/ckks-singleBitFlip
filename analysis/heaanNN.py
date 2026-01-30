@@ -23,8 +23,6 @@ dir = "img/"
 SAVENAME = "heaan_NN"
 
 
-
-
 def main():
     args = parse_args()
     savename =  SAVENAME

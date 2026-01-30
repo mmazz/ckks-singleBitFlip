@@ -46,9 +46,9 @@ def main():
 
     ########################## STATS ################################
     openfhe_filter      = filter_coeff_by_library(data_openfhe, "openfhe", args.logN)
+    openfhe             = stats_by_bit(openfhe_filter)
     heaan_filter        = filter_coeff_by_library(data_heaan, "heaan", args.logN)
-    openfhe      = stats_by_bit(openfhe_filter)
-    heaan        = stats_by_bit(heaan_filter)
+    heaan               = stats_by_bit(heaan_filter)
 
     Q_openfhe     = filters_openfhe["logQ"][1]
     Delta_openfhe = filters_openfhe["logDelta"][1]

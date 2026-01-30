@@ -48,19 +48,6 @@ def split_by_gap(data, logN, logSlot):
 
     return data, gap
 
-def stats_for_logslots_per_class(data, logN, logSlots):
-    data, gap = split_by_gap(data, logN, logSlots)
-    stats = stats_by_bit_per_class(data)
-
-    out = {}
-
-    for cls in ["aligned", "non_aligned"]:
-        s = stats[stats["gap_class"] == cls]
-
-        out[cls] = s[["bit", "mean_l2", "std_l2"]]
-
-    return out, gap
-
 def filter_coeff_by_library(data, library=None, logN=1):
     N = 1 << logN
     target_coeff = N // 2

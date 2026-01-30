@@ -39,8 +39,8 @@ def load_and_filter_campaigns(csv_path, filters):
             )
 
     for c in campaigns.columns:
-        if c not in ["library", "stage"]:
-            campaigns[c] = pd.to_numeric(campaigns[c], errors="ignore")
+        if c not in ["library", "stage", "scaleTech"]:
+            campaigns[c] = pd.to_numeric(campaigns[c], errors="coerce")
 
     missing = REQUIRED_FILTERS - filters.keys()
     if missing:
