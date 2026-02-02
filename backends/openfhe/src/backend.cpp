@@ -124,7 +124,7 @@ IterationResult run_iteration(BackendContext* bctx,
     ctx.prng->ResetToSeed();
     Plaintext result_bitFlip;
     Plaintext ptxt = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
-
+    Plaintext ptxt_clean;
     if (iterArgs && args.stage == "encode") {
         bitFlip(ptxt, args.withNTT,
                 iterArgs->limb,
@@ -134,8 +134,10 @@ IterationResult run_iteration(BackendContext* bctx,
 
     Ciphertext<DCRTPoly> c = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt);
     Ciphertext<DCRTPoly> c_clean;
-    if(args.doAdd || args.doMul)
-        c_clean = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt);
+    if(args.doAdd || args.doMul){
+        ptxt_clean = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
+        c_clean = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt_clean);
+    }
 
     if (iterArgs) {
         if (args.stage == "encrypt_c0") {
@@ -153,12 +155,33 @@ IterationResult run_iteration(BackendContext* bctx,
 
     if(args.doAdd)
         ctx.cc->EvalAddInPlace(c,c_clean);
+
+    for (uint32_t i = 0; i < args.doPlainMul; ++i)
+        c = ctx.cc->EvalMult(c,ptxt_clean);
+
     for (uint32_t i = 0; i < args.doMul; ++i)
         c = ctx.cc->EvalMult(c,c_clean);
+
+
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
         c = ctx.cc->EvalRotate(c, rotIndex);
     }
+
+    if (iterArgs) {
+        if ((args.stage == "encrypt_c0_eval") &&  (args.doAdd >0 || args.doMul>0 || args.doRot>0)) {
+            bitFlip(c, args.withNTT, 0,
+                    iterArgs->limb,
+                    iterArgs->coeff,
+                    iterArgs->bit);
+        } else if ((args.stage == "encrypt_c1_eval") &&  (args.doAdd >0 || args.doMul>0 || args.doRot>0)) {
+            bitFlip(c, args.withNTT, 1,
+                    iterArgs->limb,
+                    iterArgs->coeff,
+                    iterArgs->bit);
+        }
+    }
+
     ctx.cc->Decrypt(ctx.keys.secretKey, c, &result_bitFlip);
 
     bool detected = SDCConfigHelper::WasSDCDetected(result_bitFlip);

@@ -25,6 +25,7 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  logMax: " << logMax << "\n"
        << "  withNTT: " << withNTT << "\n"
        << "  doAdd: " << doAdd << "\n"
+       << "  doPlainMul: " << doPlainMul << "\n"
        << "  doMul: " << doMul << "\n"
        << "  doRot: " << doRot << "\n"
        << "  isExhaustive: " << isExhaustive << "\n"
@@ -60,6 +61,7 @@ void print_usage(const char* program_name) {
               << "  --mult_depth <value>    Multiplicative depth (only openfhe, default: 0)\n"
               << "  --withNTT <value>       Turn on or off NTT (only heaan, default: 0)\n"
               << "  --doAdd <value>         The pipeline server has addition (default: 0)\n"
+              << "  --doPlainMul <value>    The pipeline server has that much of plain Muls (default: 0)\n"
               << "  --doMul <value>         The pipeline server has that much Muls (default: 0)\n"
               << "  --doRot <value>         The pipeline server has Rot, the value is how many rot (default: 0)\n"
               << "  --flipType <name>       Type of bit flip campaign (default: exhaustive)\n"
@@ -92,6 +94,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"mult_depth",     required_argument, 0, 'm'},
         {"withNTT",        required_argument, 0, 'n'},
         {"doAdd",          required_argument, 0, 'A'},
+        {"doPlainMul",          required_argument, 0, 'p'},
         {"doMul",          required_argument, 0, 'M'},
         {"doRot",          required_argument, 0, 'r'},
         {"isExhaustive",   required_argument, 0, 'T'},
@@ -114,7 +117,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "S:c:N:Q:d:g:m:n:A:M:r:T:x:y:s:b:a:t:D:C:R:v:h",
+        "S:c:N:Q:d:g:m:n:A:p:M:r:T:x:y:s:b:a:t:D:C:R:v:h",
         long_options,
         &option_index)) != -1)
     {
@@ -154,6 +157,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                 args.doAdd = std::stoul(optarg) != 0;
                 break;
 
+            case 'p': args.doPlainMul = std::stoul(optarg); break;
             case 'M': args.doMul = std::stoul(optarg); break;
 
 

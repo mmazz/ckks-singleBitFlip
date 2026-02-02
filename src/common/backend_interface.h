@@ -39,7 +39,7 @@ inline void compute_plain_io(const CampaignArgs& args,
     }
 
     /* MUL: multiplicative depth */
-    for (uint32_t i = 0; i < args.doMul; ++i) {
+    for (uint32_t i = 0; i < args.doPlainMul+args.doMul; ++i) {
         std::transform(
             golden.begin(), golden.end(),
             base.begin(),

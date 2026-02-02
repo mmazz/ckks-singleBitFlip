@@ -10,8 +10,10 @@ We inject faults by flipping **one bit of a `uint64_t` coefficient** belonging t
 at well-defined pipeline stages:
 
 - `encode`
-- `encrypt-c0`
-- `encrypt-c1`
+- `encrypt_c0`
+- `encrypt_c1`
+- `encrypt_c0_eval`
+- `encrypt_c1_eval`
 - `decrypt`
 
 The goal is to analyze numerical degradation, error propagation, and Silent Data Corruption (SDC) behavior under precise, low-level faults.

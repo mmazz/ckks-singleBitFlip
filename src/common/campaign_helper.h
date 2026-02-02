@@ -45,6 +45,7 @@ struct CampaignArgs {
 
     bool withNTT = false;
     bool doAdd = false;
+    uint32_t doPlainMul = 0;
     uint32_t doMul = 0;
     uint32_t doRot = 0;
     bool isExhaustive = true;

@@ -77,15 +77,22 @@ IterationResult run_iteration(
         args.logDelta,
         args.logQ
     );
-
+    Plaintext plain_clean;
     if (iterArgs && args.stage == "encode") {
         SwitchBit(plain.mx[iterArgs->coeff], iterArgs->bit);
     }
 
     Ciphertext c = ctx.scheme.encryptMsg(plain, ctx.seed);
     Ciphertext c_clean;
-    if(args.doAdd || args.doMul)
-        c_clean = ctx.scheme.encryptMsg(plain, ctx.seed);
+    if(args.doAdd || args.doMul || args.doPlainMul){
+        plain_clean =  ctx.scheme.encode(ctx.baseInput.data(),
+                            ctx.baseInput.size(),
+                            args.logDelta,
+                            args.logQ
+                        );
+        c_clean = ctx.scheme.encryptMsg(plain_clean, ctx.seed);
+    }
+
 
     if (iterArgs) {
         if (args.stage == "encrypt_c0") {
@@ -97,6 +104,10 @@ IterationResult run_iteration(
 
     if(args.doAdd)
         c = ctx.scheme.add(c, c_clean);
+
+    for (uint32_t i = 0; i < args.doPlainMul; ++i) {
+        c = ctx.scheme.multByPoly(c, plain_clean.mx, args.logDelta);
+    }
 
     for (uint32_t i = 0; i < args.doMul; ++i) {
         c = ctx.scheme.mult(c, c_clean);
@@ -149,15 +160,21 @@ IterationResult run_NN(
         args.logDelta,
         args.logQ
     );
-
+    Plaintext plain_clean;
     if (iterArgs && args.stage == "encode") {
         SwitchBit(plain.mx[iterArgs->coeff], iterArgs->bit);
     }
 
     Ciphertext c = ctx.scheme.encryptMsg(plain, ctx.seed);
     Ciphertext c_clean;
-    if(args.doAdd || args.doMul)
-        c_clean = ctx.scheme.encryptMsg(plain, ctx.seed);
+    if(args.doAdd || args.doMul || args.doPlainMul){
+        plain_clean =  ctx.scheme.encode(ctx.baseInput.data(),
+                            ctx.baseInput.size(),
+                            args.logDelta,
+                            args.logQ
+                        );
+        c_clean = ctx.scheme.encryptMsg(plain_clean, ctx.seed);
+    }
 
     if (iterArgs) {
         if (args.stage == "encrypt_c0") {
@@ -170,6 +187,10 @@ IterationResult run_NN(
     if(args.doAdd)
         c = ctx.scheme.add(c, c_clean);
 
+    for (uint32_t i = 0; i < args.doPlainMul; ++i) {
+        c = ctx.scheme.multByPoly(c, plain_clean.mx, args.logDelta);
+    }
+
     for (uint32_t i = 0; i < args.doMul; ++i) {
         c = ctx.scheme.mult(c, c_clean);
         ctx.scheme.reScaleByAndEqual(c, args.logDelta);
@@ -178,6 +199,14 @@ IterationResult run_NN(
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
         c = ctx.scheme.leftRotateFast(c, rotIndex);
+    }
+
+    if (iterArgs) {
+        if ((args.stage == "encrypt_c0_eval") && (args.doAdd >0 || args.doMul>0 || args.doRot>0)){
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+        } else if ((args.stage == "encrypt_c1_eval") && (args.doAdd >0 || args.doMul>0 || args.doRot>0)){
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
     }
 
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
