@@ -13,7 +13,9 @@
 #include <random>
 #include <utility>
 #include <stdexcept>
+#include <complex>
 
+using cdouble = std::complex<double>;
 struct RelativeErrorThresholds {
     double zero_eps   = 1e-15; // qué consideramos "golden = 0"
     double degraded   = 1e-2;  // 1%
@@ -58,6 +60,9 @@ void printVector(const std::vector<double>& v,
                  const std::string& name = "",
                  size_t max_elems = SIZE_MAX);
 
+void printVector(const std::vector<cdouble>& v,
+                 const std::string& name = "",
+                 size_t max_elems = SIZE_MAX);
 
 template <typename T>
 void printBaselineComparison(
@@ -96,6 +101,7 @@ CKKSAccuracyMetrics EvaluateCKKSAccuracy(
     const std::vector<double>& ckks,
     double zero_eps = 1e-15
 );
+
 
 SlotErrorStats categorize_slots_relative(
     const std::vector<double>& golden,

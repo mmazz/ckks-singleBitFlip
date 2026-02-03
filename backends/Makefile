@@ -74,6 +74,11 @@ add_rot_analysis:
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 64 --logSlots 3 --doRot 1 --doAdd 1  --mult_depth 3 && \
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 64 --logSlots 3 --doRot 1 --doAdd 1  --mult_depth 3
 
+plain_mul_analysis:
+	@cd $(LIBRARY) && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 64 --logSlots 3 --doPlainMul 1  --mult_depth 0 && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 64 --logSlots 3 --doPlainMul 1  --mult_depth 0
+
 mul_analysis:
 	@cd heaan && \
 	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 3 --mult_depth 3 && \

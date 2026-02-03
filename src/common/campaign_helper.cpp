@@ -27,7 +27,9 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  doAdd: " << doAdd << "\n"
        << "  doPlainMul: " << doPlainMul << "\n"
        << "  doMul: " << doMul << "\n"
+       << "  doScalarMul: " << doScalarMul << "\n"
        << "  doRot: " << doRot << "\n"
+       << "  isComplex : " << isComplex<< "\n"
        << "  isExhaustive: " << isExhaustive << "\n"
        << "  dnum: " << dnum << "\n"
        << "  scaleTech: " << scaleTech << "\n";
@@ -63,8 +65,10 @@ void print_usage(const char* program_name) {
               << "  --doAdd <value>         The pipeline server has addition (default: 0)\n"
               << "  --doPlainMul <value>    The pipeline server has that much of plain Muls (default: 0)\n"
               << "  --doMul <value>         The pipeline server has that much Muls (default: 0)\n"
+              << "  --doScalarMul <value>   The pipeline server has Multiplies the cipher with that scalar (double) (default: 0, no mult)\n"
               << "  --doRot <value>         The pipeline server has Rot, the value is how many rot (default: 0)\n"
-              << "  --flipType <name>       Type of bit flip campaign (default: exhaustive)\n"
+              << "  --isComplex <name>      Complex input, only for HEAAN (default: false)\n"
+              << "  --isExhaustive <name>   Type of bit flip campaign (default: exhaustive)\n"
               << "  --seed <value>          Random seed for scheme (default: 0)\n"
               << "  --seed_input <value>    Random seed for input (default: 0)\n"
               << "  --logMin <value>        logMin value (default: 0= sample from [-1,)\n"
@@ -94,9 +98,11 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"mult_depth",     required_argument, 0, 'm'},
         {"withNTT",        required_argument, 0, 'n'},
         {"doAdd",          required_argument, 0, 'A'},
-        {"doPlainMul",          required_argument, 0, 'p'},
+        {"doPlainMul",     required_argument, 0, 'p'},
         {"doMul",          required_argument, 0, 'M'},
+        {"doScalarMul",    required_argument, 0, 'L'},
         {"doRot",          required_argument, 0, 'r'},
+        {"isComplex",      required_argument, 0, 'X'},
         {"isExhaustive",   required_argument, 0, 'T'},
         {"logMin",         required_argument, 0, 'x'},
         {"logMax",         required_argument, 0, 'y'},
@@ -117,7 +123,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "S:c:N:Q:d:g:m:n:A:p:M:r:T:x:y:s:b:a:t:D:C:R:v:h",
+        "S:c:N:Q:d:g:m:n:A:p:M:L:r:X:T:x:y:s:b:a:t:D:C:R:v:h",
         long_options,
         &option_index)) != -1)
     {
@@ -159,10 +165,21 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
             case 'p': args.doPlainMul = std::stoul(optarg); break;
             case 'M': args.doMul = std::stoul(optarg); break;
-
+            case 'L':
+                try {
+                    args.doScalarMul = std::stod(optarg);
+                } catch (const std::exception& e) {
+                    std::cerr << "Invalid value for -L (expected double): " << optarg << "\n";
+                    std::exit(EXIT_FAILURE);
+                }
+                break;
 
             case 'S':
                 args.stage = optarg;
+                break;
+
+            case 'X':
+                args.isComplex= optarg;
                 break;
 
             case 'T':

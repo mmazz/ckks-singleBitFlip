@@ -14,7 +14,7 @@ struct OpenFHEContext final : BackendContext {
     PRNG* prng;
 };
 
-const std::vector<double>& get_reference_output(const BackendContext* bctx)
+std::vector<double> get_reference_output(const BackendContext* bctx)
 {
     auto& ctx = static_cast<const OpenFHEContext&>(*bctx);
     return ctx.goldenOutput;
@@ -134,9 +134,14 @@ IterationResult run_iteration(BackendContext* bctx,
 
     Ciphertext<DCRTPoly> c = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt);
     Ciphertext<DCRTPoly> c_clean;
+
     if(args.doAdd || args.doMul){
         ptxt_clean = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
         c_clean = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt_clean);
+    }
+
+    if(args.doPlainMul){
+        ptxt_clean = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
     }
 
     if (iterArgs) {
@@ -157,11 +162,15 @@ IterationResult run_iteration(BackendContext* bctx,
         ctx.cc->EvalAddInPlace(c,c_clean);
 
     for (uint32_t i = 0; i < args.doPlainMul; ++i)
-        c = ctx.cc->EvalMult(c,ptxt_clean);
+        c = ctx.cc->EvalMult(c, ptxt_clean);
 
     for (uint32_t i = 0; i < args.doMul; ++i)
-        c = ctx.cc->EvalMult(c,c_clean);
+        c = ctx.cc->EvalMult(c, c_clean);
 
+    if(args.doScalarMul>0){
+        double scalar = static_cast<double>(args.doScalarMul);
+        c = ctx.cc->EvalMult(c, scalar);
+    }
 
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
@@ -169,12 +178,12 @@ IterationResult run_iteration(BackendContext* bctx,
     }
 
     if (iterArgs) {
-        if ((args.stage == "encrypt_c0_eval") &&  (args.doAdd >0 || args.doMul>0 || args.doRot>0)) {
+        if ((args.stage == "encrypt_c0_eval") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
             bitFlip(c, args.withNTT, 0,
                     iterArgs->limb,
                     iterArgs->coeff,
                     iterArgs->bit);
-        } else if ((args.stage == "encrypt_c1_eval") &&  (args.doAdd >0 || args.doMul>0 || args.doRot>0)) {
+        } else if ((args.stage == "encrypt_c1_eval") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
             bitFlip(c, args.withNTT, 1,
                     iterArgs->limb,
                     iterArgs->coeff,

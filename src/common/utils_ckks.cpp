@@ -24,6 +24,27 @@ void printVector(const std::vector<double>& v,
     std::cout << " ]\n";
 }
 
+void printVector(const std::vector<cdouble>& v,
+                 const std::string& name,
+                 size_t max_elems)
+{
+    if (!name.empty())
+        std::cout << name << " (" << v.size() << "): ";
+
+    size_t n = std::min(v.size(), max_elems);
+
+    std::cout << "[ ";
+    for (size_t i = 0; i < n; ++i) {
+        std::cout << v[i];
+        if (i + 1 < n) std::cout << ", ";
+    }
+
+    if (n < v.size())
+        std::cout << ", ...";
+
+    std::cout << " ]\n";
+}
+
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 {
     std::vector<uint32_t> res;
@@ -120,7 +141,6 @@ CKKSAccuracyMetrics EvaluateCKKSAccuracy(
         bits_precision
     };
 }
-
 
 SlotErrorStats categorize_slots_relative(
     const std::vector<double>& golden,
