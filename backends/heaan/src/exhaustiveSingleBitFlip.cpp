@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
     args.library = "heaan";
     args.isExhaustive = true;
     args.mult_depth = 0;
+
     if (args.verbose) {
         args.print();
     }
@@ -19,15 +20,15 @@ int main(int argc, char* argv[]) {
     std::cout << "Computing golden output..." << std::endl;
 
     IterationResult goldenCKKS_output = run_iteration(ctx, args);
-    CKKSAccuracyMetrics baseline_metrics;
     std::vector<double> goldenOutput;
+
     if(args.isComplex){
         goldenOutput = get_reference_output_complex(ctx);
-        baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
     } else {
         goldenOutput = get_reference_output(ctx);
-        baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
     }
+
+    CKKSAccuracyMetrics baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
 
 
     if(AcceptCKKSResult(baseline_metrics))
@@ -42,18 +43,12 @@ int main(int argc, char* argv[]) {
 
         std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
-        CampaignLogger logger(
-            campaign_id,
-            args.results_dir + "/data",
-            10000);
+        CampaignLogger logger(campaign_id, args.results_dir + "/data");
 
         std::cout << "Campaign " << campaign_id << " registered" << std::endl;
 
-
-
         auto start_time = std::chrono::high_resolution_clock::now();
 
-        // ========== 10. LOOP DE BIT FLIPS ==========
         std::cout << "\nStarting bit flip campaign..." << std::endl;
 
         // Calcular total esperado para progress

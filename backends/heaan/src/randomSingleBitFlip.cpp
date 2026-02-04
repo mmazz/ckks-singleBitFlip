@@ -24,15 +24,15 @@ int main(int argc, char* argv[]) {
     std::cout << "Computing golden output..." << std::endl;
     // if complex, goldenCKKs_output has 2*slots
     IterationResult goldenCKKS_output = run_iteration(ctx, args);
-    CKKSAccuracyMetrics baseline_metrics;
     std::vector<double> goldenOutput;
+
     if(args.isComplex){
         goldenOutput = get_reference_output_complex(ctx);
-        baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
     } else {
         goldenOutput = get_reference_output(ctx);
-        baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
     }
+
+    CKKSAccuracyMetrics baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
 
     if(AcceptCKKSResult(baseline_metrics))
     {

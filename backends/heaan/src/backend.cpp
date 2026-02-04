@@ -5,7 +5,7 @@
 #include <NTL/ZZ.h>
 #include <vector>
 #include <complex>
-
+#include <algorithm>
 
 const size_t MAX_H = 64;
 
@@ -46,7 +46,6 @@ std::vector<double> get_reference_output_complex(const BackendContext* bctx)
 {
     auto& ctx = static_cast<const HEAANContext&>(*bctx);
 
-
     const auto& g = ctx.goldenOutputComplex;
     const size_t n = g.size();
 
@@ -63,16 +62,16 @@ std::vector<double> get_reference_output_complex(const BackendContext* bctx)
 
 
 BackendContext* setup_campaign(const CampaignArgs& args)
-    {
-    long h = pow(2, args.logN);
-        if (h > MAX_H)
-            h = MAX_H;
-    auto* ctx = new HEAANContext(
-        args.logN,
-        args.logQ,
-        h,          // h
-        args.seed
-    );
+{
+    long h;
+    uint64_t N = 1 << args.logN;
+    if (args.logN > 10)
+        h = MAX_H;
+    else
+        h = std::max<long>(1,N/64);
+
+    auto* ctx = new HEAANContext(args.logN, args.logQ, h, args.seed);
+
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
         ctx->scheme.addLeftRotKey(ctx->sk, rotIndex);
@@ -177,6 +176,7 @@ IterationResult run_iteration(
     for (uint32_t i = 0; i < args.doMul; ++i) {
         c = ctx.scheme.mult(c, c_clean);
         ctx.scheme.reScaleByAndEqual(c, args.logDelta);
+        ctx.scheme.reScaleByAndEqual(c_clean, args.logDelta);
     }
 
     if(args.doRot){

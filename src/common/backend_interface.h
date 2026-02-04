@@ -95,12 +95,14 @@ inline void compute_plain_io(const CampaignArgs& args,
     );
     base.resize(real_base.size());
 
+    // Its good for [-1,1] so the norm of the data is <1
+    constexpr double inv_sqrt2 = 0.7071067811865475;
     std::transform(
         real_base.begin(), real_base.end(),
         imag_base.begin(),
         base.begin(),
         [](double re, double im) {
-            return cdouble{re, im};
+            return cdouble{re* inv_sqrt2, im* inv_sqrt2};
         }
     );
 
