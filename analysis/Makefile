@@ -1,5 +1,28 @@
 LIBRARY		   ?= heaan
 ISCOMPLEX ?= 0
+ANALYSIS_TARGETS := \
+	seeds_analysis \
+	seeds_analysis_mul \
+	encode_analysis \
+	encrypt_analysis \
+	logN_analysis \
+	logQ_analysis \
+	logDelta_analysis \
+	gap_analysis \
+	mul_analysis \
+	add_rot_analysis \
+	add_analysis \
+	rot_analysis \
+
+ANALYSIS_TARGETS_RNS := \
+	mul_analysis_RNS \
+	add_analysis_RNS \
+	add_rot_analysis_RNS \
+	rot_analysis_RNS
+
+.PHONY: $(ANALYSIS_TARGETS) $(ANALYSIS_TARGETS_RNS) all_analysis
+
+all_analysis: $(ANALYSIS_TARGETS)
 
 seeds_analysis:
 	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0
@@ -8,10 +31,10 @@ seeds_analysis_mul:
 	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0 --doMul 2
 
 encode_analysis:
-	python3 encode_analysis.py   --library $(LIBRARY) --logN 3  --logSlots 2  --logQ 60  --logDelta 40 --bitPerCoeff 130 --stage encode     --seed 1 --withNTT 0
+	python3 encode_analysis.py   --library $(LIBRARY) --logN 3  --logSlots 2  --logQ 60  --logDelta 40 --bitPerCoeff 130 --stage encode   --withNTT 0
 
 encrypt_analysis:
-	python3 encrypt_analysis.py  --library $(LIBRARY) --logN 2  --logSlots 1  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0 --seed 1 --withNTT 0
+	python3 encrypt_analysis.py  --library $(LIBRARY) --logN 2  --logSlots 1  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0  --withNTT 0
 
 logN_analysis:
 	python3 logN_analysis.py     --library $(LIBRARY) --logN 16 --logSlots 15 --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0
