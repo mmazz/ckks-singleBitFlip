@@ -1,6 +1,7 @@
 BIN_EXHAUSTIVE := ./build/bin/exhaustiveSingleBitFlip
 BIN_RANDOM     := ./build/bin/randomSingleBitFlip
 LIBRARY		   ?= heaan
+ISCOMPLEX 	   ?= 0
 SEEDS := 1 2 3 4 5
 
 .PHONY: logN_analysis
@@ -81,14 +82,14 @@ plain_mul_analysis:
 
 mul_analysis:
 	@cd heaan && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 3 --mult_depth 3 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 1 --mult_depth 3 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 2 --mult_depth 3
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 3 --mult_depth 3 --isComplex $(ISCOMPLEX) && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 1 --mult_depth 3 --isComplex $(ISCOMPLEX) && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c0 --bitPerCoeff 150 --logSlots 3 --doMul 2 --mult_depth 3 --isComplex $(ISCOMPLEX)
 
 	@cd heaan && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 3 --mult_depth 3 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 1 --mult_depth 3 && \
-	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 2 --mult_depth 3
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 3 --mult_depth 3 --isComplex $(ISCOMPLEX) && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 1 --mult_depth 3 --isComplex $(ISCOMPLEX) && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --logDelta 30 --stage encrypt_c1 --bitPerCoeff 150 --logSlots 3 --doMul 2 --mult_depth 3 --isComplex $(ISCOMPLEX)
 
 mul_analysis_RNS:
 	@cd openfhe && \
@@ -112,9 +113,9 @@ add_analysis:
 
 rot_analysis:
 	@cd $(LIBRARY)&& \
-	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 3 --mult_depth 3&& \
-	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 2 --mult_depth 3&& \
-	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 1 --mult_depth 3
+	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 3 --mult_depth 3 --isComplex $(ISCOMPLEX) && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 2 --mult_depth 3 --isComplex $(ISCOMPLEX) && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logSlots 3 --logQ 60 --logDelta 30 --stage encrypt_c0  --doRot 1 --mult_depth 3 --isComplex $(ISCOMPLEX)
 
 clean:
 	rm -rf ../results

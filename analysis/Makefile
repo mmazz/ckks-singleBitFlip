@@ -1,4 +1,5 @@
 LIBRARY		   ?= heaan
+ISCOMPLEX ?= 0
 
 seeds_analysis:
 	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0
@@ -25,7 +26,7 @@ gap_analysis:
 	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0
 
 mul_analysis:
-	python3 mul_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 120 --logDelta 30 --bitPerCoeff 150 --stage encrypt_c0 --doMul 3 --mult_depth 0
+	python3 mul_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 120 --logDelta 30 --bitPerCoeff 150 --stage encrypt_c0 --doMul 3 --mult_depth 0 --isComplex $(ISCOMPLEX)
 
 mul_analysis_RNS:
 	python3 mul_analysis.py      --library openfhe --logN 6  --logSlots 3  --logQ 60 --logDelta 50 --bitPerCoeff 64 --stage encrypt_c0 --doMul 3 --mult_depth 3 --title mul_RNS
@@ -43,7 +44,7 @@ add_analysis_RNS:
 	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doAdd 1 --mult_depth 3 --title add_RNS
 
 rot_analysis:
-	python3 rot_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 3
+	python3 rot_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 0
 
 rot_analysis_RNS:
 	python3 rot_analysis.py      --library openfhe --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 3 --title rot_RNS

@@ -59,8 +59,6 @@ std::vector<double> get_reference_output_complex(const BackendContext* bctx)
     return out;
 }
 
-
-
 BackendContext* setup_campaign(const CampaignArgs& args)
 {
     long h;
@@ -79,7 +77,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     NTL::SetSeed(ctx->seed);
     std::srand(args.seed);
 
-    if(args.isComplex){
+    if(args.isComplex>0){
         compute_plain_io(args, ctx->baseInputComplex, ctx->goldenOutputComplex);
     } else{
         compute_plain_io(args, ctx->baseInput, ctx->goldenOutput);
@@ -96,16 +94,17 @@ IterationResult run_iteration(
     auto& ctx = static_cast<HEAANContext&>(*bctx);
 
     auto baseInput = ctx.baseInput.data();
+    auto baseSize  = ctx.baseInput.size();
     auto baseInputComplex = ctx.baseInputComplex.data();
-    auto baseSize = ctx.baseInput.size();
 
-    if(args.isComplex)
+    if(args.isComplex){
         baseSize = ctx.baseInputComplex.size();
+    }
 
     Plaintext plain;
     Plaintext plain_clean;
 
-    if(args.isComplex){
+    if(args.isComplex>0){
         plain = ctx.scheme.encode(
             baseInputComplex,
             baseSize,
@@ -146,15 +145,9 @@ IterationResult run_iteration(
 
     if(args.doPlainMul){
         if(args.isComplex){
-            plain_clean =  ctx.cc.encode(baseInputComplex,
-                                baseSize,
-                                args.logDelta
-                            );
+            plain_clean =  ctx.cc.encode(baseInputComplex, baseSize, args.logDelta);
         } else {
-            plain_clean =  ctx.cc.encode(baseInput,
-                                baseSize,
-                                args.logDelta
-                            );
+            plain_clean =  ctx.cc.encode(baseInput, baseSize, args.logDelta);
         }
     }
 
@@ -176,7 +169,6 @@ IterationResult run_iteration(
     for (uint32_t i = 0; i < args.doMul; ++i) {
         c = ctx.scheme.mult(c, c_clean);
         ctx.scheme.reScaleByAndEqual(c, args.logDelta);
-        ctx.scheme.reScaleByAndEqual(c_clean, args.logDelta);
     }
 
     if(args.doRot){
@@ -202,7 +194,7 @@ IterationResult run_iteration(
 
     IterationResult res;
     const size_t slots = 1u << args.logSlots;
-    if(args.isComplex){
+    if(args.isComplex>0){
         res.values.resize(2*slots);
 
         for (size_t i = 0; i < slots; i++) {

@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     IterationResult goldenCKKS_output = run_iteration(ctx, args);
     std::vector<double> goldenOutput;
 
-    if(args.isComplex){
+    if(args.isComplex>0){
         goldenOutput = get_reference_output_complex(ctx);
     } else {
         goldenOutput = get_reference_output(ctx);

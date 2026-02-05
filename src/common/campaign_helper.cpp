@@ -21,9 +21,9 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  mult_depth: " << mult_depth << "\n"
        << "  seed: " << seed << "\n"
        << "  seed_input: " << seed_input << "\n"
+       << "  withNTT: " << withNTT << "\n"
        << "  logMin: " << logMin << "\n"
        << "  logMax: " << logMax << "\n"
-       << "  withNTT: " << withNTT << "\n"
        << "  doAdd: " << doAdd << "\n"
        << "  doPlainMul: " << doPlainMul << "\n"
        << "  doMul: " << doMul << "\n"
@@ -67,7 +67,7 @@ void print_usage(const char* program_name) {
               << "  --doMul <value>         The pipeline server has that much Muls (default: 0)\n"
               << "  --doScalarMul <value>   The pipeline server has Multiplies the cipher with that scalar (double) (default: 0, no mult)\n"
               << "  --doRot <value>         The pipeline server has Rot, the value is how many rot (default: 0)\n"
-              << "  --isComplex <name>      Complex input, only for HEAAN (default: false)\n"
+              << "  --isComplex <name>      Complex input, only for HEAAN (default: 0)\n"
               << "  --isExhaustive <name>   Type of bit flip campaign (default: exhaustive)\n"
               << "  --seed <value>          Random seed for scheme (default: 0)\n"
               << "  --seed_input <value>    Random seed for input (default: 0)\n"
@@ -179,7 +179,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                 break;
 
             case 'X':
-                args.isComplex= optarg;
+                args.isComplex= std::stoul(optarg);
                 break;
 
             case 'T':
