@@ -18,7 +18,7 @@ CampaignRegistry::CampaignRegistry(const std::string& results_dir) {
         std::ofstream f(start_csv_);
         f << "campaign_id,library,stage,bitPerCoeff,logN,logQ,logDelta,logSlots,"
              "mult_depth,seed,seed_input,withNTT,"
-             "logMin,logMax,doAdd,doPlainMul,doMul,doScalarMul,doRot,iscomplex,isExhaustive,dnum,scaleTech,timestamp_start\n";
+             "logMin,logMax,doAdd,doPlainMul,doMul,doScalarMul,doRot,isComplex,isExhaustive,dnum,scaleTech,timestamp_start\n";
     }
 
     if (!fs::exists(end_csv_)) {

@@ -1,8 +1,8 @@
 #include "utils_ckks.h"
-
 #include <cmath>
 #include <algorithm>
 #include <stdexcept>
+
 void printVector(const std::vector<double>& v,
                  const std::string& name,
                  size_t max_elems)

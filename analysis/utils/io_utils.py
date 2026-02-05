@@ -16,8 +16,11 @@ OPTIONAL_DEFAULTS = {
     "logMin": 0,
     "logMax": 0,
     "doAdd": 0,
+    "doPlainMul": 0,
     "doMul": 0,
+    "doScalarMul": 0,
     "doRot": 0,
+    "isComplex": 0,
     "bitPerCoeff": 64,
     "dnum": 3,
 }
