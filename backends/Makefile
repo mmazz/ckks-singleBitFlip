@@ -4,10 +4,14 @@ LIBRARY		   ?= heaan
 ISCOMPLEX 	   ?= 0
 SEEDS := 1 2 3 4
 MULTIPLE_SEEDS := 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-ANALYSES = seeds_analysis seeds_analysis_mul encode_analysis encrypt_analysis logN_analysis logQ_analysis logDelta_analysis gap_analysis gap_analysis_c1 add_rot_analysis plain_mul_analysis mul_analysis_c1 mul_analysis_c0 mul_analysis_c0_RNS mul_analysis_c1_RNS limb_analysis add_analysis rot_analysis
+ANALYSES = seeds_analysis seeds_analysis_mul encode_analysis encrypt_analysis logN_analysis logQ_analysis logDelta_analysis gap_analysis gap_analysis_c1 add_rot_analysis plain_mul_analysis mul_analysis_c1 mul_analysis_c0  add_analysis rot_analysis
+ANALYSES_RNS = mul_analysis_c0_RNS mul_analysis_c1_RNS limb_analysis
 
-.PHONY: all_analysis $(ANALYSES)
+.PHONY: all_analysis $(ANALYSES) $(ANALYSES_RNS)
+
 all_analysis: $(ANALYSES)
+
+RNS_analysis: $(ANALYSES_RNS)
 
 
 seeds_analysis:
