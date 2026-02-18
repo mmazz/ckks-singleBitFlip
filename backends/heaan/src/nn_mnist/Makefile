@@ -43,9 +43,11 @@ UTILS_OBJ := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(UTILS_SRC))
 RUN_IDS := 0 1 2 3 4 5 6 7 8 9
 RUNS := dirs $(addprefix run,$(RUN_IDS))
 
-.PHONY: all $(RUNS)
+.PHONY: all allRuns $(RUNS)
 
-all: $(RUNS)
+all: dirs $(TARGETS)
+
+allRuns: $(RUNS)
 
 run0:
 	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 0
