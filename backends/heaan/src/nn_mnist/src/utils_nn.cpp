@@ -355,3 +355,174 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector
     }
     return res;
 }
+
+/// Server side bit flip/ ////
+///
+Ciphertext chebyTanh3OP(
+    HEEnv& he,
+    Ciphertext c,
+    long logP,
+    CampaignArgs& args, std::optional<IterationArgs> iterArgs, uint32_t hidden
+){
+    if(args.verbose)
+        cout << hidden << ", ";
+    if (hidden>0 && iterArgs && args.doMul==1) {
+        if (args.stage == "encrypt_c0") {
+            cout << "Bit: " << iterArgs->bit << ": " << c.bx[iterArgs->coeff] << ", ";
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+            cout << c.bx[iterArgs->coeff] << endl;
+        } else if (args.stage == "encrypt_c1") {
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
+    }
+    // x^2
+    Ciphertext x2 = he.scheme.square(c);
+    he.scheme.reScaleByAndEqual(x2, logP);
+
+    if (hidden>0 && iterArgs && args.doMul==2) {
+        if (args.stage == "encrypt_c0") {
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+        } else if (args.stage == "encrypt_c1") {
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
+    }
+    // x^3
+    Ciphertext x3 = he.scheme.mult(x2, c);
+    he.scheme.reScaleByAndEqual(x3, logP);
+
+    // -0.23*x^3
+    he.scheme.multByConstAndEqual(x3, -0.23, logP);
+    he.scheme.reScaleByAndEqual(x3, logP);
+    if (hidden>0 && iterArgs && args.doScalarMul>0) {
+        if (args.stage == "encrypt_c0") {
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+        } else if (args.stage == "encrypt_c1") {
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
+    }
+    // 0.98*x
+    he.scheme.multByConstAndEqual(c, 0.98, logP);
+    he.scheme.reScaleByAndEqual(c, logP);
+
+    he.scheme.addAndEqual(x3, c);
+
+    return x3;
+}
+
+vector<Ciphertext> forwardOP(
+    HEEnv& he,
+    Ciphertext c,
+    EncodedWeights& ew,
+    long logSlots,
+    long logP,
+    CampaignArgs& args, std::optional<IterationArgs> iterArgs
+)
+{
+    size_t HIDDEN = ew.W1.size();
+    size_t OUTPUT = ew.W2.size();
+
+    vector<Ciphertext> layer1(HIDDEN);
+    uint32_t hidden = random_int(0, HIDDEN-1);
+    if(args.verbose)
+        cout << "Hidden bitflip: ";
+    for(size_t j=0;j<HIDDEN;++j){
+
+        Ciphertext s = he.scheme.multByPoly(c, ew.W1[j], logP);
+        he.scheme.reScaleByAndEqual(s, logP);
+
+        reduceSum(he, s, logSlots);
+
+        he.scheme.addConstAndEqual(s, ew.b1[j]);
+
+        // Chebyshev tanh
+        s = chebyTanh3OP(he, std::move(s), logP, args, iterArgs, hidden==j);
+
+        layer1[j] = std::move(s);
+    }
+    if(args.verbose)
+        cout << endl;
+
+    vector<Ciphertext> out(OUTPUT);
+    for(size_t o=0;o<OUTPUT;++o){
+
+        Ciphertext acc = he.scheme.multByPoly(layer1[0], ew.W2[o][0], logP);
+        he.scheme.reScaleByAndEqual(acc, logP);
+
+        for(size_t h=0;h<HIDDEN;++h){
+            Ciphertext term = he.scheme.multByPoly(layer1[h], ew.W2[o][h], logP);
+            he.scheme.reScaleByAndEqual(term, logP);
+            he.scheme.addAndEqual(acc, term);
+        }
+
+        he.scheme.addConstAndEqual(acc, ew.b2[o]);
+
+        out[o] = std::move(acc);
+    }
+
+    return out;
+}
+
+IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs){
+
+    size_t logSlots = args.logSlots;
+    size_t slots = 1 << logSlots;
+    size_t logP = args.logDelta;
+    size_t logQ = args.logQ;
+    size_t verbose = args.verbose;
+
+
+    vector<complex<double>> arr(slots, {0,0});
+
+    for(size_t i=0;i<vals.size();++i)
+        arr[i] = {vals[i],0};
+
+    Plaintext plain = he.scheme.encode(arr.data(), slots, logP, logQ);
+
+    Ciphertext c = he.scheme.encryptMsg(plain, ZZ(args.seed));
+
+    if(args.verbose)
+        cout << "Running encrypted inference..." << endl;
+    auto outputs = forwardOP(
+        he,
+        c,
+        encoded,
+        logSlots,
+        logP,
+        args, iterArgs
+    );
+
+    if(verbose)
+        cout << "Decrypting..." << endl;
+
+    auto logits = decryptLogits(he, outputs);
+
+
+    size_t pred = 0;
+    double best = logits[0];
+
+    for(size_t i=1;i<logits.size();++i){
+        if(logits[i] > best){
+            best = logits[i];
+            pred = i;
+        }
+    }
+    IterationResult res;
+    res.detected = (pred == targetValue);
+    if(verbose){
+        cout << "\nPrediction: " << pred
+             << "\nTarget:     " << targetValue
+             << endl;
+
+        if(pred == targetValue)
+            cout << "✔ Correct\n";
+        else
+            cout << "✘ Incorrect\n";
+    }
+    else{
+        if(pred == targetValue)
+            cout << 1 << std::endl;
+        else
+            cout << 0 << std::endl;
+    }
+    return res;
+}

@@ -87,3 +87,20 @@ std::vector<std::vector<double>> loadCSVMatrix(const std::string& path, size_t r
 std::vector<double> loadCSVVector(const std::string& path, size_t size);
 
 IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs=std::nullopt);
+
+
+Ciphertext chebyTanh3OP(
+    HEEnv& he,
+    Ciphertext c,
+    long logP,
+    CampaignArgs& args, std::optional<IterationArgs> iterArgs, uint32_t hidden
+);
+IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs);
+vector<Ciphertext> forwardOP(
+    HEEnv& he,
+    Ciphertext c,
+    EncodedWeights& ew,
+    long logSlots,
+    long logP,
+    CampaignArgs& args, std::optional<IterationArgs> iterArgs
+);

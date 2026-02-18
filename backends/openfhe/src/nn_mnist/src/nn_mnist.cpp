@@ -9,16 +9,16 @@ const size_t INPUT_DIM = 784;
 const size_t HIDDEN_DIM = 64;
 const size_t OUTPUT_DIM = 10;
 const double PIXEL_MAX = 255.0;
-const std::string path = "data/mnist_train.csv";
+const std::string path = "../../../heaan/src/nn_mnist/data/mnist_train.csv";
 size_t NUM_BITFLIPS = 50;
+using namespace std;
 
 int main(int argc, char* argv[]) {
 
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
-    args.library = "heaanNN";
+    args.library = "openfheNN";
     args.isExhaustive= false;
-    args.mult_depth = 0;
 
     if (args.verbose) {
         args.print();
@@ -27,10 +27,11 @@ int main(int argc, char* argv[]) {
 
     long logQ = args.logQ;
     long logP = args.logDelta;
+    long multDepth = args.mult_depth;
     long logN = args.logN;
     long logSlots = args.logSlots;
     long slots = 1 << logSlots;
-    long h = 64;
+ //   long h = 64;
 
     size_t targetRow =  args.seed;
     size_t verbose =  args.verbose;
@@ -39,16 +40,15 @@ int main(int argc, char* argv[]) {
     if(verbose)
         cout << "Initializing HE..." << endl;
 
-    HEEnv he(logN, logQ, h);
+    HEEnv he(logN, multDepth,logP, logQ);
 
     if(verbose)
         cout << "Loading weights..." << endl;
 
-    auto W1  = loadCSVMatrix("data/weights/W1.csv", HIDDEN_DIM, INPUT_DIM);
-    auto b1  = loadCSVVector("data/weights/b1.csv", HIDDEN_DIM);
-
-    auto W2  = loadCSVMatrix("data/weights/W2.csv", OUTPUT_DIM, HIDDEN_DIM);
-    auto b2  = loadCSVVector("data/weights/b2.csv", OUTPUT_DIM);
+    auto W1  = loadCSVMatrix("../../../heaan/src/nn_mnist/data/weights/W1.csv", HIDDEN_DIM, INPUT_DIM);
+    auto b1  = loadCSVVector("../../../heaan/src/nn_mnist/data/weights/b1.csv", HIDDEN_DIM);
+    auto W2  = loadCSVMatrix("../../../heaan/src/nn_mnist/data/weights/W2.csv", OUTPUT_DIM, HIDDEN_DIM);
+    auto b2  = loadCSVVector("../../../heaan/src/nn_mnist/data/weights/b2.csv", OUTPUT_DIM);
     assert(W1[0].size() == INPUT_DIM);
     assert(W2[0].size() == HIDDEN_DIM);
 
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
         cout << "Encoding weights..." << endl;
 
     EncodedWeights encoded =
-        encodeWeights(he, W1, b1, W2, b2, slots, logP);
+        encodeWeights(he, W1, b1, W2, b2, slots);
 
     if(verbose)
         cout << "Ready for inference.\n" << endl;
