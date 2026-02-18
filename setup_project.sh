@@ -54,7 +54,7 @@ cd "$PROJECT_ROOT"
 
 if [ ! -f "campaigns/openfhe/build/bin/singleBitFlip" ]; then
     echo "Building OpenFHE campaigns..."
-    cd campaigns/openfhe
+    cd backends/openfhe
     ./build.sh
     cd -
 else
