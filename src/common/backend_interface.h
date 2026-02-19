@@ -169,5 +169,8 @@ IterationResult run_iteration(
     const CampaignArgs& args,
     std::optional<IterationArgs> iterArgs = std::nullopt
 );
-
+IterationResult run_iteration_multiBit(
+    BackendContext* bctx,
+    const CampaignArgs& args,
+    std::optional<IterationArgs> iterArgs);
 void destroy_campaign(BackendContext* ctx);

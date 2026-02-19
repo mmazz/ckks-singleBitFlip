@@ -147,7 +147,7 @@ def plot_bit_cat(stats, ax=None, label_prefix="", color=colors["red"], scatter=T
             alpha=alpha,
             s=size,
             zorder=4,
-            label=f"{label_prefix} Mean $L_2$"
+            label=f"{label_prefix} Mean SDC"
         )
     else:
         ax.plot(
@@ -158,7 +158,7 @@ def plot_bit_cat(stats, ax=None, label_prefix="", color=colors["red"], scatter=T
             markersize=6,
             color=color,
             zorder=2,
-            label=f"{label_prefix} Mean $L_2$"
+            label=f"{label_prefix} Mean SDC"
         )
 
     if plot_std:

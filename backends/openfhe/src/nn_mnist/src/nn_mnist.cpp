@@ -10,7 +10,7 @@ const size_t HIDDEN_DIM = 64;
 const size_t OUTPUT_DIM = 10;
 const double PIXEL_MAX = 255.0;
 const std::string path = "../../../heaan/src/nn_mnist/data/mnist_train.csv";
-size_t NUM_BITFLIPS = 50;
+size_t LAPS = 15;
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -80,11 +80,14 @@ int main(int argc, char* argv[]) {
         cout << "Encrypting input..." << endl;
 
     auto start_time = std::chrono::high_resolution_clock::now();
-    IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue);
+    for(size_t i=0 ; i<LAPS;i++){
+        args.seed++;
+        IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue);
+    }
     auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+    std::chrono::duration<double> duration = end_time - start_time;
 
-    std::cout << "Time: " << duration.count() << " s"  << std::endl;
+    std::cout << "Time: " << duration.count()/LAPS << " s"  << std::endl;
 
 
 

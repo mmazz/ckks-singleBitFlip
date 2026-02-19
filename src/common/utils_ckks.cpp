@@ -73,12 +73,12 @@ std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 
     // zone 2
     push_unique(logDelta);
-    if(logQ>=120){
+ //   if(logQ>=120){
         push_unique((logDelta + logQ) / 6);
         push_unique((logDelta + logQ) / 4);
         push_unique((logDelta + logQ) / 3);
         push_unique(logQ-logDelta);
-    }
+ //   }
     push_unique((logDelta + logQ) / 2);
 
     if (logQ > 0)

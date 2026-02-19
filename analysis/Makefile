@@ -72,9 +72,13 @@ rot_analysis:
 rot_analysis_RNS:
 	python3 rot_analysis.py      --library openfhe --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 3 --title rot_RNS
 
+multibit:
+	python3 multibit.py --library heaan --logN 10  --logQ 60 --bitPerCoeff 64 --logDelta 30 --stage encrypt_c0 --logSlots 9  --withNTT 0
+
 
 heaanNN:
 	python3 heaanNN.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0
 
-
+heaanNNop:
+	python3 heaanNN.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0 --doMul 1
 

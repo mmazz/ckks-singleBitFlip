@@ -30,7 +30,7 @@ struct HEEnv {
         parameters.SetFirstModSize(firstMod);
         parameters.SetBatchSize(1 << (logN-1));
         parameters.SetRingDim(1 << logN);
-        parameters.SetScalingTechnique(FIXEDMANUAL);
+        //parameters.SetScalingTechnique(FIXEDMANUAL);
         parameters.SetSecurityLevel(HEStd_NotSet);
 
         cc = GenCryptoContext(parameters);

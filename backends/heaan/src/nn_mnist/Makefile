@@ -109,7 +109,7 @@ clean:
 .PHONY: all clean dirs
 
 run0OP:
-	build/bin/nn_mnist_randomBitFlipOp --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 2 --withNTT 0 --doMul 1 --verbose
+	build/bin/nn_mnist_randomBitFlipOp --logN 14  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 2 --withNTT 0 --doMul 1 --verbose
 
 run:
 	build/bin/nn_mnist 6 0 >> log.txt

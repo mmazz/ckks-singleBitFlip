@@ -1,5 +1,6 @@
 BIN_EXHAUSTIVE := ./build/bin/exhaustiveSingleBitFlip
 BIN_RANDOM     := ./build/bin/randomSingleBitFlip
+BIN_RANDOM_MULTI     := ./build/bin/randomMultiBitFlip
 LIBRARY		   ?= heaan
 ISCOMPLEX 	   ?= 0
 SEEDS := 1 2 3 4
@@ -200,6 +201,13 @@ limb_analysis:
 		done; \
 	done
 
+multi_analysis:
+	@cd heaan && \
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM_MULTI)     --logN 10 --logQ 60  --bitPerCoeff 64  --logDelta 30 --stage encrypt_c0 --logSlots 9 --seed $$s --seed_input $$s --withNTT 0 && \
+		$(BIN_RANDOM_MULTI)     --logN 10 --logQ 60  --bitPerCoeff 64  --logDelta 30 --stage encrypt_c0 --logSlots 7 --seed $$s --seed_input $$s --withNTT 0 && \
+		$(BIN_RANDOM_MULTI)     --logN 10 --logQ 60  --bitPerCoeff 64  --logDelta 30 --stage encrypt_c0 --logSlots 5 --seed $$s --seed_input $$s --withNTT 0; \
+	done
 clean:
 	rm -rf ../results
 
