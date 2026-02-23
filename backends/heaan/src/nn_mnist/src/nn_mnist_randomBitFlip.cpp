@@ -10,7 +10,7 @@ const size_t HIDDEN_DIM = 64;
 const size_t OUTPUT_DIM = 10;
 const double PIXEL_MAX = 255.0;
 const std::string path = "data/mnist_train.csv";
-size_t NUM_BITFLIPS = 50;
+size_t NUM_BITFLIPS = 500;
 
 int main(int argc, char* argv[]) {
 
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
     IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue);
     if(res.detected)
     {
-        args.results_dir = "../../../../results";
+        args.results_dir = "../../../../results_NN";
         CampaignRegistry registry(args.results_dir);
         uint32_t campaign_id = registry.allocate_campaign_id();
         std::cout << "\n=== Registring Campaign "<< std::endl;

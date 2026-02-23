@@ -49,6 +49,7 @@ all: dirs $(TARGETS)
 
 allRuns: $(RUNS)
 
+
 run0:
 	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 0
 run1:
@@ -106,7 +107,6 @@ $(OBJ_DIR)/%.o: %.cpp
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean dirs
 
 run0OP:
 	build/bin/nn_mnist_randomBitFlipOp --logN 14  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 2 --withNTT 0 --doMul 1 --verbose
