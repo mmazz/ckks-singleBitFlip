@@ -24,9 +24,9 @@ dir = "img/"
 SAVENAME = "heaan_NN"
 
 CSV_PATH = config.CAMPAIGNS_CSV
-CSV_PATH=  "../resultsNNop/campaigns_start.csv"
+CSV_PATH=  "../resultsNN/campaigns_start.csv"
 DATA_PATH = config.DATA_DIR
-DATA_PATH = Path("../resultsNNop/data")
+DATA_PATH = Path("../resultsNN/data")
 def main():
     args = parse_args()
     savename =  SAVENAME

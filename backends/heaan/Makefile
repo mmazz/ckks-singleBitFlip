@@ -17,7 +17,7 @@ LIBS    := -lHEAAN -lntl -lgmp -lm
 
 # ---------- Programs ----------
 
-PROGRAMS := exhaustiveSingleBitFlip randomSingleBitFlip randomMultiBitFlip
+PROGRAMS := exhaustiveSingleBitFlip randomSingleBitFlip randomMultiBitFlip bootPerformance
 
 COMMON_SOURCES := $(wildcard $(COMMON_SRC)/*.cpp)
 COMMON_OBJECTS := $(patsubst $(COMMON_SRC)/%.cpp,$(OBJ_DIR)/common_%.o,$(COMMON_SOURCES))

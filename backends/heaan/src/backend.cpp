@@ -69,7 +69,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
         h = std::max<long>(1,N/64);
 
     auto* ctx = new HEAANContext(args.logN, args.logQ, h, args.seed);
-
+    ctx->scheme.addBootKey(ctx->sk, args.logSlots, args.logQ/4 + 4);
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
         ctx->scheme.addLeftRotKey(ctx->sk, rotIndex);
@@ -181,6 +181,13 @@ IterationResult run_iteration(
         } else if ((args.stage == "encrypt_c1_eval") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
+    }
+    //cipher, logq, logQ, logT, logI=4
+    std::cout << "Starting Bootstrapp!" << std::endl;
+
+    if(args.doBoot){
+        c.logq = args.logQ/4;
+        ctx.scheme.bootstrapAndEqual(c, c.logq, args.logQ, 3);
     }
 
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);

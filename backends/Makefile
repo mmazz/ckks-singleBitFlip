@@ -208,6 +208,11 @@ multi_analysis:
 		$(BIN_RANDOM_MULTI)     --logN 10 --logQ 60  --bitPerCoeff 64  --logDelta 30 --stage encrypt_c0 --logSlots 7 --seed $$s --seed_input $$s --withNTT 0 && \
 		$(BIN_RANDOM_MULTI)     --logN 10 --logQ 60  --bitPerCoeff 64  --logDelta 30 --stage encrypt_c0 --logSlots 5 --seed $$s --seed_input $$s --withNTT 0; \
 	done
+
+mult_boot_analysis:
+	@cd heaan && \
+	./build/bin/bootPerformance --logN 14 --logQ 160  --bitPerCoeff 180  --logDelta 30 --stage encrypt_c0 --logSlots 9 --seed 0 --seed_input 0 --withNTT 0 --doBoot 1\
+
 clean:
 	rm -rf ../results
 

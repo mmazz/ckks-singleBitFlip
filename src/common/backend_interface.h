@@ -169,6 +169,11 @@ IterationResult run_iteration(
     const CampaignArgs& args,
     std::optional<IterationArgs> iterArgs = std::nullopt
 );
+IterationResult run_iteration_boot(
+    BackendContext* ctx,
+    const CampaignArgs& args,
+    std::optional<IterationArgs> iterArgs = std::nullopt
+);
 IterationResult run_iteration_multiBit(
     BackendContext* bctx,
     const CampaignArgs& args,

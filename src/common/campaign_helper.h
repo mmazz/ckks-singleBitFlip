@@ -49,6 +49,7 @@ struct CampaignArgs {
     uint32_t doMul = 0;
     double doScalarMul = 0;
     uint32_t doRot = 0;
+    uint32_t doBoot= 0;
     size_t isComplex = 0;
     bool isExhaustive = true;
     bool verbose = false;
