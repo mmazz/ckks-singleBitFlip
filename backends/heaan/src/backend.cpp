@@ -176,9 +176,9 @@ IterationResult run_iteration(
     }
 
     if (iterArgs) {
-        if ((args.stage == "encrypt_c0_eval") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        if ((args.stage == "decrypt_c0") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
-        } else if ((args.stage == "encrypt_c1_eval") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        } else if ((args.stage == "decrypt_c1") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
@@ -192,7 +192,7 @@ IterationResult run_iteration(
 
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
 
-    if (iterArgs && args.stage == "decrypt") {
+    if (iterArgs && args.stage == "decode") {
         SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit);
     }
 
@@ -324,12 +324,12 @@ IterationResult run_iteration_multiBit(
     }
 
     if (iterArgs) {
-        if ((args.stage == "encrypt_c0_eval") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        if ((args.stage == "decrypt_c0") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit+1);
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit+2);
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit+3);
-        } else if ((args.stage == "encrypt_c1_eval") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        } else if ((args.stage == "decrypt_c1") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit+1);
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit+2);
@@ -339,7 +339,7 @@ IterationResult run_iteration_multiBit(
 
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
 
-    if (iterArgs && args.stage == "decrypt") {
+    if (iterArgs && args.stage == "decode") {
         SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit);
         SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit+1);
         SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit+2);
@@ -442,16 +442,16 @@ IterationResult run_NN(
     }
 
     if (iterArgs) {
-        if ((args.stage == "encrypt_c0_eval") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        if ((args.stage == "decrypt_c0") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
-        } else if ((args.stage == "encrypt_c1_eval") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        } else if ((args.stage == "decrypt_c1") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
 
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
 
-    if (iterArgs && args.stage == "decrypt") {
+    if (iterArgs && args.stage == "decode") {
         SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit);
     }
 
