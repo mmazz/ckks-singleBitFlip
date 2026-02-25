@@ -10,7 +10,7 @@ const size_t HIDDEN_DIM = 64;
 const size_t OUTPUT_DIM = 10;
 const double PIXEL_MAX = 255.0;
 const std::string path = "data/mnist_train.csv";
-size_t NUM_BITFLIPS = 500;
+size_t NUM_BITFLIPS = 50;
 
 int main(int argc, char* argv[]) {
 

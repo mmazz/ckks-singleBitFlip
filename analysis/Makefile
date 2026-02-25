@@ -78,20 +78,27 @@ multibit:
 
 heaanNN:
 	python3 heaanNN.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0
+NN:
+	python3 NN_byBits.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0
 
 heaanNNop:
 	python3 heaanNN.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0 --doMul 1
 
 openfheNN_enco:
+	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encode --logSlots 10  --withNTT 0 --mult_depth 5
 	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encode --logSlots 10  --withNTT 1 --mult_depth 5
 openfheNN_encrC0:
+	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encrypt_c0 --logSlots 10  --withNTT 0 --mult_depth 5
 	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encrypt_c0 --logSlots 10  --withNTT 1 --mult_depth 5
 
 openfheNN_encrC1:
+	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encrypt_c1 --logSlots 10  --withNTT 0 --mult_depth 5
 	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encrypt_c1 --logSlots 10  --withNTT 1 --mult_depth 5
 openfheNN_decrC0:
+	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage decrypt_c0 --logSlots 10  --withNTT 0 --mult_depth 5
 	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage decrypt_c0 --logSlots 10  --withNTT 1 --mult_depth 5
 openfheNN_decrC1:
+	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage decrypt_c1 --logSlots 10  --withNTT 0 --mult_depth 5
 	python3 heaanNN.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage decrypt_c1 --logSlots 10  --withNTT 1 --mult_depth 5
 
 

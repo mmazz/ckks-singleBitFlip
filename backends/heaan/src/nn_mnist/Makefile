@@ -53,15 +53,15 @@ allRuns: $(RUNS)
 run0:
 	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 0
 run1:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c1 --logSlots 10 --seed 1 --withNTT 0
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 1 --withNTT 0
 run2:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encode     --logSlots 10 --seed 2 --withNTT 0
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 2 --withNTT 0
 run3:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decrypt_c0 --logSlots 10 --seed 3 --withNTT 0
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 3 --withNTT 0
 run4:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decrypt_c1 --logSlots 10 --seed 4 --withNTT 0
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 4 --withNTT 0
 run5:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decode     --logSlots 10 --seed 5 --withNTT 0
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 5 --withNTT 0
 run6:
 	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 6 --withNTT 0
 run7:
@@ -70,6 +70,22 @@ run8:
 	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 8 --withNTT 0
 run9:
 	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 9 --withNTT 0
+
+
+
+run_stages0:
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 0
+run_stages1:
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c1 --logSlots 10 --seed 1 --withNTT 0
+run_stages2:
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encode     --logSlots 10 --seed 2 --withNTT 0
+run_stages3:
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decrypt_c0 --logSlots 10 --seed 3 --withNTT 0
+run_stages4:
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decrypt_c1 --logSlots 10 --seed 4 --withNTT 0
+run_stages5:
+	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decode     --logSlots 10 --seed 5 --withNTT 0
+
 
 dirs:
 	@mkdir -p $(BIN_DIR)

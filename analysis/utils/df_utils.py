@@ -116,3 +116,22 @@ def stats_by_bit(data):
         )
     )
     return stats.merge(extrema, on="bit")
+
+
+def stats_by_bit_sdc(data):
+
+    per_coeff = (
+        data
+        .groupby(["bit", "coeff"], as_index=False)
+        .agg(sdc_mean=("is_sdc", "mean"))
+    )
+
+    stats = (
+        per_coeff
+        .groupby("bit", as_index=False)
+        .agg(
+            mean_sdc=("sdc_mean", "mean"),
+            std_sdc=("sdc_mean", lambda x: x.std(ddof=0)),
+        )
+    )
+    return stats
