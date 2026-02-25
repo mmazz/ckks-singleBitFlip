@@ -48,7 +48,7 @@ void printVector(const std::vector<cdouble>& v,
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 {
     std::vector<uint32_t> res;
-    res.reserve(10);
+    res.reserve(14);
 
     const uint32_t logQ         = args.logQ;
     const uint32_t logDelta     = args.logDelta;

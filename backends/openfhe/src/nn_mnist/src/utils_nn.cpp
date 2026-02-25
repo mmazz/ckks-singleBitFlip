@@ -1,6 +1,31 @@
 #include "utils_nn.h"
 #include "backend_interface.h"
 
+static void bitFlip(Ciphertext<DCRTPoly> &c, bool withNTT, size_t k, size_t i, size_t j, size_t bit){
+    if(!withNTT)
+        c->GetElements()[k].SwitchFormat();
+
+    NativeInteger& x = c->GetElements()[k].GetAllElements()[i][j];
+    uint64_t val = x.ConvertToInt();  // Extrae como uint64_t
+    val ^= (1ULL << bit);               // Aplica XOR
+    x = NativeInteger(val);
+
+    if(!withNTT)
+        c->GetElements()[k].SwitchFormat();
+}
+
+static void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bit){
+    if(!withNTT)
+        ptxt->GetElement<DCRTPoly>().SwitchFormat();
+
+    NativeInteger& x = ptxt->GetElement<DCRTPoly>().GetAllElements()[i][j];
+    uint64_t val = x.ConvertToInt();  // Extrae como uint64_t
+    val ^= (1ULL << bit);               // Aplica XOR
+    x = NativeInteger(val);
+
+    if(!withNTT)
+        ptxt->GetElement<DCRTPoly>().SwitchFormat();
+}
 
 EncodedWeights encodeWeights(
     HEEnv& he,
@@ -302,10 +327,31 @@ IterationResult run_iteration_NN(
     size_t verbose = args.verbose;
 
     // ===== Encoding =====
-    Plaintext plain = he.cc->MakeCKKSPackedPlaintext(vals);
+    Plaintext ptxt = he.cc->MakeCKKSPackedPlaintext(vals);
+
+    if (iterArgs && args.stage == "encode") {
+        bitFlip(ptxt, args.withNTT,
+                iterArgs->limb,
+                iterArgs->coeff,
+                iterArgs->bit);
+    }
     // ===== Encrypt =====
  //   lbcrypto::PseudoRandomNumberGenerator::SetPRNGSeed(args.seed);
-    auto c = he.cc->Encrypt(he.keys.publicKey, plain);
+    auto c = he.cc->Encrypt(he.keys.publicKey, ptxt);
+
+    if (iterArgs) {
+        if (args.stage == "encrypt_c0") {
+            bitFlip(c, args.withNTT, 0,
+                    iterArgs->limb,
+                    iterArgs->coeff,
+                    iterArgs->bit);
+        } else if (args.stage == "encrypt_c1") {
+            bitFlip(c, args.withNTT, 1,
+                    iterArgs->limb,
+                    iterArgs->coeff,
+                    iterArgs->bit);
+        }
+    }
 
 
 
@@ -316,7 +362,19 @@ IterationResult run_iteration_NN(
 
     if (verbose)
         cout << "Decrypting..." << endl;
-
+    if (iterArgs) {
+        if (args.stage == "decrypt_c0") {
+            bitFlip(outputs[targetValue], args.withNTT, 0,
+                    iterArgs->limb,
+                    iterArgs->coeff,
+                    iterArgs->bit);
+        } else if (args.stage == "decrypt_c1") {
+            bitFlip(outputs[targetValue], args.withNTT, 1,
+                    iterArgs->limb,
+                    iterArgs->coeff,
+                    iterArgs->bit);
+        }
+    }
     auto logits = decryptLogits(he, outputs);
 
     // ===== Prediction =====

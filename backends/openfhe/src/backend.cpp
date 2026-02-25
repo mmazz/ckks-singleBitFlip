@@ -178,12 +178,12 @@ IterationResult run_iteration(BackendContext* bctx,
     }
 
     if (iterArgs) {
-        if ((args.stage == "encrypt_c0_eval") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
+        if ((args.stage == "decrypt_c0") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
             bitFlip(c, args.withNTT, 0,
                     iterArgs->limb,
                     iterArgs->coeff,
                     iterArgs->bit);
-        } else if ((args.stage == "encrypt_c1_eval") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
+        } else if ((args.stage == "decrypt_c1") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
             bitFlip(c, args.withNTT, 1,
                     iterArgs->limb,
                     iterArgs->coeff,

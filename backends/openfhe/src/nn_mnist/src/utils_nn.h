@@ -10,6 +10,7 @@
 #include "backend_interface.h"
 #include "utils_ckks.h"
 
+#include "attack_mode.h"
 #include <cassert>
 using namespace lbcrypto;
 using namespace std;
@@ -23,7 +24,12 @@ struct HEEnv {
           uint32_t multDepth,
           uint32_t scaleMod,
           uint32_t firstMod) {
+        auto cfg = SDCConfigHelper::MakeConfig(
+            false, // Disable execption
+            SecretKeyAttackMode::CompleteInjection
+        );
 
+        SDCConfigHelper::SetGlobalConfig(cfg);
         CCParams<CryptoContextCKKSRNS> parameters;
         parameters.SetMultiplicativeDepth(multDepth);
         parameters.SetScalingModSize(scaleMod);
@@ -47,6 +53,7 @@ struct HEEnv {
         cc->EvalAtIndexKeyGen(keys.secretKey, rotIdx);
     }
 };
+
 struct EncodedWeights {
     std::vector<Plaintext> W1;
     std::vector<Plaintext> b1;

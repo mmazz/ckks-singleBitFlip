@@ -3,7 +3,7 @@
 #include "campaign_logger.h"
 #include "campaign_registry.h"
 #include "backend_interface.h"
-#include "utils_ckks.h"
+#include "utils_nn.h"
 
 const size_t INPUT_DIM = 784;
 const size_t HIDDEN_DIM = 64;
@@ -23,7 +23,6 @@ int main(int argc, char* argv[]) {
     if (args.verbose) {
         args.print();
     }
-
 
     long logQ = args.logQ;
     long logP = args.logDelta;
