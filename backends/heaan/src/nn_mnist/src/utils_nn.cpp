@@ -145,23 +145,46 @@ vector<Ciphertext> forward(
 
     return out;
 }
-vector<double> decryptLogits(
+
+vector<Plaintext> decryptLogits(
     HEEnv& he,
-    vector<Ciphertext>& outs
+    const vector<Ciphertext>& outs
 ){
-    vector<double> res(outs.size());
+    vector<Plaintext> res;
+    res.reserve(outs.size());
 
-    for(size_t i=0;i<outs.size();++i){
+    for(const auto& ct_const : outs){
 
-        unique_ptr<complex<double>[]> tmp(
-            he.scheme.decrypt(he.sk, outs[i])
+        Ciphertext ct = ct_const;  // copia porque decryptMsg no es const
+        res.push_back(
+            he.scheme.decryptMsg(he.sk, ct)
         );
-
-        res[i] = tmp[0].real();
     }
 
     return res;
 }
+
+vector<double> decodeLogits(
+    HEEnv& he,
+    vector<Plaintext>& pts
+){
+    vector<double> res;
+    res.reserve(pts.size());
+
+    for(const auto& pt_const : pts){
+
+        Plaintext pt = pt_const;  // copia porque decryptMsg no es const
+        unique_ptr<complex<double>[]> tmp(
+            he.scheme.decode(pt)
+        );
+
+        res.push_back(tmp[0].real());
+    }
+
+    return res;
+}
+
+
 
 bool loadMnistNormRowByIndex(const std::string &csvPath, size_t rowIndex,
                          size_t &outLabel, std::vector<double> &pixelsOut)
@@ -323,8 +346,21 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector
     if(verbose)
         cout << "Decrypting..." << endl;
 
-    auto logits = decryptLogits(he, outputs);
+    // I make a bit flip on the cipher with the target value
+    if (iterArgs) {
+        if (args.stage == "decrypt_c0") {
+            SwitchBit(outputs[targetValue].bx[iterArgs->coeff], iterArgs->bit);
+        } else if (args.stage == "decrypt_c1") {
+            SwitchBit(outputs[targetValue].ax[iterArgs->coeff], iterArgs->bit);
+        }
+    }
+    auto logitsDec = decryptLogits(he, outputs);
 
+    if (iterArgs && args.stage == "decode") {
+        SwitchBit(logitsDec[targetValue].mx[iterArgs->coeff], iterArgs->bit);
+    }
+
+    auto logits = decodeLogits(he, logitsDec);
 
     size_t pred = 0;
     double best = logits[0];
@@ -494,8 +530,8 @@ IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vect
     if(verbose)
         cout << "Decrypting..." << endl;
 
-    auto logits = decryptLogits(he, outputs);
-
+    auto logitsDec = decryptLogits(he, outputs);
+    auto logits = decodeLogits(he, logitsDec);
 
     size_t pred = 0;
     double best = logits[0];

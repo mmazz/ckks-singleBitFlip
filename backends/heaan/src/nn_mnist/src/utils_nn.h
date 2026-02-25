@@ -72,11 +72,16 @@ vector<Ciphertext> forward(
     long logSlots,
     long logP
 );
-
-vector<double> decryptLogits(
+vector<Plaintext> decryptLogits(
     HEEnv& he,
-    vector<Ciphertext>& outs
+    const vector<Ciphertext>& outs
 );
+
+vector<double> decodeLogits(
+    HEEnv& he,
+    vector<Plaintext>& outs
+);
+
 
 bool loadMnistNormRowByIndex(const std::string &csvPath, size_t rowIndex,
                          size_t &outLabel, std::vector<double> &pixelsOut);
