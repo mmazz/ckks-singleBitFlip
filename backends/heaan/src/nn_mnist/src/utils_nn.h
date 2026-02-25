@@ -3,7 +3,7 @@
 #include <NTL/ZZ.h>
 #include <vector>
 #include <algorithm>
-
+#include <cassert>
 #include "campaign_helper.h"
 #include "backend_interface.h"
 #include "utils_ckks.h"
@@ -100,7 +100,8 @@ Ciphertext chebyTanh3OP(
     long logP,
     CampaignArgs& args, std::optional<IterationArgs> iterArgs, uint32_t hidden
 );
-IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs);
+IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs=std::nullopt);
+
 vector<Ciphertext> forwardOP(
     HEEnv& he,
     Ciphertext c,

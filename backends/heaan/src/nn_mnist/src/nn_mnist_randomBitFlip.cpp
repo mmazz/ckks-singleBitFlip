@@ -3,7 +3,7 @@
 #include "campaign_logger.h"
 #include "campaign_registry.h"
 #include "backend_interface.h"
-#include "utils_ckks.h"
+#include "utils_nn.h"
 
 const size_t INPUT_DIM = 784;
 const size_t HIDDEN_DIM = 64;
@@ -37,12 +37,12 @@ int main(int argc, char* argv[]) {
 
     assert(INPUT_DIM <= slots);
     if(verbose)
-        cout << "Initializing HE..." << endl;
+        std::cout << "Initializing HE..." << std::endl;
 
     HEEnv he(logN, logQ, h);
 
     if(verbose)
-        cout << "Loading weights..." << endl;
+        std::cout << "Loading weights..." << std::endl;
 
     auto W1  = loadCSVMatrix("data/weights/W1.csv", HIDDEN_DIM, INPUT_DIM);
     auto b1  = loadCSVVector("data/weights/b1.csv", HIDDEN_DIM);
@@ -55,13 +55,13 @@ int main(int argc, char* argv[]) {
 
 
     if(verbose)
-        cout << "Encoding weights..." << endl;
+        std::cout << "Encoding weights..." << std::endl;
 
     EncodedWeights encoded =
         encodeWeights(he, W1, b1, W2, b2, slots, logP);
 
     if(verbose)
-        cout << "Ready for inference.\n" << endl;
+        std::cout << "Ready for inference.\n" << std::endl;
 
     vector<double> vals;
     size_t targetValue;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 
 
     if(verbose)
-        cout << "Encrypting input..." << endl;
+        std::cout << "Encrypting input..." << std::endl;
 
     IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue);
     if(res.detected)
