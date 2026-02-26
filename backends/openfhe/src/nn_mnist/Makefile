@@ -1,9 +1,21 @@
 PROJECT_ROOT := $(shell cd ../../../.. && pwd)
-RUN_IDS := 0 1 2 3 4 5
+RUN_IDS := 0 1 2 3
 RUNS := dirs $(addprefix run,$(RUN_IDS))
 RUNS_nonNTT := dirs $(addprefix run_nonNTT,$(RUN_IDS))
 
 .PHONY: allRuns $(RUNS)
+BIN_RANDOM     := ./build/bin/nn_mnist_randomBitFlip
+SEEDS := 1 2 3 4 5
+RUNS := dirs $(addprefix run,$(RUN_IDS))
+RUNS_SEEDS := dirs $(addprefix run_stages,$(RUN_IDS))
+
+.PHONY: all allRuns $(RUNS)
+
+all: dirs $(TARGETS)
+
+allRuns: $(RUNS)
+allRuns_seeds: $(RUNS_SEEDS)
+
 
 
 allRuns: $(RUNS)
@@ -23,6 +35,36 @@ run5:
 	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50   --stage decode --logSlots 10 --seed 0 --withNTT 1 --mult_depth 5
 
 allRuns_nonNTT: $(RUNS_nonNTT)
+
+run_stages0:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 60 --bitPerCoeff 64 --logDelta 50 \
+			--stage encrypt_c0 --logSlots 10 --seed $$s --seed_input $$s_input --mult_depth 5 --withNTT 0; \
+		done; \
+	done
+run_stages1:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 60 --bitPerCoeff 64 --logDelta 50 \
+			--stage encrypt_c1 --logSlots 10 --seed $$s --seed_input $$s_input --mult_depth 5 --withNTT 0; \
+		done; \
+	done
+run_stages2:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 60 --bitPerCoeff 64 --logDelta 50 \
+			--stage encode --logSlots 10 --seed $$s --seed_input $$s_input  --mult_depth 5    --withNTT 0; \
+		done; \
+	done
+
+run_stages3:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 60 --bitPerCoeff 64 --logDelta 50 \
+			--stage decode --logSlots 10 --seed $$s --seed_input $$s_input  --mult_depth 5    --withNTT 0; \
+		done; \
+	done
 
 
 run_nonNTT0:

@@ -40,16 +40,22 @@ UTILS_OBJ := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(UTILS_SRC))
 
 
 # ------------------------------------------------
+
+BIN_RANDOM     := ./build/bin/nn_mnist_randomBitFlip
+SEEDS := 1 2 3 4 5
 RUN_IDS := 0 1 2 3 4 5
 RUNS := dirs $(addprefix run,$(RUN_IDS))
+RUNS_SEEDS := dirs $(addprefix run_stages,$(RUN_IDS))
 
 .PHONY: all allRuns $(RUNS)
 
 all: dirs $(TARGETS)
 
 allRuns: $(RUNS)
+allRuns_seeds: $(RUNS_SEEDS)
 
 
+# Is like this to paralelize with -j9
 run0:
 	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 0
 run1:
@@ -74,17 +80,47 @@ run9:
 
 
 run_stages0:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 0
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
+			--stage encrypt_c0 --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		done; \
+	done
 run_stages1:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c1 --logSlots 10 --seed 1 --withNTT 0
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
+			--stage encrypt_c1 --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		done; \
+	done
 run_stages2:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encode     --logSlots 10 --seed 2 --withNTT 0
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
+			--stage encode --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		done; \
+	done
 run_stages3:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decrypt_c0 --logSlots 10 --seed 3 --withNTT 0
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
+			--stage decrypt_c0 --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		done; \
+	done
 run_stages4:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decrypt_c1 --logSlots 10 --seed 4 --withNTT 0
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
+			--stage decrypt_c1 --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		done; \
+	done
 run_stages5:
-	build/bin/nn_mnist_randomBitFlip --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decode     --logSlots 10 --seed 5 --withNTT 0
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
+			--stage decode --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		done; \
+	done
 
 
 dirs:
