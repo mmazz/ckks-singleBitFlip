@@ -20,6 +20,14 @@ s = config.size+20
 c = [colors["red"], colors["blue"]]
 
 dir = "img/"
+plt.rcParams['font.size']       = 24  # Tamaño de la fuente
+plt.rcParams['figure.figsize']  = (12, 5)  # Tamaño de la figura
+plt.rcParams['axes.titlesize']  = 24  # Tamaño del título de los ejes
+plt.rcParams['axes.labelsize']  = 24  # Tamaño de las etiquetas de los ejes
+plt.rcParams['xtick.labelsize'] = 24  # Tamaño de las etiquetas del eje x
+plt.rcParams['ytick.labelsize'] = 24  # Tamaño de las etiquetas del eje y
+plt.rcParams['legend.fontsize'] = 24 # Tamaño de la fuente de la leyenda
+
 
 SAVENAME = "heaan_NN"
 
@@ -43,7 +51,6 @@ def main():
 
     data = load_campaign_data(selected, DATA_PATH)
     #fig, ax = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
-    fig, ax = plt.subplots(figsize=(12, 5))
     i = 0
     s = config.size
     alpha = config.alpha
@@ -55,13 +62,27 @@ def main():
 
     print(stats)
 
-    plot_bit(stats, ax=ax,  color=c[1], size=s*5, alpha=1, plot_std=False, dataType="sdc")
+ #   plot_bit(stats, ax=ax,  color=c[1], size=s*5, alpha=1, plot_std=False, dataType="sdc")
+    fig, ax = plt.subplots(figsize=(12, 5))
+    x = stats["bit"].to_numpy()
+    mean = stats[f"mean_sdc"].to_numpy()
+    colors_list = np.where(
+    mean <= 0.05, "green",
+    np.where(mean <= 0.1, "yellow", "red")
+    )
+    ax.scatter(
+        x,
+        mean, color=colors_list,
+        alpha=1,
+        s=s*5,                # 👈 tamaño del punto
+        zorder=4,            # 👈 arriba del plot
+    )
+    ax.set_yscale("symlog")
     ax.set_ylim(-0.1, 1.1)
     ax.set_yticks([0.0, 1.0])
     ax.set_yticklabels(["(all Mask) 0% ", "(all SDC) 100% "])
     ax.set_xlabel("Bit index")
     ax.set_ylabel("SDC rate", labelpad=-180)
-    ax.get_legend().remove()
     ax.grid(True, which="both")
     ########################## STATS ###############################
 #    stats_gaps, gap = split_by_gap(data, args.logN, args.logSlots)

@@ -53,12 +53,12 @@ def main():
 
     ########################## STATS ###############################
     stats_gaps, gap = split_by_gap(data, args.logN, args.logSlots)
-    stats_aligned   = stats_by_bit_sdc(stats_gaps[stats_gaps["gap_class"] =="aligned"])
-    stats_non_aligned = stats_by_bit_sdc(stats_gaps[stats_gaps["gap_class"] =="non_aligned"])
+    stats_aligned   = stats_by_bit_sdc(stats_gaps[stats_gaps["gap_class"] == "aligned"])
+    stats_non_aligned = stats_by_bit_sdc(stats_gaps[stats_gaps["gap_class"] == "non_aligned"])
 
     plot_bit_cat(stats_aligned,     ax=ax[0], label_prefix="", color=c[1],  size=s, plot_std=False)
     plot_bit_cat(stats_non_aligned, ax=ax[1], label_prefix="", color=c[1],  size=s, plot_std=False)
-
+    plt.title(f"NTT={args.withNTT}")
 
   #  plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
   #  plt.savefig(dir+f"{savename}.png", bbox_inches='tight')
