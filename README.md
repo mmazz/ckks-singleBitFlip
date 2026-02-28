@@ -1,8 +1,8 @@
 # CKKS Single-Bit Fault Injection Framework
 
-This project studies **single-bit fault injection in CKKS-based FHE schemes** at the **RNS limb level**.
+This project studies **single-bit fault injection in CKKS-based FHE schemes** at the **RNS limb level** or without **RNS***.
 
-We inject faults by flipping **one bit of a `uint64_t` coefficient** belonging to a single CRT component (RNS limb). Faults can be injected in either:
+We inject faults by flipping **one bit of a `uint64_t` coefficient** belonging to a single CRT component (RNS limb) or NTL objetct. Faults can be injected in either:
 
 - **Coefficient domain**
 - **NTT domain**
@@ -22,7 +22,7 @@ The goal is to analyze numerical degradation, error propagation, and Silent Data
 
 ## CKKS Libraries
 
-In this work we foucs on two  libraries.
+In this work we foucs on two libraries.
 HEAAN for a vanilla version without RNS and NTT, and OpenFHE as state of the
 art.
 For both we create our own fork with some changes in order to get totally
