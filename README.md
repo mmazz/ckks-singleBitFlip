@@ -12,9 +12,9 @@ at well-defined pipeline stages:
 - `encode`
 - `encrypt_c0`
 - `encrypt_c1`
-- `encrypt_c0_eval`
-- `encrypt_c1_eval`
-- `decrypt`
+- `decrypt_c0`
+- `decrypt_c1`
+- `decode`
 
 The goal is to analyze numerical degradation, error propagation, and Silent Data Corruption (SDC) behavior under precise, low-level faults.
 
