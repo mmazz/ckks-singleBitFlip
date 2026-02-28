@@ -50,8 +50,12 @@ github.com/mmazz/openfhe-PRNG-Control
 ├── backends/
 │ ├── openfhe/
 │ │ └── src/ # OpenFHE-specific campaign sources
+|  └── nn_mnist/
+|    └── src/ # Openfhe-NN specific campaign sources
 │ └── heaan/
 │ └── src/ # HEAAN-specific campaign sources
+|  └── nn_mnist/
+|    └── src/ # HEAAN-NN specific campaign sources
 │
 ├── setup_project.sh
 └── results/
@@ -129,7 +133,7 @@ High-level orchestration:
 
 ---
 
-## Dependencies
+## Dependencies (in progress)
 
 - `zlib`
 
