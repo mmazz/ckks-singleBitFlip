@@ -211,7 +211,12 @@ multi_analysis:
 
 mult_boot_analysis:
 	@cd heaan && \
-	./build/bin/bootPerformance --logN 14 --logQ 160  --bitPerCoeff 180  --logDelta 30 --stage encrypt_c0 --logSlots 9 --seed 0 --seed_input 0 --withNTT 0 --doBoot 1\
+	./build/bin/bootInjection --logN 6 --logQ 620  --bitPerCoeff 700  --logDelta 32 --stage encode --logSlots 3 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 --doRot 0 && \
+	./build/bin/bootInjection --logN 6 --logQ 620  --bitPerCoeff 700  --logDelta 32 --stage encrypt_c0 --logSlots 3 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 --doRot 0 && \
+	./build/bin/bootInjection --logN 6 --logQ 620  --bitPerCoeff 700  --logDelta 32 --stage encrypt_c1 --logSlots 3 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 --doRot 0 && \
+	./build/bin/bootInjection --logN 6 --logQ 620  --bitPerCoeff 700  --logDelta 32 --stage decrypt_c0 --logSlots 3 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 --doRot 0 && \
+	./build/bin/bootInjection --logN 6 --logQ 620  --bitPerCoeff 700  --logDelta 32 --stage decrypt_c1 --logSlots 3 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 --doRot 0 && \
+	./build/bin/bootInjection --logN 6 --logQ 620  --bitPerCoeff 700  --logDelta 32 --stage decode --logSlots 3 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 --doRot 0  \
 
 clean:
 	rm -rf ../results

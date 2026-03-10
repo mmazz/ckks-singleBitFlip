@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument("--doMul", type=int, default=0)
     parser.add_argument("--doScalarMul", type=int, default=0)
     parser.add_argument("--doRot", type=int, default=0)
+    parser.add_argument("--doBoot", type=int, default=0)
     parser.add_argument("--isComplex", type=int, default=0)
     parser.add_argument("--withNTT", type=int, default=0)
     parser.add_argument("--logN", type=int, default=6)

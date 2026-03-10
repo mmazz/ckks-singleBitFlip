@@ -69,14 +69,15 @@ BackendContext* setup_campaign(const CampaignArgs& args)
         h = std::max<long>(1,N/64);
 
     auto* ctx = new HEAANContext(args.logN, args.logQ, h, args.seed);
-    ctx->scheme.addBootKey(ctx->sk, args.logSlots, args.logQ/4 + 4);
+    NTL::SetSeed(ctx->seed);
+    std::srand(args.seed);
+    if(args.doBoot)
+        ctx->scheme.addBootKey(ctx->sk, args.logSlots, 40+4);
+
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
         ctx->scheme.addLeftRotKey(ctx->sk, rotIndex);
     }
-    NTL::SetSeed(ctx->seed);
-    std::srand(args.seed);
-
     if(args.isComplex>0){
         compute_plain_io(args, ctx->baseInputComplex, ctx->goldenOutputComplex);
     } else{
@@ -183,10 +184,9 @@ IterationResult run_iteration(
         }
     }
     //cipher, logq, logQ, logT, logI=4
-    std::cout << "Starting Bootstrapp!" << std::endl;
 
     if(args.doBoot){
-        c.logq = args.logQ/4;
+        c.logq = 40;
         ctx.scheme.bootstrapAndEqual(c, c.logq, args.logQ, 3);
     }
 

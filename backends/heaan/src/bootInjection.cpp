@@ -7,8 +7,8 @@
 size_t NUM_BITFLIPS = 5;
 
 int main(int argc, char* argv[]) {
-    std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
+    std::cout << "\n=== Starting Campaign "<< std::endl;
     args.library = "heaan";
     args.isExhaustive = true;
     args.mult_depth = 0;
@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
         args.print();
     }
 
+    std::cout << "Setting campaing..." << std::endl;
     BackendContext* ctx = setup_campaign(args);
     size_t slots =  (size_t)(1 << args.logSlots);
     std::cout << "Computing golden output..." << std::endl;
@@ -65,13 +66,10 @@ int main(int argc, char* argv[]) {
         std::cout << "Expected bit flips: " << total_expected << std::endl;
         std::mt19937 rng(args.seed);
 
-
-        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 14 values
-        for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
-            uint32_t bit = bits_to_flip[bitIndex];
-            std::cout << bit << std::endl;
-            for (size_t i = 0; i < num_bitFlips; i++) {
-                uint32_t coeff = random_int(0, N-1);
+        for (size_t coeff = 0; coeff<8; coeff++)
+        {
+            for(size_t bit=0; bit<bits_per_coeff; bit++)
+            {
                 IterationArgs iterArgs(0, coeff, bit);
 
                 IterationResult res = run_iteration(ctx, args, iterArgs);
