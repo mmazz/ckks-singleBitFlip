@@ -11,6 +11,13 @@ struct OpenFHEContext final : BackendContext {
 };
 
 
-Ciphertext<DCRTPoly> gen_cipher(BackendContext* bctx,
+struct IterationChequer {
+    std::vector<double> values;
+    bool detected;
+    Ciphertext<DCRTPoly> cipher;
+};
+
+
+ IterationChequer gen_cipher(BackendContext* bctx,
               const CampaignArgs& args,
                 std::optional<IterationArgs> iterArgs = std::nullopt);

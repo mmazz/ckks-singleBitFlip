@@ -189,8 +189,7 @@ IterationResult run_iteration(BackendContext* bctx,
 }
 
 
-
-Ciphertext<DCRTPoly> gen_cipher(BackendContext* bctx,
+IterationChequer gen_cipher(BackendContext* bctx,
               const CampaignArgs& args,
               std::optional<IterationArgs> iterArgs)
 {
@@ -265,6 +264,11 @@ Ciphertext<DCRTPoly> gen_cipher(BackendContext* bctx,
                     iterArgs->bit);
         }
     }
+    ctx.cc->Decrypt(ctx.keys.secretKey, c, &result_bitFlip);
 
-    return c;
+    bool detected = SDCConfigHelper::WasSDCDetected(result_bitFlip);
+
+    result_bitFlip->SetLength(1 << args.logSlots);
+
+    return {result_bitFlip->GetRealPackedValue(), detected, c};
 }
