@@ -93,6 +93,7 @@ set(EXECUTABLES
     randomSingleBitFlip
     exhaustiveSingleBitFlip
     test_ckks_qi
+    integrityChequer
 )
 foreach(exec_name ${EXECUTABLES})
     add_executable(${exec_name} src/${exec_name}.cpp)
