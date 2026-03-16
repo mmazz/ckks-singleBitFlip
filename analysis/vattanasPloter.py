@@ -15,11 +15,12 @@ width = int(config.width)
 colors = config.colors
 s = config.size
 fontSize = config.fontSize
+fontSize2 = fontSize - 8
 figSizeX = config.figSizeX
 figSizeY = config.figSizeY
 dir = "img/"
 SAVENAME = "encrypt"
-stages = ["encode", "encrypt_c0", "encrypt_c1"]
+stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 
 def l2_color(val):
     if val < 0.1:
@@ -44,49 +45,68 @@ class HandlerColorbar(HandlerPatch):
                                 width=height, head_width=0, head_length=0,
                                 transform=trans)
         return [p]
-def add_legend(fig, show=True):
+
+
+def add_legend(fig, l2_max, show=True):
     if not show:
         return
-
     fig.canvas.draw()
 
-    # posiciones fijas en coordenadas de figura
-    y_patch  = 0.97   # altura de los parches
-    y_label1 = 0.93   # altura de los nombres
-    y_label2 = 0.90   # altura de los rangos
+    y_patch  = 0.88   # altura de los parches
+    y_label  = 0.85   # altura de los rangos (debajo de los parches)
+    patch_h  = 0.030
+    patch_w  = 0.035
 
     items = [
-        (0.15, '#2d9e5f', 'Masked',        '<= ε'),
-        (0.35, '#e8c93a', 'Minor SDC',     '<= 10%'),
-        (0.55, '#e07c1a', 'Moderate SDC',  '10% - 100%'),
+        (0.08, '#2d9e5f', 'Masked',       '<= ε'),
+        (0.22, '#e8c93a', 'Minor SDC',    '<= 10%'),
+        (0.42, '#e07c1a', 'Moderate SDC', '10% - 100%'),
     ]
 
-    patch_w = 0.03
-    patch_h = 0.025
-
     for x, color, name, rng in items:
+        # Cuadro de color
         ax_p = fig.add_axes([x - patch_w/2, y_patch - patch_h/2, patch_w, patch_h])
         ax_p.set_facecolor(color)
-        ax_p.set_xticks([]); ax_p.set_yticks([])
+        ax_p.set_xticks([])
+        ax_p.set_yticks([])
         for sp in ax_p.spines.values():
             sp.set_linewidth(0.5)
-        fig.text(x + patch_w/2 + 0.01, y_patch, name, va='center', fontsize=9)
-        fig.text(x, y_label2, rng, ha='center', va='center', fontsize=8, color='gray')
 
-    # colorbar severe
-    cb_x = 0.75
-    cb_w = 0.18
+        # Nombre a la derecha del cuadro
+        fig.text(x + patch_w/2 + 0.01, y_patch, name,
+                 va='center', fontsize=fontSize2)
+
+        # Rango centrado bajo el cuadro
+        fig.text(x, y_label, rng,
+                 ha='center', va='center', fontsize=fontSize2, color='black')
+
+    # --- Severe SDC: colorbar ---
+    cb_x = 0.76
+    cb_w = 0.22
+
     ax_cb = fig.add_axes([cb_x - cb_w/2, y_patch - patch_h/2, cb_w, patch_h])
-    cmap = plt.matplotlib.colors.LinearSegmentedColormap.from_list('severe', ['#d63b3b', '#1a0000'])
-    cb = plt.colorbar(plt.cm.ScalarMappable(cmap=cmap), cax=ax_cb, orientation='horizontal')
+    cmap = plt.matplotlib.colors.LinearSegmentedColormap.from_list(
+        'severe', ['#d63b3b', '#1a0000']
+    )
+    cb = plt.colorbar(
+        plt.cm.ScalarMappable(cmap=cmap), cax=ax_cb, orientation='horizontal'
+    )
     cb.set_ticks([])
     for sp in ax_cb.spines.values():
         sp.set_linewidth(0.5)
-    fig.text(cb_x + cb_w/2 + 0.01, y_patch, 'Severe SDC', va='center', fontsize=9)
-    fig.text(cb_x, y_label2, '>= 100%', ha='center', va='center', fontsize=8, color='gray')
 
+    # Nombre a la derecha del rectángulo
+    fig.text(cb_x + cb_w/2 + 0.01, y_patch, 'Severe SDC',
+             va='center', fontsize=fontSize2)
 
+    # "100%" centrado bajo el inicio del rectángulo
+    fig.text(cb_x - cb_w/2, y_label, '100%',
+             ha='center', va='center', fontsize=fontSize - 4, color='black')
 
+    # Valor máximo centrado bajo el final del rectángulo
+    l2_max_str = f'{l2_max:.2e}%' if l2_max >= 1e6 else f'{l2_max:.0f}%'
+    fig.text(cb_x + cb_w/2, y_label, l2_max_str,
+             ha='center', va='center', fontsize=fontSize2, color='black')
 
 def plot_coeff_bit_l2(df, ax, title=None):
     df = df[df['coeff'].isin(range(8))].copy()
@@ -98,10 +118,11 @@ def plot_coeff_bit_l2(df, ax, title=None):
     x = [coeff_idx[c] for c in df['coeff']]
     y = df['bit'].tolist()
 
-    ax.scatter(x, y, c=colors, s=180, edgecolors='white', linewidths=0.8, zorder=3)
+    ax.scatter(x, y, c=colors, s=180,  linewidths=0.8, zorder=3)
+    ax.set_xticks([i for i in range(len(coeff_order)) if i % 3 == 0])
+    ax.set_xticklabels([coeff_order[i] for i in range(len(coeff_order)) if i % 3 == 0],
+                       rotation=0, ha='right', fontsize=fontSize)
 
-    ax.set_xticks(range(len(coeff_order)))
-    ax.set_xticklabels(coeff_order, rotation=30, ha='right', fontsize=fontSize)
     ax.grid(True, linestyle='--', alpha=0.3, zorder=0)
 
     if title:
@@ -116,7 +137,7 @@ def main():
 
     n = len(stages)
     fig, axes = plt.subplots(1, n, figsize=(n * 5, figSizeY), sharey=True)
-
+    l2_max = 0
     for i, (stage, ax) in enumerate(zip(stages, axes)):  # FIX: era (df, ax) pero zip era sobre stages
         filters = build_filters(args)
         filters["stage"] = ("str", stage)
@@ -139,6 +160,9 @@ def main():
                     ha='center', va='center', fontsize=fontSize, color='white', fontweight='bold',
                     bbox=dict(boxstyle='circle,pad=0.4', facecolor='#d63b3b', edgecolor='none'))
 
+        l2_max_temp = data['l2_norm'].max()  # o el max global de todos los dfs
+        if l2_max_temp >= l2_max:
+            l2_max = l2_max_temp
     axes[0].set_ylabel('i-th Bit of Register', fontsize=fontSize, fontweight='bold')
     fig.text(0.5, 0.02, 'Coeficiente', ha='center', fontsize=fontSize, fontweight='bold')
 
@@ -161,8 +185,7 @@ def main():
     # línea bottom continua
     for ax in axes:
         ax.axhline(y=ax.get_ylim()[0], color='black', linewidth=0.8, zorder=5)
-
-    add_legend(fig, show=True)
+    add_legend(fig, l2_max=l2_max, show=True)
     plt.savefig(savename, bbox_inches='tight')
     plt.show()
 
