@@ -20,6 +20,7 @@ OPTIONAL_DEFAULTS = {
     "doMul": 0,
     "doScalarMul": 0,
     "doRot": 0,
+    "doBoot": 0,
     "isComplex": 0,
     "bitPerCoeff": 64,
     "dnum": 3,

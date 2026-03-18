@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
                         iterArgs.coeff,
                         iterArgs.bit,
                         exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
-                        exp_metrics.linf_abs_error,
+                        exp_metrics.linf_rel_error,
                         res.detected,
                         slot_stats
                     );

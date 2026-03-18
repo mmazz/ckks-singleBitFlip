@@ -21,16 +21,22 @@ figSizeY = config.figSizeY
 dir = "img/"
 SAVENAME = "encrypt"
 stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
+green = '#008000'
+yellow = '#FFFF00'
+orange ='#FFA500'
+red = '#FF0000'
 
-def l2_color(val):
+
+
+def mrep_color(val):
     if val < 0.1:
-        return '#008000'
-    elif val < 1:
-        return '#FFFF00'
+        return green
     elif val < 10:
-        return '#FFA500'
+        return yellow
+    elif val < 100:
+        return orange
     else:
-        return '#FF0000'
+        return red
 
 
 class HandlerColorbar(HandlerPatch):
@@ -47,7 +53,7 @@ class HandlerColorbar(HandlerPatch):
         return [p]
 
 
-def add_legend(fig, l2_max, show=True):
+def add_legend(fig, mrep_max, show=True):
     if not show:
         return
     fig.canvas.draw()
@@ -58,9 +64,9 @@ def add_legend(fig, l2_max, show=True):
     patch_w  = 0.035
 
     items = [
-        (0.08, '#2d9e5f', 'Masked',       '<= ε'),
-        (0.22, '#e8c93a', 'Minor SDC',    '<= 10%'),
-        (0.42, '#e07c1a', 'Moderate SDC', '10% - 100%'),
+        (0.08, green , 'Masked',       '<= ε'),
+        (0.22, yellow, 'Minor SDC',    '<= 10%'),
+        (0.42, orange, 'Moderate SDC', '10% - 100%'),
     ]
 
     for x, color, name, rng in items:
@@ -86,7 +92,7 @@ def add_legend(fig, l2_max, show=True):
 
     ax_cb = fig.add_axes([cb_x - cb_w/2, y_patch - patch_h/2, cb_w, patch_h])
     cmap = plt.matplotlib.colors.LinearSegmentedColormap.from_list(
-        'severe', ['#d63b3b', '#1a0000']
+        'severe', [red, '#1a0000']
     )
     cb = plt.colorbar(
         plt.cm.ScalarMappable(cmap=cmap), cax=ax_cb, orientation='horizontal'
@@ -104,17 +110,17 @@ def add_legend(fig, l2_max, show=True):
              ha='center', va='center', fontsize=fontSize - 4, color='black')
 
     # Valor máximo centrado bajo el final del rectángulo
-    l2_max_str = f'{l2_max:.2e}%' if l2_max >= 1e6 else f'{l2_max:.0f}%'
-    fig.text(cb_x + cb_w/2, y_label, l2_max_str,
+    mrep_max_str = f'{mrep_max:.2e}%' if mrep_max >= 1e6 else f'{mrep_max:.0f}%'
+    fig.text(cb_x + cb_w/2, y_label, mrep_max_str,
              ha='center', va='center', fontsize=fontSize2, color='black')
 
-def plot_coeff_bit_l2(df, ax, title=None):
+def plot_coeff_bit_mrep(df, ax, title=None):
     df = df[df['coeff'].isin(range(8))].copy()
 
     coeff_order = list(range(8))
     coeff_idx = {c: i for i, c in enumerate(coeff_order)}
 
-    colors = [l2_color(v) for v in df['l2_norm']]
+    colors = [mrep_color(v) for v in df['mrep']]
     x = [coeff_idx[c] for c in df['coeff']]
     y = df['bit'].tolist()
 
@@ -137,13 +143,14 @@ def main():
 
     n = len(stages)
     fig, axes = plt.subplots(1, n, figsize=(n * 5, figSizeY), sharey=True)
-    l2_max = 0
+    mrep_max = 0
     for i, (stage, ax) in enumerate(zip(stages, axes)):  # FIX: era (df, ax) pero zip era sobre stages
         filters = build_filters(args)
         filters["stage"] = ("str", stage)
         selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
         data = load_campaign_data(selected, config.DATA_DIR)
-        plot_coeff_bit_l2(data, ax)
+        data['mrep'] = data['rel_error']*100
+        plot_coeff_bit_mrep(data, ax)
 
         # spines
         ax.spines['top'].set_visible(False)
@@ -158,11 +165,11 @@ def main():
 
         ax.annotate(str(i + 1), xy=(0.5, -0.18), xycoords='axes fraction',
                     ha='center', va='center', fontsize=fontSize, color='white', fontweight='bold',
-                    bbox=dict(boxstyle='circle,pad=0.4', facecolor='#d63b3b', edgecolor='none'))
+                    bbox=dict(boxstyle='circle,pad=0.4', facecolor=red, edgecolor='none'))
 
-        l2_max_temp = data['l2_norm'].max()  # o el max global de todos los dfs
-        if l2_max_temp >= l2_max:
-            l2_max = l2_max_temp
+        mrep_max_temp = data['mrep'].max()  # o el max global de todos los dfs
+        if mrep_max_temp >= mrep_max:
+            mrep_max = mrep_max_temp
     axes[0].set_ylabel('i-th Bit of Register', fontsize=fontSize, fontweight='bold')
     fig.text(0.5, 0.02, 'Coeficiente', ha='center', fontsize=fontSize, fontweight='bold')
 
@@ -185,8 +192,8 @@ def main():
     # línea bottom continua
     for ax in axes:
         ax.axhline(y=ax.get_ylim()[0], color='black', linewidth=0.8, zorder=5)
-    add_legend(fig, l2_max=l2_max, show=True)
-    plt.savefig(savename, bbox_inches='tight')
+    add_legend(fig, mrep_max=mrep_max, show=True)
+    plt.savefig("img/"+savename, bbox_inches='tight')
     plt.show()
 
 
