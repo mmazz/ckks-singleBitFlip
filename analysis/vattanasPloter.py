@@ -24,13 +24,13 @@ stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "dec
 
 def l2_color(val):
     if val < 0.1:
-        return '#2d9e5f'
+        return '#008000'
     elif val < 1:
-        return '#e8c93a'
+        return '#FFFF00'
     elif val < 10:
-        return '#e07c1a'
+        return '#FFA500'
     else:
-        return '#d63b3b'
+        return '#FF0000'
 
 
 class HandlerColorbar(HandlerPatch):
