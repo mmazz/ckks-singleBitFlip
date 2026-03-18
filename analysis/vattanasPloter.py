@@ -18,8 +18,10 @@ fontSize = config.fontSize
 fontSize2 = fontSize - 8
 figSizeX = config.figSizeX
 figSizeY = config.figSizeY
+withLegend = False
 dir = "img/"
 SAVENAME = "encrypt"
+#stages = ["encrypt_c0", "encrypt_c1"]
 stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 green = '#008000'
 yellow = '#FFFF00'
@@ -53,9 +55,7 @@ class HandlerColorbar(HandlerPatch):
         return [p]
 
 
-def add_legend(fig, mrep_max, show=True):
-    if not show:
-        return
+def add_legend(fig, mrep_max):
     fig.canvas.draw()
 
     y_patch  = 0.88   # altura de los parches
@@ -192,7 +192,8 @@ def main():
     # línea bottom continua
     for ax in axes:
         ax.axhline(y=ax.get_ylim()[0], color='black', linewidth=0.8, zorder=5)
-    add_legend(fig, mrep_max=mrep_max, show=True)
+    if(withLegend):
+        add_legend(fig, mrep_max=mrep_max)
     plt.savefig("img/"+savename, bbox_inches='tight')
     plt.show()
 

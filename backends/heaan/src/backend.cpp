@@ -66,7 +66,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     if (args.logN > 10)
         h = MAX_H;
     else
-        h = std::max<long>(1,N/64);
+        h = std::max<long>(4,N/64);
 
     auto* ctx = new HEAANContext(args.logN, args.logQ, h, args.seed);
     NTL::SetSeed(ctx->seed);
@@ -150,7 +150,6 @@ IterationResult run_iteration(
             plain_clean =  ctx.cc.encode(baseInput, baseSize, args.logDelta);
         }
     }
-
     if (iterArgs) {
         if (args.stage == "encrypt_c0") {
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
@@ -159,7 +158,8 @@ IterationResult run_iteration(
         }
     }
 
-    if(args.doAdd)
+
+    if(args.doAdd>0)
         c = ctx.scheme.add(c, c_clean);
 
     for (uint32_t i = 0; i < args.doPlainMul; ++i) {
@@ -171,21 +171,23 @@ IterationResult run_iteration(
         ctx.scheme.reScaleByAndEqual(c, args.logDelta);
     }
 
-    if(args.doRot){
+    if(args.doRot>0){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
         c = ctx.scheme.leftRotateFast(c, rotIndex);
     }
 
     if (iterArgs) {
-        if ((args.stage == "decrypt_c0") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        //if ((args.stage == "decrypt_c0") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        if (args.stage == "decrypt_c0"){
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
-        } else if ((args.stage == "decrypt_c1") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
+        } else if (args.stage == "decrypt_c1"){
+        //} else if ((args.stage == "decrypt_c1") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
     //cipher, logq, logQ, logT, logI=4
 
-    if(args.doBoot){
+    if(args.doBoot>0){
         c.logq = 40;
         ctx.scheme.bootstrapAndEqual(c, c.logq, args.logQ, 3);
     }
