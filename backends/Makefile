@@ -219,20 +219,39 @@ mult_boot_analysis:
 	./build/bin/bootInjection --logN 6 --logQ 620  --bitPerCoeff 700  --logDelta 32 --stage decode --logSlots 3 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 --doRot 0  \
 
 
-boot_analysis:
+BOOT: boot_analysis1 boot_analysis2 boot_analysis3 boot_analysis4
+
+boot_analysis1:
 	@cd heaan && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encode     --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encode     --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 0 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encrypt_c0 --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encrypt_c0 --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 0 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encrypt_c1 --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encrypt_c1 --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 0 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decrypt_c0 --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decrypt_c0 --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 0 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decrypt_c1 --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decrypt_c1 --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 0 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decode     --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 1 && \
-	./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decode     --logSlots 4 --seed 0 --seed_input 0 --withNTT 0 --doMul 3 --doBoot 0 \
+	for s in $(SEEDS); do \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 1280 --logDelta 34 --stage encode     --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 1 && \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 1280 --logDelta 34 --stage encode     --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 0; \
+	done
+
+boot_analysis2:
+	@cd heaan && \
+	for s in $(SEEDS); do \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encrypt_c0 --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 1 && \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encrypt_c0 --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 0 && \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encrypt_c1 --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 1 && \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage encrypt_c1 --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 0; \
+	done
+
+boot_analysis3:
+	@cd heaan && \
+	for s in $(SEEDS); do \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decrypt_c0 --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 1 && \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decrypt_c0 --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 0 && \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decrypt_c1 --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 1; \
+	done
+
+boot_analysis4:
+	@cd heaan && \
+	for s in $(SEEDS); do \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decrypt_c1 --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 0 && \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decode     --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 1 && \
+		./build/bin/bootInjection --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --stage decode     --logSlots 4 --seed $$s --seed_input $$s --withNTT 0 --doMul 4 --doBoot 0; \
+	done
 
 clean:
 	rm -rf ../results

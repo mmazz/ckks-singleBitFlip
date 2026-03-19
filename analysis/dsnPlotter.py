@@ -10,15 +10,25 @@ from utils import config
 from utils.args import parse_args, build_filters
 from utils.io_utils import load_campaign_data, load_and_filter_campaigns
 
-show = config.show
+show = False
 width = int(config.width)
 colors = config.colors
 s = config.size
-fontSize = config.fontSize
+fontSize = 54
+fontLabelSize = 54
 fontSize2 = fontSize - 8
-figSizeX = config.figSizeX
-figSizeY = config.figSizeY
-withLegend = False
+
+
+figSizeX = 6
+figSizeY = 12
+withLegend = True
+stagesCircles = True
+
+fontAxisName = 64
+circleSize = 0.01
+circleFont = 40
+coeffLabel = 0.05
+scatterSize = 1250
 dir = "img/"
 SAVENAME = "encrypt"
 #stages = ["encrypt_c0", "encrypt_c1"]
@@ -58,8 +68,8 @@ class HandlerColorbar(HandlerPatch):
 def add_legend(fig, mrep_max):
     fig.canvas.draw()
 
-    y_patch  = 0.88   # altura de los parches
-    y_label  = 0.85   # altura de los rangos (debajo de los parches)
+    y_label  = .95   # altura de los rangos (debajo de los parches)
+    y_patch  = y_label+0.03   # altura de los parches
     patch_h  = 0.030
     patch_w  = 0.035
 
@@ -124,7 +134,7 @@ def plot_coeff_bit_mrep(df, ax, title=None):
     x = [coeff_idx[c] for c in df['coeff']]
     y = df['bit'].tolist()
 
-    ax.scatter(x, y, c=colors, s=180,  linewidths=0.8, zorder=3)
+    ax.scatter(x, y, c=colors, s=scatterSize,  linewidths=0.8, zorder=3)
     ax.set_xticks([i for i in range(len(coeff_order)) if i % 3 == 0])
     ax.set_xticklabels([coeff_order[i] for i in range(len(coeff_order)) if i % 3 == 0],
                        rotation=0, ha='right', fontsize=fontSize)
@@ -147,10 +157,15 @@ def main():
     for i, (stage, ax) in enumerate(zip(stages, axes)):  # FIX: era (df, ax) pero zip era sobre stages
         filters = build_filters(args)
         filters["stage"] = ("str", stage)
+        print(filters["bitPerCoeff"])
+        if(stage=="encode"):
+            filters["bitPerCoeff"] = ("int", 2*filters["bitPerCoeff"][1])
         selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
         data = load_campaign_data(selected, config.DATA_DIR)
         data['mrep'] = data['rel_error']*100
-        plot_coeff_bit_mrep(data, ax)
+        df = data.groupby(['coeff', 'bit'])['mrep'].mean().reset_index()
+        print(df['mrep'].head(100))
+        plot_coeff_bit_mrep(df, ax)
 
         # spines
         ax.spines['top'].set_visible(False)
@@ -162,17 +177,18 @@ def main():
             ax.spines['left'].set_visible(False)
             ax.spines['right'].set_visible(False)
             ax.axvline(x=-0.5, color='gray', linestyle='--', linewidth=1.2, zorder=2)
-
-        ax.annotate(str(i + 1), xy=(0.5, -0.18), xycoords='axes fraction',
-                    ha='center', va='center', fontsize=fontSize, color='white', fontweight='bold',
-                    bbox=dict(boxstyle='circle,pad=0.4', facecolor=red, edgecolor='none'))
+        if(stagesCircles):
+            ax.annotate(str(i + 1), xy=(0.5, -0.1), xycoords='axes fraction',
+                        ha='center', va='center', fontsize=circleFont, color='white', fontweight='bold',
+                        bbox=dict(boxstyle=f'circle,pad={circleFont*circleSize}', facecolor=red, edgecolor='none'))
 
         mrep_max_temp = data['mrep'].max()  # o el max global de todos los dfs
         if mrep_max_temp >= mrep_max:
             mrep_max = mrep_max_temp
-    axes[0].set_ylabel('i-th Bit of Register', fontsize=fontSize, fontweight='bold')
-    fig.text(0.5, 0.02, 'Coeficiente', ha='center', fontsize=fontSize, fontweight='bold')
-
+    axes[0].set_ylabel('i-th Bit of Register', fontsize=fontAxisName, fontweight='bold')
+    fig.text(0.5, coeffLabel, 'Coefficients', ha='center', fontsize=fontAxisName, fontweight='bold')
+    for ax in axes:
+        ax.tick_params(axis='both', labelsize=fontLabelSize)
     # FIX: tight_layout ANTES de leer posiciones
     plt.tight_layout(rect=[0, 0.06, 1, 0.88])
     fig.canvas.draw()
@@ -195,7 +211,9 @@ def main():
     if(withLegend):
         add_legend(fig, mrep_max=mrep_max)
     plt.savefig("img/"+savename, bbox_inches='tight')
-    plt.show()
+    plt.savefig("img/"+savename+".pdf", bbox_inches='tight')
+    if(show):
+        plt.show()
 
 
 if __name__ == "__main__":
