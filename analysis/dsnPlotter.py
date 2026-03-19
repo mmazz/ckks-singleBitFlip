@@ -26,7 +26,7 @@ stagesCircles = True
 
 fontAxisName = 64
 circleSize = 0.01
-circleFont = 40
+circleFont = 50
 coeffLabel = 0.05
 scatterSize = 1250
 dir = "img/"
@@ -69,7 +69,7 @@ def add_legend(fig, mrep_max):
     fig.canvas.draw()
 
     y_label  = .95   # altura de los rangos (debajo de los parches)
-    y_patch  = y_label+0.03   # altura de los parches
+    y_patch  = y_label+0.06   # altura de los parches
     patch_h  = 0.030
     patch_w  = 0.035
 
