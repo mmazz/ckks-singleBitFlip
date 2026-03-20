@@ -1,6 +1,7 @@
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
 from matplotlib.legend_handler import HandlerPatch
+import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import sys
 import os
@@ -19,28 +20,35 @@ fontLabelSize = 54
 fontSize2 = fontSize - 8
 
 
+withLegend = False
 figSizeX = 6
 figSizeY = 12
-withLegend = True
 stagesCircles = True
 
 fontAxisName = 64
 circleSize = 0.01
-circleFont = 50
-coeffLabel = 0.05
+circleFont = 55
+circleYpos = -0.15
+
+coeffLabel = 0.0
 scatterSize = 1250
 dir = "img/"
 SAVENAME = "encrypt"
+
+
 #stages = ["encrypt_c0", "encrypt_c1"]
 stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
+stagesNum = [1,3,4,7,8,9]
 green = '#008000'
 yellow = '#FFFF00'
 orange ='#FFA500'
 red = '#FF0000'
+cmap = mcolors.LinearSegmentedColormap.from_list(
+    "red_to_black", [red, "black"]
+)
 
 
-
-def mrep_color(val):
+def mrep_color(val, mrep_max):
     if val < 0.1:
         return green
     elif val < 10:
@@ -48,31 +56,37 @@ def mrep_color(val):
     elif val < 100:
         return orange
     else:
-        return red
+        t = (val - 100) / (mrep_max - 100) if mrep_max > 100 else 1
+        t = max(0, min(t, 1))
+        return cmap(t)
 
 
-class HandlerColorbar(HandlerPatch):
-    def create_artists(self, legend, orig_handle, xdescent, ydescent, width, height, fontsize, trans):
-        import matplotlib.colors as mcolors
-        import numpy as np
-        from matplotlib.image import AxesImage
-
-        # dibuja el gradiente rojo->negro como rectangulo
-        ax = legend.axes if hasattr(legend, 'axes') else None
-        p = mpatches.FancyArrow(0, height/2, width, 0,
-                                width=height, head_width=0, head_length=0,
-                                transform=trans)
-        return [p]
+#class HandlerColorbar(HandlerPatch):
+#    def create_artists(self, legend, orig_handle, xdescent, ydescent, width, height, fontsize, trans):
+#        import matplotlib.colors as mcolors
+#        import numpy as np
+#        from matplotlib.image import AxesImage
+#
+#        # dibuja el gradiente rojo->negro como rectangulo
+#        ax = legend.axes if hasattr(legend, 'axes') else None
+#        p = mpatches.FancyArrow(0, height/2, width, 0,
+#                                width=height, head_width=0, head_length=0,
+#                                transform=trans)
+#        return [p]
 
 
 def add_legend(fig, mrep_max):
     fig.canvas.draw()
 
     y_label  = .95   # altura de los rangos (debajo de los parches)
-    y_patch  = y_label+0.06   # altura de los parches
+    y_patch  = y_label+0.08   # altura de los parches
     patch_h  = 0.030
     patch_w  = 0.035
+    fig_w, fig_h = fig.get_size_inches()
+    aspect = fig_h / fig_w
 
+    patch_w = 0.025
+    patch_h = patch_w / aspect
     items = [
         (0.08, green , 'Masked',       '<= ε'),
         (0.22, yellow, 'Minor SDC',    '<= 10%'),
@@ -124,20 +138,20 @@ def add_legend(fig, mrep_max):
     fig.text(cb_x + cb_w/2, y_label, mrep_max_str,
              ha='center', va='center', fontsize=fontSize2, color='black')
 
-def plot_coeff_bit_mrep(df, ax, title=None):
+def plot_coeff_bit_mrep(df, ax, mrep_max ,title=None):
     df = df[df['coeff'].isin(range(8))].copy()
 
     coeff_order = list(range(8))
     coeff_idx = {c: i for i, c in enumerate(coeff_order)}
 
-    colors = [mrep_color(v) for v in df['mrep']]
+    colors = [mrep_color(v, mrep_max) for v in df['mrep']]
     x = [coeff_idx[c] for c in df['coeff']]
     y = df['bit'].tolist()
 
     ax.scatter(x, y, c=colors, s=scatterSize,  linewidths=0.8, zorder=3)
-    ax.set_xticks([i for i in range(len(coeff_order)) if i % 3 == 0])
-    ax.set_xticklabels([coeff_order[i] for i in range(len(coeff_order)) if i % 3 == 0],
-                       rotation=0, ha='right', fontsize=fontSize)
+    ax.set_xticks([0, 7])
+    ax.set_xticklabels([coeff_order[0], coeff_order[7]],
+                   rotation=0, ha='right', fontsize=fontSize)
 
     ax.grid(True, linestyle='--', alpha=0.3, zorder=0)
 
@@ -165,7 +179,7 @@ def main():
         data['mrep'] = data['rel_error']*100
         df = data.groupby(['coeff', 'bit'])['mrep'].mean().reset_index()
         print(df['mrep'].head(100))
-        plot_coeff_bit_mrep(df, ax)
+        plot_coeff_bit_mrep(df, ax, 1e153)
 
         # spines
         ax.spines['top'].set_visible(False)
@@ -178,15 +192,16 @@ def main():
             ax.spines['right'].set_visible(False)
             ax.axvline(x=-0.5, color='gray', linestyle='--', linewidth=1.2, zorder=2)
         if(stagesCircles):
-            ax.annotate(str(i + 1), xy=(0.5, -0.1), xycoords='axes fraction',
+            ax.annotate(str(stagesNum[i]), xy=(0.5, circleYpos), xycoords='axes fraction',
                         ha='center', va='center', fontsize=circleFont, color='white', fontweight='bold',
                         bbox=dict(boxstyle=f'circle,pad={circleFont*circleSize}', facecolor=red, edgecolor='none'))
 
         mrep_max_temp = data['mrep'].max()  # o el max global de todos los dfs
+        print(mrep_max_temp)
         if mrep_max_temp >= mrep_max:
             mrep_max = mrep_max_temp
     axes[0].set_ylabel('i-th Bit of Register', fontsize=fontAxisName, fontweight='bold')
-    fig.text(0.5, coeffLabel, 'Coefficients', ha='center', fontsize=fontAxisName, fontweight='bold')
+    fig.text(0.55, coeffLabel, 'Coefficients', ha='center', fontsize=fontAxisName, fontweight='bold')
     for ax in axes:
         ax.tick_params(axis='both', labelsize=fontLabelSize)
     # FIX: tight_layout ANTES de leer posiciones
