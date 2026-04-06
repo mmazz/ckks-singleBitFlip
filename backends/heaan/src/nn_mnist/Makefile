@@ -42,86 +42,139 @@ UTILS_OBJ := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(UTILS_SRC))
 # ------------------------------------------------
 
 BIN_RANDOM     := ./build/bin/nn_mnist_randomBitFlipOp
-SEEDS := 1 2 3 4 5
+SEEDS := 1 2 3 4
 RUN_IDS := 0 1 2 3 4 5
 RUNS := dirs $(addprefix run,$(RUN_IDS))
 RUNS_SEEDS := dirs $(addprefix run_stages,$(RUN_IDS))
+RUNS_SERVER := dirs $(addprefix run_server,$(RUN_IDS))
 
-.PHONY: all allRuns $(RUNS)
+COMMON_PARAMS := --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 --logSlots 10 --withNTT 0
+
+.PHONY: all allRuns $(RUNS) allRuns_seeds $(RUNS_SEEDS) allRuns_server $(RUNS_SERVER)
 
 all: dirs $(TARGETS)
 
 allRuns: $(RUNS)
 allRuns_seeds: $(RUNS_SEEDS)
+allRuns_server: $(RUNS_SERVER)
 
 
 # Is like this to paralelize with -j9
 run0:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 0
 run1:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 1 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 1
 run2:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 2 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 2
 run3:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 3 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 3
 run4:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 4 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 4
 run5:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 5 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 5
 run6:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 6 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 6
 run7:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 7 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 7
 run8:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 8 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 8
 run9:
-	$(BIN_RANDOM) --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 9 --withNTT 0
+	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 9
 
 
 
 run_stages0:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
-			--stage encrypt_c0 --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input ; \
 		done; \
 	done
 run_stages1:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
-			--stage encrypt_c1 --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input ; \
 		done; \
 	done
 run_stages2:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
-			--stage encode --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encode  --seed $$s --seed_input $$s_input; \
 		done; \
 	done
 run_stages3:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
-			--stage decrypt_c0 --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage decrypt_c0 --seed $$s --seed_input $$s_input; \
 		done; \
 	done
 run_stages4:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
-			--stage decrypt_c1 --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage decrypt_c1 --seed $$s --seed_input $$s_input; \
 		done; \
 	done
 run_stages5:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 \
-			--stage decode --logSlots 10 --seed $$s --seed_input $$s_input --withNTT 0; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage decode --seed $$s --seed_input $$s_input; \
+		done; \
+	done
+##
+## SERVER RUNS
+##
+run_server0:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input --doMul 0; \
 		done; \
 	done
 
+run_server1:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input --doMul 0; \
+		done; \
+	done
+run_server2:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input --doMul 1; \
+		done; \
+	done
+
+run_server3:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input --doMul 1; \
+		done; \
+	done
+
+run_server4:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input --doMul 2; \
+		done; \
+	done
+
+run_server5:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input --doMul 2; \
+		done; \
+	done
+run_server6:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input --doScalarMul 1; \
+		done; \
+	done
+
+run_server7:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input --doScalarMul 1; \
+		done; \
+	done
 
 dirs:
 	@mkdir -p $(BIN_DIR)
