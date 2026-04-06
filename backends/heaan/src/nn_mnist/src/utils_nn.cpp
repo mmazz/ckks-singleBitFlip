@@ -408,18 +408,14 @@ Ciphertext chebyTanh3OP(
     Ciphertext x_clean = c;
     if (hidden>0 && iterArgs && args.doMul==0) {
         if (args.stage == "encrypt_c0") {
-            cout << "Bit: " << iterArgs->bit << ": " << c.bx[iterArgs->coeff] << ", ";
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
-            cout << c.bx[iterArgs->coeff] << endl;
         } else if (args.stage == "encrypt_c1") {
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
     if (hidden>0 && iterArgs && args.doMul==1) {
         if (args.stage == "encrypt_c0") {
-            cout << "Bit: " << iterArgs->bit << ": " << c.bx[iterArgs->coeff] << ", ";
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
-            cout << c.bx[iterArgs->coeff] << endl;
         } else if (args.stage == "encrypt_c1") {
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
@@ -427,7 +423,7 @@ Ciphertext chebyTanh3OP(
     if(args.doMul==0)
         x2 = he.scheme.mult(x_clean, c);
 
-    else if(args.doMul==1)
+    else
         x2 = he.scheme.square(c);
 
     he.scheme.reScaleByAndEqual(x2, logP);
