@@ -86,6 +86,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
 
     return ctx;
 }
+
 IterationResult run_iteration(
     BackendContext* bctx,
     const CampaignArgs& args,
@@ -388,7 +389,6 @@ IterationResult run_NN(
     // Backend cerrado: cast seguro por contrato
     auto& ctx = static_cast<HEAANContext&>(*bctx);
 
-    /* ---------------- Encode ---------------- */
     Plaintext plain = ctx.scheme.encode(
         ctx.baseInput.data(),
         ctx.baseInput.size(),

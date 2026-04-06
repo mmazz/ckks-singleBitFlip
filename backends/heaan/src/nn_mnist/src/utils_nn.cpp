@@ -393,7 +393,9 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector
 }
 
 /// Server side bit flip/ ////
-///
+/// doMul = 0: bitflip on x^2 but only in one of the x
+/// doMul = 1: bitflip on x^2 but in both ciphers
+/// doMul = 2: bitflip on x^3 but in only the last x
 Ciphertext chebyTanh3OP(
     HEEnv& he,
     Ciphertext c,
@@ -402,6 +404,17 @@ Ciphertext chebyTanh3OP(
 ){
     if(args.verbose)
         cout << hidden << ", ";
+    Ciphertext x2;
+    Ciphertext x_clean = c;
+    if (hidden>0 && iterArgs && args.doMul==0) {
+        if (args.stage == "encrypt_c0") {
+            cout << "Bit: " << iterArgs->bit << ": " << c.bx[iterArgs->coeff] << ", ";
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+            cout << c.bx[iterArgs->coeff] << endl;
+        } else if (args.stage == "encrypt_c1") {
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
+    }
     if (hidden>0 && iterArgs && args.doMul==1) {
         if (args.stage == "encrypt_c0") {
             cout << "Bit: " << iterArgs->bit << ": " << c.bx[iterArgs->coeff] << ", ";
@@ -411,8 +424,12 @@ Ciphertext chebyTanh3OP(
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
-    // x^2
-    Ciphertext x2 = he.scheme.square(c);
+    if(args.doMul==0)
+        x2 = he.scheme.mult(x_clean, c);
+
+    else if(args.doMul==1)
+        x2 = he.scheme.square(c);
+
     he.scheme.reScaleByAndEqual(x2, logP);
 
     if (hidden>0 && iterArgs && args.doMul==2) {
@@ -422,11 +439,9 @@ Ciphertext chebyTanh3OP(
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
-    // x^3
     Ciphertext x3 = he.scheme.mult(x2, c);
     he.scheme.reScaleByAndEqual(x3, logP);
 
-    // -0.23*x^3
     he.scheme.multByConstAndEqual(x3, -0.23, logP);
     he.scheme.reScaleByAndEqual(x3, logP);
     if (hidden>0 && iterArgs && args.doScalarMul>0) {
@@ -436,7 +451,6 @@ Ciphertext chebyTanh3OP(
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
-    // 0.98*x
     he.scheme.multByConstAndEqual(c, 0.98, logP);
     he.scheme.reScaleByAndEqual(c, logP);
 
@@ -461,8 +475,8 @@ vector<Ciphertext> forwardOP(
     uint32_t hidden = random_int(0, HIDDEN-1);
     if(args.verbose)
         cout << "Hidden bitflip: ";
-    for(size_t j=0;j<HIDDEN;++j){
 
+    for(size_t j=0;j<HIDDEN;++j){
         Ciphertext s = he.scheme.multByPoly(c, ew.W1[j], logP);
         he.scheme.reScaleByAndEqual(s, logP);
 
@@ -470,11 +484,11 @@ vector<Ciphertext> forwardOP(
 
         he.scheme.addConstAndEqual(s, ew.b1[j]);
 
-        // Chebyshev tanh
         s = chebyTanh3OP(he, std::move(s), logP, args, iterArgs, hidden==j);
 
         layer1[j] = std::move(s);
     }
+
     if(args.verbose)
         cout << endl;
 
@@ -518,6 +532,7 @@ IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vect
 
     if(args.verbose)
         cout << "Running encrypted inference..." << endl;
+
     auto outputs = forwardOP(
         he,
         c,
@@ -542,6 +557,7 @@ IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vect
             pred = i;
         }
     }
+
     IterationResult res;
     res.detected = (pred == targetValue);
     if(verbose){

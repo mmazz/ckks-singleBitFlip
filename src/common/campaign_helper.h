@@ -25,8 +25,6 @@ struct IterationArgs{
         : limb(l), coeff(c), bit(b) {}
 };
 
-
-
 struct CampaignArgs {
     std::string library = "none";
     std::string stage = "none";
@@ -57,7 +55,6 @@ struct CampaignArgs {
     std::string scaleTech = "FIXEDMANUAL";
     std::string results_dir = "../../results";
 
-// OpenFHE-only
 
     std::optional<AttackModeSKA> openfhe_attack_mode = AttackModeSKA::CompleteInjection;
     std::optional<double> openfhe_threshold_bits = 5.0;
@@ -69,10 +66,7 @@ struct CampaignArgs {
 void print_usage(const char* program_name);
 CampaignArgs parse_arguments(int argc, char* argv[]);
 
-/**
- * Contexto mínimo de una campaña viva
- * (lo usa main.cpp)
- */
+
 struct CampaignContext {
     uint32_t campaign_id;
     CampaignArgs args;
