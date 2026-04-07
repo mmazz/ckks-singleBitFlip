@@ -17,6 +17,9 @@ all_analysis: $(ANALYSES)
 
 RNS_analysis: $(ANALYSES_RNS)
 
+mul_inside:
+	@cd $(LIBRARY) && \
+		$(BIN_RANDOM) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 1 --doMul 2 --mult_depth 2 --logSlots 5 --verbose
 
 seeds_analysis:
 	@cd $(LIBRARY) && \

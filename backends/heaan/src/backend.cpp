@@ -90,8 +90,12 @@ BackendContext* setup_campaign(const CampaignArgs& args)
 IterationResult run_iteration(
     BackendContext* bctx,
     const CampaignArgs& args,
-    std::optional<IterationArgs> iterArgs)
+    std::optional<IterationArgs> iterArgs
+    )
 {
+    uint32_t step = args.op_step;
+    uint32_t count = args.op_count;
+
     auto& ctx = static_cast<HEAANContext&>(*bctx);
 
     auto baseInput = ctx.baseInput.data();
@@ -168,7 +172,14 @@ IterationResult run_iteration(
     }
 
     for (uint32_t i = 0; i < args.doMul; ++i) {
-        c = ctx.scheme.mult(c, c_clean);
+        if(iterArgs && args.stage == "mul_inside" && i == count){
+            c = ctx.scheme.multBitFlip(c, c_clean, step, iterArgs->coeff, iterArgs->bit);
+        }else {
+            if(iterArgs && args.stage == "mul_outside" && i == count)
+                c = ctx.scheme.multBitFlip(c, c_clean, step, iterArgs->coeff, iterArgs->bit);
+            else
+                c = ctx.scheme.mult(c, c_clean);
+        }
         ctx.scheme.reScaleByAndEqual(c, args.logDelta);
     }
 

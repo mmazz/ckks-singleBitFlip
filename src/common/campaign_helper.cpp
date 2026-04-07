@@ -30,6 +30,8 @@ void CampaignArgs::print(std::ostream& os) const {
        << "  doScalarMul: " << doScalarMul << "\n"
        << "  doRot: " << doRot << "\n"
        << "  doBoot: " << doBoot << "\n"
+       << "  op_count: " << op_count << "\n"
+       << "  op_step: " << op_step<< "\n"
        << "  isComplex : " << isComplex<< "\n"
        << "  isExhaustive: " << isExhaustive << "\n"
        << "  dnum: " << dnum << "\n"
@@ -55,7 +57,7 @@ void CampaignArgs::print(std::ostream& os) const {
 void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [OPTIONS]\n\n"
               << "Options:\n"
-              << "  --stage <name>          Stage to attack: none, encode, encrypt_c0, encrypt_c1, mul_c0, mul_c1, add_c0, add_c1 (default: none)\n"
+              << "  --stage <name>          Stage to attack: none, encode, encrypt_c0, encrypt_c1, decrypt_c0, decrypt_c1, decode, mul_inside, mul_outside, add_inside, add_outside, rot_inside, rot_outside (default: none)\n"
               << "  --bitPerCoeff <value>   Max bits per coeff (default: 64)\n"
               << "  --logN <value>          log Ring dimension (default: 3 = 2^3 = 8)\n"
               << "  --logQ <value>          First mod bits (default: 60)\n"
@@ -68,7 +70,9 @@ void print_usage(const char* program_name) {
               << "  --doMul <value>         The pipeline server has that much Muls (default: 0)\n"
               << "  --doScalarMul <value>   The pipeline server has Multiplies the cipher with that scalar (double) (default: 0, no mult)\n"
               << "  --doRot <value>         The pipeline server has Rot, the value is how many rot (default: 0)\n"
-              << "  --doBoot <value>         The pipeline server has Bootstrapping after operations (default: 0)\n"
+              << "  --doBoot <value>        The pipeline server has Bootstrapping after operations (default: 0)\n"
+              << "  --op_count <value>      If actacking on the server, at wich count of selected operation does the bit flip happen (default: 0)\n"
+              << "  --op_step <value>       If actacking on the server, at wich step inside of selected operation does the bit flip happen (default: 0)\n"
               << "  --isComplex <name>      Complex input, only for HEAAN (default: 0)\n"
               << "  --isExhaustive <name>   Type of bit flip campaign (default: exhaustive)\n"
               << "  --seed <value>          Random seed for scheme (default: 0)\n"
@@ -105,6 +109,8 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"doScalarMul",    required_argument, 0, 'L'},
         {"doRot",          required_argument, 0, 'r'},
         {"doBoot",         required_argument, 0, 'B'},
+        {"op_count",       required_argument, 0, 'o'},
+        {"op_step",        required_argument, 0, 'O'},
         {"isComplex",      required_argument, 0, 'X'},
         {"isExhaustive",   required_argument, 0, 'T'},
         {"logMin",         required_argument, 0, 'x'},
@@ -126,7 +132,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "S:c:N:Q:d:g:m:n:A:p:M:L:r:B:X:T:x:y:s:b:a:t:D:C:R:v:h",
+        "S:c:N:Q:d:g:m:n:A:p:M:L:r:B:o:O:X:T:x:y:s:b:a:t:D:C:R:v:h",
         long_options,
         &option_index)) != -1)
     {
@@ -151,6 +157,8 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'D': args.dnum= std::stoul(optarg); break;
             case 'r': args.doRot = std::stoul(optarg); break;
             case 'B': args.doBoot = std::stoul(optarg); break;
+            case 'o': args.op_count = std::stoul(optarg); break;
+            case 'O': args.op_step = std::stoul(optarg); break;
 
             case 'v':
                 args.verbose = true;

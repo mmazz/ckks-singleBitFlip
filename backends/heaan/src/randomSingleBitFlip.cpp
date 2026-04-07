@@ -78,7 +78,6 @@ int main(int argc, char* argv[]) {
             uint32_t coeff = random_int(0, N-1);
             for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
                 uint32_t bit = bits_to_flip[bitIndex];
-                std::cout << bit << std::endl;
                 IterationArgs iterArgs(0, coeff, bit);
                 IterationResult res = run_iteration(ctx, args, iterArgs);
                 CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
