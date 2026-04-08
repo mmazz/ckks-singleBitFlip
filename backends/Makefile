@@ -19,7 +19,19 @@ RNS_analysis: $(ANALYSES_RNS)
 
 mul_inside:
 	@cd $(LIBRARY) && \
-		$(BIN_RANDOM) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 1 --doMul 2 --mult_depth 2 --logSlots 5 --verbose
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 0 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 1 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 2 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 3 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 4 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 5 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 6 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 7 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 8 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 9 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 10 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 11 --doMul 2 --mult_depth 2 --logSlots 5 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40  --stage mul_inside --op_step 1 --op_count 12 --doMul 2 --mult_depth 2 --logSlots 5 --verbose
 
 seeds_analysis:
 	@cd $(LIBRARY) && \
