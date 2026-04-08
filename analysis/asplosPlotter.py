@@ -15,8 +15,8 @@ show = True
 width = int(config.width)
 colors = config.colors
 s = config.size
-fontSize = 54
-fontLabelSize = 54
+fontSize = 24
+fontLabelSize = 24
 fontSize2 = fontSize - 8
 
 
@@ -25,13 +25,13 @@ figSizeX = 6
 figSizeY = 12
 stagesCircles = True
 
-fontAxisName = 64
+fontAxisName = 24
 circleSize = 0.01
-circleFont = 55
+circleFont = 25
 circleYpos = -0.15
 
 coeffLabel = 0.0
-scatterSize = 50
+scatterSize =75
 dir = "img/"
 SAVENAME = "encrypt"
 
@@ -42,6 +42,7 @@ green = '#008000'
 yellow = '#FFFF00'
 orange ='#FFA500'
 red = '#FF0000'
+blue = '#4382B4'
 cmap = mcolors.LinearSegmentedColormap.from_list(
     "red_to_black", [red, "black"]
 )
@@ -189,7 +190,10 @@ def main():
             ax.spines['left'].set_visible(False)
             ax.spines['right'].set_visible(False)
             ax.axvline(x=-0.5, color='gray', linestyle='--', linewidth=1.2, zorder=2)
-
+        if(stagesCircles):
+            ax.annotate(str(steps[i]), xy=(0.5, circleYpos), xycoords='axes fraction',
+                        ha='center', va='center', fontsize=circleFont, color='white', fontweight='bold',
+                        bbox=dict(boxstyle=f'circle,pad={circleFont*circleSize}', facecolor=blue, edgecolor='none'))
         mrep_max_temp = data['mrep'].max()  # o el max global de todos los dfs
         print(mrep_max_temp)
         if mrep_max_temp >= mrep_max:
