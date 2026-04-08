@@ -172,10 +172,10 @@ IterationResult run_iteration(
     }
 
     for (uint32_t i = 0; i < args.doMul; ++i) {
-        if(iterArgs && args.stage == "mul_inside" && i == count){
+        if(iterArgs && args.stage == "mul_inside" && i == count-1){
             c = ctx.scheme.multBitFlip(c, c_clean, step, iterArgs->coeff, iterArgs->bit);
         }else {
-            if(iterArgs && args.stage == "mul_outside" && i == count)
+            if(iterArgs && args.stage == "mul_outside" && i == count-1)
                 c = ctx.scheme.multBitFlip(c, c_clean, step, iterArgs->coeff, iterArgs->bit);
             else
                 c = ctx.scheme.mult(c, c_clean);
