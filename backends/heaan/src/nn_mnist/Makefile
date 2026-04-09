@@ -41,12 +41,13 @@ UTILS_OBJ := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(UTILS_SRC))
 
 # ------------------------------------------------
 
-BIN_RANDOM     := ./build/bin/nn_mnist_randomBitFlipOp
-SEEDS := 1 2 3 4
+BIN_RANDOM     := ./build/bin/nn_mnist_randomBitFlip
+SEEDS := 1 2
 RUN_IDS := 0 1 2 3 4 5
+RUN_IDS_SERVER := 0 1 2 3 4 5 6 7 8 9
 RUNS := dirs $(addprefix run,$(RUN_IDS))
 RUNS_SEEDS := dirs $(addprefix run_stages,$(RUN_IDS))
-RUNS_SERVER := dirs $(addprefix run_server,$(RUN_IDS))
+RUNS_SERVER := dirs $(addprefix run_server,$(RUN_IDS_SERVER))
 
 COMMON_PARAMS := --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 --logSlots 10 --withNTT 0
 
@@ -125,54 +126,68 @@ run_stages5:
 run_server0:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input --doMul 0; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 0 ; \
 		done; \
 	done
 
 run_server1:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input --doMul 0; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 1 ; \
 		done; \
 	done
 run_server2:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input --doMul 1; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input  --op_index 2 ; \
 		done; \
 	done
 
 run_server3:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input --doMul 1; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 3 ; \
 		done; \
 	done
 
 run_server4:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input --doMul 2; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input  --op_index 4 ; \
 		done; \
 	done
 
 run_server5:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input --doMul 2; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 5 ; \
 		done; \
 	done
 run_server6:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input --doScalarMul 1; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input  --op_index 6 ; \
 		done; \
 	done
 
 run_server7:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input --doScalarMul 1; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 7 ; \
+		done; \
+	done
+
+run_server8:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 8 ; \
+		done; \
+	done
+
+run_server9:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 9 ; \
 		done; \
 	done
 

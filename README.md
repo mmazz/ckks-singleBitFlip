@@ -17,8 +17,10 @@ at well-defined pipeline stages:
     - `decrypt_c1`
     - `decode`
 - Server-side
-    - `mul_inside`
-    - `mul_outside`
+    - `mul_inside`: op_index = [0, doMul], op_step = [0,12]
+    - `mul_outside`: op_index = [0, doMul]
+    - `hidden_layer`: library=heaanNN, op_index = [0, 11]
+    - `chebyTanh3`: library=heaanNN, op_index = [0, 9]
 
 The goal is to analyze numerical degradation, error propagation, and Silent Data Corruption (SDC) behavior under precise, low-level faults.
 
@@ -127,7 +129,7 @@ encode
 | doPlainMul   |   Amount of sucecive plain multilicatios     |
 | doRot        |   One Rotation of that power of 2          |
 | doBoot       |   Make boot strap at the end of operations          |
-| op_count     |   If valid, at which sucecive operation to attacck          |
+| op_index     |   If valid, operation index within the stage |
 | op_step      |   If valid, at  which steo of the inside of the selected operation to attack   |
 
 

@@ -94,7 +94,7 @@ IterationResult run_iteration(
     )
 {
     uint32_t step = args.op_step;
-    uint32_t count = args.op_count;
+    uint32_t count = args.op_index;
 
     auto& ctx = static_cast<HEAANContext&>(*bctx);
 

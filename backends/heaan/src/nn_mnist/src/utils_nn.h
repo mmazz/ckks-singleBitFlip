@@ -53,25 +53,13 @@ Ciphertext encryptInput(
     long logQ
 );
 
-Ciphertext chebyTanh3(
-    HEEnv& he,
-    Ciphertext x,
-    long logP
-);
-
 void reduceSum(
     HEEnv& he,
     Ciphertext& ct,
-    long logSlots
+    long logSlots,
+    CampaignArgs& args, std::optional<IterationArgs> iterArgs
 );
 
-vector<Ciphertext> forward(
-    HEEnv& he,
-    Ciphertext x,
-    EncodedWeights& ew,
-    long logSlots,
-    long logP
-);
 vector<Plaintext> decryptLogits(
     HEEnv& he,
     const vector<Ciphertext>& outs
@@ -94,7 +82,7 @@ std::vector<double> loadCSVVector(const std::string& path, size_t size);
 IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs=std::nullopt);
 
 
-Ciphertext chebyTanh3OP(
+Ciphertext chebyTanh3(
     HEEnv& he,
     Ciphertext c,
     long logP,
@@ -102,7 +90,7 @@ Ciphertext chebyTanh3OP(
 );
 IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs=std::nullopt);
 
-vector<Ciphertext> forwardOP(
+vector<Ciphertext> forward(
     HEEnv& he,
     Ciphertext c,
     EncodedWeights& ew,
