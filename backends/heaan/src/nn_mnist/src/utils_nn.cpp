@@ -195,7 +195,7 @@ vector<Ciphertext> forward(
             s = he.scheme.multByPoly(c, ew.W1[j], logP);
         he.scheme.reScaleByAndEqual(s, logP);
 
-        reduceSum(he, s, logSlots);
+        reduceSum(he, s, logSlots, args, iterArgs);
 
         he.scheme.addConstAndEqual(s, ew.b1[j]);
         if (j==hidden && iterArgs && args.stage == "hidden_layer") {
