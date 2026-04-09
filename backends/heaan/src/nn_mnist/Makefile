@@ -48,16 +48,18 @@ RUN_IDS_SERVER := 0 1 2 3 4 5 6 7 8 9
 RUNS := dirs $(addprefix run,$(RUN_IDS))
 RUNS_SEEDS := dirs $(addprefix run_stages,$(RUN_IDS))
 RUNS_SERVER := dirs $(addprefix run_server,$(RUN_IDS_SERVER))
+RUNS_SERVER_LAYERS:= dirs $(addprefix run_server_layer,$(RUN_IDS))
 
 COMMON_PARAMS := --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 --logSlots 10 --withNTT 0
 
-.PHONY: all allRuns $(RUNS) allRuns_seeds $(RUNS_SEEDS) allRuns_server $(RUNS_SERVER)
+.PHONY: all allRuns $(RUNS) allRuns_seeds $(RUNS_SEEDS) allRuns_server $(RUNS_SERVER)  allRuns_server_layers $(RUNS_SERVER_LAYERS)
 
 all: dirs $(TARGETS)
 
 allRuns: $(RUNS)
 allRuns_seeds: $(RUNS_SEEDS)
 allRuns_server: $(RUNS_SERVER)
+allRuns_server_layers: $(RUNS_SERVER_LAYERS)
 
 
 # Is like this to paralelize with -j9
@@ -191,6 +193,38 @@ run_server9:
 		done; \
 	done
 
+
+## HIDDEN LAYER
+run_server_layer0:
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 0 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 1 ; \
+	done
+run_server_layer1:
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 2 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 3 ; \
+	done
+run_server_layer2:
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 4 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 5 ; \
+	done
+run_server_layer3:
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 6 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 7 ; \
+	done
+run_server_layer4:
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 8 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 9 ; \
+	done
+run_server_layer5:
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 10 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 11 ; \
+	done
 dirs:
 	@mkdir -p $(BIN_DIR)
 
