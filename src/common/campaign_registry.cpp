@@ -17,8 +17,8 @@ CampaignRegistry::CampaignRegistry(const std::string& results_dir) {
     if (!fs::exists(start_csv_)) {
         std::ofstream f(start_csv_);
         f << "campaign_id,library,stage,logN,logQ,bitPerCoeff,logDelta,logSlots,"
-             "doAdd,doPlainMul,doMul,doScalarMul,doRot,doBoot,op_index,"
-             "op_step,mult_depth,seed,seed_input,withNTT,"
+             "withNTT,mult_depth,doAdd,doPlainMul,doMul,doScalarMul,doRot,doBoot,op_index,"
+             "op_step,seed,seed_input,"
              "isComplex,logMin,logMax,isExhaustive,dnum,scaleTech,timestamp_start\n";
     }
 
@@ -66,17 +66,13 @@ void CampaignRegistry::register_start(const CampaignStartRecord& r) {
     f << r.campaign_id << ","
       << r.args.library << ","
       << r.args.stage<< ","
-      << r.args.bitPerCoeff<< ","
       << r.args.logN << ","
       << r.args.logQ << ","
+      << r.args.bitPerCoeff<< ","
       << r.args.logDelta << ","
       << r.args.logSlots << ","
-      << r.args.mult_depth << ","
-      << r.args.seed << ","
-      << r.args.seed_input << ","
       << (r.args.withNTT ? 1 : 0) << ","
-      << r.args.logMin << ","
-      << r.args.logMax << ","
+      << r.args.mult_depth << ","
       << (r.args.doAdd? 1 : 0) << ","
       << r.args.doPlainMul << ","
       << r.args.doMul << ","
@@ -85,7 +81,11 @@ void CampaignRegistry::register_start(const CampaignStartRecord& r) {
       << r.args.doBoot << ","
       << r.args.op_index<< ","
       << r.args.op_step<< ","
+      << r.args.seed << ","
+      << r.args.seed_input << ","
       << r.args.isComplex<< ","
+      << r.args.logMin << ","
+      << r.args.logMax << ","
       << r.args.isExhaustive << ","
       << r.args.dnum<< ","
       << r.args.scaleTech<< ","

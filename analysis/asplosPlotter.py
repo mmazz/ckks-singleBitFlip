@@ -56,8 +56,8 @@ def main():
         filters["op_step"] = ("int", step)
         print(filters["op_step"])
 
-        selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
-        data = load_campaign_data(selected, config.DATA_DIR)
+        selected = load_and_filter_campaigns(config.CAMPAIGNS_NN_CSV, filters)
+        data = load_campaign_data(selected, config.DATA_NN_DIR)
         data['mrep'] = data['rel_error']*100
         df = data.groupby(['coeff', 'bit'])['mrep'].mean().reset_index()
         print(df['mrep'].head(100))
