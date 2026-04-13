@@ -73,7 +73,7 @@ Ciphertext chebyTanh3(
 ){
     // x^2
 
-    if (doBitFlip && iterArgs && args.stage == "chebyTanh3") {
+    if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_index== 0) {
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
         } else if (args.op_index == 1) {
@@ -83,7 +83,7 @@ Ciphertext chebyTanh3(
     Ciphertext c2 = he.scheme.square(c);
     he.scheme.reScaleByAndEqual(c2, logP);
 
-    if (doBitFlip && iterArgs && args.stage == "chebyTanh3") {
+    if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_index == 2) {
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
         } else if (args.op_index == 3) {
@@ -93,7 +93,7 @@ Ciphertext chebyTanh3(
     Ciphertext c3 = he.scheme.mult(c2, c);
     he.scheme.reScaleByAndEqual(c3, logP);
 
-    if (doBitFlip && iterArgs && args.stage == "chebyTanh3") {
+    if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_index == 4) {
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
         } else if (args.op_index == 5) {
@@ -103,7 +103,7 @@ Ciphertext chebyTanh3(
     he.scheme.multByConstAndEqual(c3, -0.23, logP);
     he.scheme.reScaleByAndEqual(c3, logP);
 
-    if (doBitFlip && iterArgs && args.stage == "chebyTanh3") {
+    if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_index == 6) {
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
         } else if (args.op_index == 7) {
@@ -113,7 +113,7 @@ Ciphertext chebyTanh3(
     he.scheme.multByConstAndEqual(c, 0.98, logP);
     he.scheme.reScaleByAndEqual(c, logP);
 
-    if (doBitFlip && iterArgs && args.stage == "chebyTanh3") {
+    if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_index == 8) {
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
         } else if (args.op_index == 9) {
@@ -137,30 +137,30 @@ void reduceSum(
         Ciphertext rot;
         if (i==selected_layer && iterArgs && args.stage == "hidden_layer") {
             Ciphertext c_copy = ct;
-            if (args.op_index == 2) {
+            if (args.op_index == 4) {
                 SwitchBit(c_copy.bx[iterArgs->coeff], iterArgs->bit);
-            } else if (args.op_index == 3) {
+            } else if (args.op_index == 5) {
                 SwitchBit(c_copy.ax[iterArgs->coeff], iterArgs->bit);
             }
             rot = he.scheme.leftRotateFast(c_copy, 1<<i);
         } else
             rot = he.scheme.leftRotateFast(ct, 1<<i);
         if (i==selected_layer && iterArgs && args.stage == "hidden_layer") {
-            if (args.op_index == 4) {
+            if (args.op_index == 6) {
                 SwitchBit(rot.bx[iterArgs->coeff], iterArgs->bit);
-            } else if (args.op_index == 5) {
+            } else if (args.op_index == 7) {
                 SwitchBit(rot.ax[iterArgs->coeff], iterArgs->bit);
-            } else if (args.op_index == 6) {
+            } else if (args.op_index == 8) {
                 SwitchBit(ct.bx[iterArgs->coeff], iterArgs->bit);
-            }else if (args.op_index == 7) {
+            }else if (args.op_index == 9) {
                 SwitchBit(ct.ax[iterArgs->coeff], iterArgs->bit);
             }
         }
         he.scheme.addAndEqual(ct, rot);
         if (i==selected_layer && iterArgs && args.stage == "hidden_layer") {
-            if (args.op_index == 8) {
+            if (args.op_index == 10) {
                 SwitchBit(ct.bx[iterArgs->coeff], iterArgs->bit);
-            }else if (args.op_index == 9) {
+            }else if (args.op_index == 11) {
                 SwitchBit(ct.ax[iterArgs->coeff], iterArgs->bit);
             }
         }
@@ -193,15 +193,24 @@ vector<Ciphertext> forward(
             s = he.scheme.multByPoly(c_copy, ew.W1[j], logP);
         } else
             s = he.scheme.multByPoly(c, ew.W1[j], logP);
+
+        if (j==hidden && iterArgs && args.stage == "hidden_layer") {
+            if (args.op_index == 2) {
+                SwitchBit(s.bx[iterArgs->coeff], iterArgs->bit);
+            }else if (args.op_index == 3) {
+                SwitchBit(s.ax[iterArgs->coeff], iterArgs->bit);
+            }
+        }
+
         he.scheme.reScaleByAndEqual(s, logP);
 
         reduceSum(he, s, logSlots, args, iterArgs);
 
         he.scheme.addConstAndEqual(s, ew.b1[j]);
         if (j==hidden && iterArgs && args.stage == "hidden_layer") {
-            if (args.op_index == 10) {
+            if (args.op_index == 12) {
                 SwitchBit(s.bx[iterArgs->coeff], iterArgs->bit);
-            }else if (args.op_index == 11) {
+            }else if (args.op_index == 13) {
                 SwitchBit(s.ax[iterArgs->coeff], iterArgs->bit);
             }
         }

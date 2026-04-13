@@ -19,7 +19,19 @@ blue = '#4382B4'
 cmap = mcolors.LinearSegmentedColormap.from_list(
     "red_to_black", [red, "black"]
 )
+def sdc_color(v, mrep_max=1):
+    # Normalizar si corresponde
+    if mrep_max != 0:
+        v = v / mrep_max
 
+    if 0 <= v <= 0.1:
+        return "green"
+    elif v <= 0.5:
+        return "yellow"
+    elif v <= 0.8:
+        return "orange"
+    else:
+        return "red"
 def mrep_color(val, mrep_max):
     if val < 0.1:
         return green
@@ -283,3 +295,103 @@ def plot_coeff_bit_mrep(df, ax, mrep_max, scatterSize, fontSize, fontSizeLegend=
     if title:
         ax.set_title(title, fontsize=fontSize)
 
+def plot_coeff_bit_mrep_gap(df, ax, gap, mrep_max, scatterSize, fontSize, fontSizeLegend=0, title=None):
+    df_group0 = df[df['coeff'] % gap == 0].copy()
+    df_group1 = df[df['coeff'] % gap != 0].copy()
+
+    # Promediar mrep por bit
+    g0 = df_group0.groupby('bit')['mrep'].mean().reset_index()
+    g1 = df_group1.groupby('bit')['mrep'].mean().reset_index()
+
+    # X positions (dos columnas)
+    x0 = [0] * len(g0)
+    x1 = [1] * len(g1)
+
+    # Colores según promedio de mrep
+    colors0 = [mrep_color(v, mrep_max) for v in g0['mrep']]
+    colors1 = [mrep_color(v, mrep_max) for v in g1['mrep']]
+
+    # Scatter
+    ax.scatter(x0, g0['bit'], c=colors0, s=scatterSize, linewidths=0.8, zorder=3)
+    ax.scatter(x1, g1['bit'], c=colors1, s=scatterSize, linewidths=0.8, zorder=3)
+
+    # Eje X
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(
+        [f'coeff % {gap} == 0', f'coeff % {gap} != 0'],
+        fontsize=fontSize
+    )
+
+    # Grid
+    ax.grid(True, linestyle='--', alpha=0.3, zorder=0)
+
+    # Título
+    if title:
+        ax.set_title(title, fontsize=fontSize)
+
+def plot_coeff_bit_sdc_gap(df, ax, gap,  scatterSize, fontSize, fontSizeLegend=0, title=None):
+    df_group0 = df[df['coeff'] % gap == 0].copy()
+    df_group1 = df[df['coeff'] % gap != 0].copy()
+
+    # Promediar mrep por bit
+    g0 = df_group0.groupby('bit')['is_sdc'].mean().reset_index()
+    g1 = df_group1.groupby('bit')['is_sdc'].mean().reset_index()
+
+    # X positions (dos columnas)
+    x0 = [0] * len(g0)
+    x1 = [1] * len(g1)
+
+    # Colores según promedio de mrep
+    colors0 = [sdc_color(v, 1) for v in g0['is_sdc']]
+    colors1 = [sdc_color(v, 1) for v in g1['is_sdc']]
+
+    # Scatter
+    ax.scatter(x0, g0['bit'], c=colors0, s=scatterSize, linewidths=0.8, zorder=3)
+    ax.scatter(x1, g1['bit'], c=colors1, s=scatterSize, linewidths=0.8, zorder=3)
+
+    # Eje X
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(
+        [f'coeff % {gap} == 0', f'coeff % {gap} != 0'],
+        fontsize=fontSize
+    )
+
+    # Grid
+    ax.grid(True, linestyle='--', alpha=0.3, zorder=0)
+
+    # Título
+    if title:
+        ax.set_title(title, fontsize=fontSize)
+
+
+def plot_coeff_bit_sdc_modulo(df, ax, coeff_mod, scatterSize, fontSize, title=None):
+    df = df.copy()
+
+    # Crear grupo por resto
+    df['group'] = df['coeff'] % coeff_mod  # gap = 8 en tu caso
+
+    # Promediar por (grupo, bit)
+    g = df.groupby(['group', 'bit'])['is_sdc'].mean().reset_index()
+
+    # Plotear cada grupo como una columna
+    for grp in sorted(g['group'].unique()):
+        data = g[g['group'] == grp]
+
+        x = [grp] * len(data)
+        y = data['bit']
+        colors = [sdc_color(v, 1) for v in data['is_sdc']]
+
+        ax.scatter(x, y, c=colors, s=scatterSize, linewidths=0.8, zorder=3)
+
+    # Eje X
+    ax.set_xticks(range(coeff_mod))
+    ax.set_xticklabels([f'% {coeff_mod} = {i}' for i in range(coeff_mod)], fontsize=fontSize)
+    ax.set_xticks([0, 7])
+    ax.set_xticklabels([0, 7],
+                   rotation=0, ha='right', fontsize=fontSize)
+    # Grid
+    ax.grid(True, linestyle='--', alpha=0.3, zorder=0)
+
+    # Título
+    if title:
+        ax.set_title(title, fontsize=fontSize)

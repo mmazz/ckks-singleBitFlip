@@ -8,8 +8,8 @@ CAMPAIGNS_CSV = "../results/campaigns_start.csv"
 CAMPAIGNS_END_CSV = "../results/campaigns_end.csv"
 DATA_DIR = Path("../results/data")
 
-CAMPAIGNS_NN_CSV = "../resultsNNop/campaigns_start.csv"
-DATA_NN_DIR = Path("../resultsNNop/data")
+CAMPAIGNS_NN_CSV = "../results_NN/campaigns_start.csv"
+DATA_NN_DIR = Path("../results_NN/data")
 
 fontSize = 24
 figSizeX = 10

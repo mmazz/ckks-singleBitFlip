@@ -62,6 +62,10 @@ allRuns_server: $(RUNS_SERVER)
 allRuns_server_layers: $(RUNS_SERVER_LAYERS)
 
 
+
+test:
+	./build/bin/nn_test $(COMMON_PARAMS) --stage hidden_layer --op_index 0 ;
+
 # Is like this to paralelize with -j9
 run0:
 	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 0
@@ -128,68 +132,68 @@ run_stages5:
 run_server0:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 0 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 0 ; \
 		done; \
 	done
 
 run_server1:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 1 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 1 ; \
 		done; \
 	done
 run_server2:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input  --op_index 2 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_index 2 ; \
 		done; \
 	done
 
 run_server3:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 3 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 3 ; \
 		done; \
 	done
 
 run_server4:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input  --op_index 4 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_index 4 ; \
 		done; \
 	done
 
 run_server5:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 5 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 5 ; \
 		done; \
 	done
 run_server6:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input  --op_index 6 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_index 6 ; \
 		done; \
 	done
 
 run_server7:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 7 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 7 ; \
 		done; \
 	done
 
 run_server8:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 8 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 8 ; \
 		done; \
 	done
 
 run_server9:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage chebyTanh3 --seed $$s --seed_input $$s_input --op_index 9 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 9 ; \
 		done; \
 	done
 

@@ -121,11 +121,12 @@ int main(int argc, char* argv[]) {
 
         std::mt19937 rng(args.seed);
 
-        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 10 values
+        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 14 values
         for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
             uint32_t bit = bits_to_flip[bitIndex];
             for (size_t i = 0; i < num_bitFlips; i++) {
-                uint32_t coeff = random_int(0, N-1);
+                // We already know what happens to all coeffs, so we can reduce the search for the first 8 coeefs
+                uint32_t coeff = random_int(0, 8-1);
                 IterationArgs iterArgs(0, coeff, bit);
                 IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, iterArgs);
                 SlotErrorStats  stats;
