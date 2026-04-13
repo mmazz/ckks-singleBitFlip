@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import numpy as np
 import sys
 import os
@@ -9,6 +10,27 @@ from utils import config
 
 width = int(config.width)
 colors = config.colors
+
+green = '#008000'
+yellow = '#FFFF00'
+orange ='#FFA500'
+red = '#FF0000'
+blue = '#4382B4'
+cmap = mcolors.LinearSegmentedColormap.from_list(
+    "red_to_black", [red, "black"]
+)
+
+def mrep_color(val, mrep_max):
+    if val < 0.1:
+        return green
+    elif val < 10:
+        return yellow
+    elif val < 100:
+        return orange
+    else:
+        t = (val - 100) / (mrep_max - 100) if mrep_max > 100 else 1
+        t = max(0, min(t, 1))
+        return cmap(t)
 
 
 def plot_bits(stats, ax=None, label_prefix="", color=config.colors["red"], scatter=False, size=40, alpha=1):
@@ -177,3 +199,87 @@ def plot_bit_cat(stats, ax=None, label_prefix="", color=colors["red"], scatter=T
     ax.set_ylabel("SDC rate")
     ax.grid(True, which="both")
     ax.legend()
+
+
+def add_legend(fig, mrep_max, fontSize):
+    fig.canvas.draw()
+
+    y_label  = .95   # altura de los rangos (debajo de los parches)
+    y_patch  = y_label+0.08   # altura de los parches
+    patch_h  = 0.030
+    patch_w  = 0.035
+    fig_w, fig_h = fig.get_size_inches()
+    aspect = fig_h / fig_w
+
+    patch_w = 0.025
+    patch_h = patch_w / aspect
+    items = [
+        (0.08, green , 'Masked',       '<= ε'),
+        (0.22, yellow, 'Minor SDC',    '<= 10%'),
+        (0.42, orange, 'Moderate SDC', '10% - 100%'),
+    ]
+
+    for x, color, name, rng in items:
+        # Cuadro de color
+        ax_p = fig.add_axes([x - patch_w/2, y_patch - patch_h/2, patch_w, patch_h])
+        ax_p.set_facecolor(color)
+        ax_p.set_xticks([])
+        ax_p.set_yticks([])
+        for sp in ax_p.spines.values():
+            sp.set_linewidth(0.5)
+
+        # Nombre a la derecha del cuadro
+        fig.text(x + patch_w/2 + 0.01, y_patch, name,
+                 va='center', fontsize=fontSize)
+
+        # Rango centrado bajo el cuadro
+        fig.text(x, y_label, rng,
+                 ha='center', va='center', fontsize=fontSize, color='black')
+
+    cb_x = 0.76
+    cb_w = 0.22
+
+    ax_cb = fig.add_axes([cb_x - cb_w/2, y_patch - patch_h/2, cb_w, patch_h])
+    cmap = plt.matplotlib.colors.LinearSegmentedColormap.from_list(
+        'severe', [red, '#1a0000']
+    )
+    cb = plt.colorbar(
+        plt.cm.ScalarMappable(cmap=cmap), cax=ax_cb, orientation='horizontal'
+    )
+    cb.set_ticks([])
+    for sp in ax_cb.spines.values():
+        sp.set_linewidth(0.5)
+
+    # Nombre a la derecha del rectángulo
+    fig.text(cb_x + cb_w/2 + 0.01, y_patch, 'Severe SDC',
+             va='center', fontsize=fontSize)
+
+    # "100%" centrado bajo el inicio del rectángulo
+    fig.text(cb_x - cb_w/2, y_label, '100%',
+             ha='center', va='center', fontsize=fontSize - 4, color='black')
+
+    # Valor máximo centrado bajo el final del rectángulo
+    mrep_max_str = f'{mrep_max:.2e}%' if mrep_max >= 1e6 else f'{mrep_max:.0f}%'
+    fig.text(cb_x + cb_w/2, y_label, mrep_max_str,
+             ha='center', va='center', fontsize=fontSize, color='black')
+
+def plot_coeff_bit_mrep(df, ax, mrep_max, scatterSize, fontSize, fontSizeLegend=0, title=None):
+    df = df[df['coeff'].isin(range(8))].copy()
+
+    coeff_order = list(range(8))
+    coeff_idx = {c: i for i, c in enumerate(coeff_order)}
+
+    colors = [mrep_color(v, mrep_max) for v in df['mrep']]
+    x = [coeff_idx[c] for c in df['coeff']]
+    y = df['bit'].tolist()
+
+    ax.scatter(x, y, c=colors, s=scatterSize,  linewidths=0.8, zorder=3)
+    ax.set_xticks([0, 7])
+    ax.set_xticklabels([coeff_order[0], coeff_order[7]],
+                   rotation=0, ha='right', fontsize=fontSize)
+
+    ax.grid(True, linestyle='--', alpha=0.3, zorder=0)
+
+    if title:
+        ax.set_title(title, fontsize=fontSize)
+
