@@ -29,17 +29,18 @@ stagesCircles = True
 fontAxisName = 24
 circleSize = 0.01
 circleFont = 25
-circleYpos = -0.15
+circleYpos = -0.07
 
 coeffLabel = 0.0
-scatterSize =75
+scatterSize =135
 dir = "img/"
 SAVENAME = "encrypt"
 
 
 #stages = ["encrypt_c0", "encrypt_c1"]
-steps=[0,1,2,3,4,5,6]
-steps=[7,8,9,10,11,12]
+steps=[0,1,2,3,4]
+steps=[5,6,7,8,9]
+
 
 
 def main():
@@ -49,12 +50,12 @@ def main():
         savename = args.title
 
     n = len(steps)
-    fig, axes = plt.subplots(1, n, figsize=(n * 5, figSizeY), sharey=True)
+    fig, axes = plt.subplots(1, n, figsize=(n * 2, figSizeY), sharey=True)
+    fig.subplots_adjust(wspace=0.01)
     mrep_max = 0
     for i, (step, ax) in enumerate(zip(steps, axes)):  # FIX: era (df, ax) pero zip era sobre stages
         filters = build_filters(args)
-        filters["op_step"] = ("int", step)
-        print(filters["op_step"])
+        filters["op_index"] = ("int", step)
 
         selected = load_and_filter_campaigns(config.CAMPAIGNS_NN_CSV, filters)
         data = load_campaign_data(selected, config.DATA_NN_DIR)
@@ -87,7 +88,7 @@ def main():
     for ax in axes:
         ax.tick_params(axis='both', labelsize=fontLabelSize)
     # FIX: tight_layout ANTES de leer posiciones
-    plt.tight_layout(rect=[0, 0.06, 1, 0.88])
+ #   plt.tight_layout(rect=[0, 0.06, 1, 0.88])
     fig.canvas.draw()
 
     # línea top continua

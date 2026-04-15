@@ -24,6 +24,18 @@ ANALYSIS_TARGETS_RNS := \
 
 all_analysis: $(ANALYSIS_TARGETS)
 
+ASPLOS:
+	python outsideOpPlotter.py --library heaanNN --stage cheby_tanh3  --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title cheby1
+	python outsideOpPlotter.py --library heaanNN --stage cheby_tanh3  --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title cheby2
+	python outsideOpPlotter.py --library heaanNN --stage hidden_layer --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title hidden1
+	python outsideOpPlotter.py --library heaanNN --stage hidden_layer --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title hidden2
+
+ASPLOS_MUL:
+	python outsideOpPlotter.py --library heaan --stage mul_inside   --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --doMul 1 --op_step 1 --title mul1_1
+	python outsideOpPlotter.py --library heaan --stage mul_inside   --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --doMul 1 --op_step 1 --title mul2_1
+	python outsideOpPlotter.py --library heaan --stage mul_inside   --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --doMul 2 --op_step 1 --title mul1_2
+	python outsideOpPlotter.py --library heaan --stage mul_inside   --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --doMul 2 --op_step 1 --title mul2_2
+
 seeds_analysis:
 	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0
 

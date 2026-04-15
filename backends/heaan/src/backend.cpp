@@ -93,8 +93,8 @@ IterationResult run_iteration(
     std::optional<IterationArgs> iterArgs
     )
 {
-    uint32_t step = args.op_step;
-    uint32_t count = args.op_index;
+    uint32_t whichOpStep = args.op_step;
+    uint32_t index_atack = args.op_index;
 
     auto& ctx = static_cast<HEAANContext&>(*bctx);
 
@@ -172,11 +172,11 @@ IterationResult run_iteration(
     }
 
     for (uint32_t i = 0; i < args.doMul; ++i) {
-        if(iterArgs && args.stage == "mul_inside" && i == count-1){
-            c = ctx.scheme.multBitFlip(c, c_clean, step, iterArgs->coeff, iterArgs->bit);
+        if(iterArgs && args.stage == "mul_inside" && i == whichOpStep-1){
+            c = ctx.scheme.multBitFlip(c, c_clean, index_atack, iterArgs->coeff, iterArgs->bit);
         }else {
-            if(iterArgs && args.stage == "mul_outside" && i == count-1)
-                c = ctx.scheme.multBitFlip(c, c_clean, step, iterArgs->coeff, iterArgs->bit);
+            if(iterArgs && args.stage == "mul_outside" && i == whichOpStep-1)
+                c = ctx.scheme.multBitFlip(c, c_clean, index_atack, iterArgs->coeff, iterArgs->bit);
             else
                 c = ctx.scheme.mult(c, c_clean);
         }
