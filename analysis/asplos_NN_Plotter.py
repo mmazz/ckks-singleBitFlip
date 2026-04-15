@@ -55,12 +55,9 @@ def main():
     filters = build_filters(args)
     title_select = filters["title"][1]
     steps = []
-    camp_csv = config.CAMPAIGNS_CSV
-    data_csv = config.DATA_DIR
 
-    if filters["library"][1] == "heaanNN":
-        camp_csv = config.CAMPAIGNS_NN_CSV
-        data_csv = config.DATA_NN_DIR
+    camp_csv = config.CAMPAIGNS_NN_CSV
+    data_csv = config.DATA_NN_DIR
 
     if "cheby1" in title_select:
         steps=idx_inside1
