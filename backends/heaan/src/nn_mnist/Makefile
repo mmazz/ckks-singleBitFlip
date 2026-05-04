@@ -42,22 +42,22 @@ UTILS_OBJ := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(UTILS_SRC))
 # ------------------------------------------------
 
 BIN_RANDOM     := ./build/bin/nn_mnist_randomBitFlip
-SEEDS := 1 2
-RUN_IDS := 0 1 2 3 4 5
+SEEDS := 1 2 3 4 5
+RUN_IDS_CLIENT := 0 1 2 3 4 5
 RUN_IDS_SERVER := 0 1 2 3 4 5 6 7 8 9
 RUNS := dirs $(addprefix run,$(RUN_IDS))
-RUNS_SEEDS := dirs $(addprefix run_stages,$(RUN_IDS))
+RUNS_CLIENT := dirs $(addprefix run_stages,$(RUN_IDS_CLIENT))
 RUNS_SERVER := dirs $(addprefix run_server,$(RUN_IDS_SERVER))
 RUNS_SERVER_LAYERS:= dirs $(addprefix run_server_layer,$(RUN_IDS))
 
 COMMON_PARAMS := --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 --logSlots 10 --withNTT 0
 
-.PHONY: all allRuns $(RUNS) allRuns_seeds $(RUNS_SEEDS) allRuns_server $(RUNS_SERVER)  allRuns_server_layers $(RUNS_SERVER_LAYERS)
+.PHONY: all allRuns $(RUNS) allRuns_client $(RUNS_CLIENT) allRuns_server $(RUNS_SERVER)  allRuns_server_layers $(RUNS_SERVER_LAYERS)
 
 all: dirs $(TARGETS)
 
 allRuns: $(RUNS)
-allRuns_seeds: $(RUNS_SEEDS)
+allRuns_client: $(RUNS_CLIENT)
 allRuns_server: $(RUNS_SERVER)
 allRuns_server_layers: $(RUNS_SERVER_LAYERS)
 
@@ -88,38 +88,45 @@ run8:
 run9:
 	$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed 9
 
-
+##
+## CLIENT RUNS
+##
 
 run_stages0:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input ; \
+			$(BIN_RANDOM) $(COMMON_PARAMS) --stage encode  --seed $$s --seed_input $$s_input; \
 		done; \
 	done
+
 run_stages1:
+	for s in $(SEEDS); do \
+		for s_input in $(SEEDS); do \
+			$(BIN_RANDOM) $(COMMON_PARAMS) --stage encrypt_c0 --seed $$s --seed_input $$s_input ; \
+		done; \
+	done
+
+run_stages2:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
 		$(BIN_RANDOM)  $(COMMON_PARAMS) --stage encrypt_c1 --seed $$s --seed_input $$s_input ; \
 		done; \
 	done
-run_stages2:
-	for s in $(SEEDS); do \
-		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage encode  --seed $$s --seed_input $$s_input; \
-		done; \
-	done
+
 run_stages3:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
 		$(BIN_RANDOM) $(COMMON_PARAMS) --stage decrypt_c0 --seed $$s --seed_input $$s_input; \
 		done; \
 	done
+
 run_stages4:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
 		$(BIN_RANDOM) $(COMMON_PARAMS) --stage decrypt_c1 --seed $$s --seed_input $$s_input; \
 		done; \
 	done
+
 run_stages5:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
