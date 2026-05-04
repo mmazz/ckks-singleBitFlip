@@ -77,7 +77,8 @@ def load_and_filter_campaigns(csv_path, filters):
             raise KeyError(f"The column '{col}' does not exist in the CSV")
 
         if dtype == "str":
-            value = str(value).strip().lower()
+            if str(value)!= "chebyTanh3":
+                value = str(value).strip().lower()
         elif dtype == "int":
             value = int(value)
         else:

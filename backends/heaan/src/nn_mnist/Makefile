@@ -49,22 +49,31 @@ RUNS := dirs $(addprefix run,$(RUN_IDS))
 RUNS_CLIENT := dirs $(addprefix run_stages,$(RUN_IDS_CLIENT))
 RUNS_SERVER := dirs $(addprefix run_server,$(RUN_IDS_SERVER))
 RUNS_SERVER_LAYERS:= dirs $(addprefix run_server_layer,$(RUN_IDS))
+RUN_IDS_new := 1 2
+RUNS_SERVER_LAYERS_new := dirs $(addprefix run_server_layer_new,$(RUN_IDS_new))
 
 COMMON_PARAMS := --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 --logSlots 10 --withNTT 0
 
 .PHONY: all allRuns $(RUNS) allRuns_client $(RUNS_CLIENT) allRuns_server $(RUNS_SERVER)  allRuns_server_layers $(RUNS_SERVER_LAYERS)
 
+
 all: dirs $(TARGETS)
 
+allRuns_server_layers_new: $(RUNS_SERVER_LAYERS_new)
+
+run_server_layer_new1:
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 2 ; \
+	done
+
+run_server_layer_new2:
+	for s in $(SEEDS); do \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 3 ; \
+	done
 allRuns: $(RUNS)
 allRuns_client: $(RUNS_CLIENT)
 allRuns_server: $(RUNS_SERVER)
 allRuns_server_layers: $(RUNS_SERVER_LAYERS)
-
-
-
-test:
-	./build/bin/nn_test $(COMMON_PARAMS) --stage hidden_layer --op_index 0 ;
 
 # Is like this to paralelize with -j9
 run0:
