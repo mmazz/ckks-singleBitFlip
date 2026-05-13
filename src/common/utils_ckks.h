@@ -14,6 +14,7 @@
 #include <utility>
 #include <stdexcept>
 #include <complex>
+#include <cctype>
 
 using cdouble = std::complex<double>;
 struct RelativeErrorThresholds {

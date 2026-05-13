@@ -56,7 +56,7 @@ def main():
 
     data = load_campaign_data(selected, config.DATA_DIR)
 
-    limb0= data[data["limb"]==0]
+    limb0 = data[data["limb"]==0]
     plot_l2_per_coeff_bit(limb0)
 
 

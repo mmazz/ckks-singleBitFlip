@@ -1,5 +1,6 @@
 #include "backend_openfhe.h"
 #include "attack_mode.h"
+#include "constants-defs.h"
 #include "utils_ckks.h"
 
 std::vector<double> get_reference_output(const BackendContext* bctx)
@@ -50,6 +51,23 @@ SecretKeyAttackMode to_openfhe_attack_mode(AttackModeSKA mode)
     throw std::logic_error("Invalid AttackModeSKA");
 }
 
+std::string toLower(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+    return s;
+}
+
+ScalingTechnique toScalingTechnique(const std::string& s) {
+    std::string key = toLower(s);
+
+    if (key == "fixedauto") return ScalingTechnique::FIXEDAUTO;
+    if (key == "fixedmanual") return ScalingTechnique::FIXEDMANUAL;
+    if (key == "flexibleauto") return ScalingTechnique::FLEXIBLEAUTO;
+    if (key == "flexibleautoext") return ScalingTechnique::FLEXIBLEAUTOEXT;
+
+    throw std::invalid_argument("Unknown scaling technique: " + s);
+}
+
 BackendContext* setup_campaign(const CampaignArgs& args)
 {
 
@@ -76,7 +94,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     params.SetFirstModSize(args.logQ);
     params.SetBatchSize(1 << args.logSlots);
     params.SetRingDim(1 << args.logN);
-    params.SetScalingTechnique(FIXEDMANUAL);
+    params.SetScalingTechnique(toScalingTechnique(args.scaleTech));
 
     params.SetSecurityLevel(HEStd_NotSet);
     auto* ctx = new OpenFHEContext();
@@ -166,12 +184,12 @@ IterationResult run_iteration(BackendContext* bctx,
     }
 
     if (iterArgs) {
-        if ((args.stage == "decrypt_c0") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
+        if (args.stage == "decrypt_c0") {
             bitFlip(c, args.withNTT, 0,
                     iterArgs->limb,
                     iterArgs->coeff,
                     iterArgs->bit);
-        } else if ((args.stage == "decrypt_c1") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
+        } else if (args.stage == "decrypt_c1") {
             bitFlip(c, args.withNTT, 1,
                     iterArgs->limb,
                     iterArgs->coeff,
@@ -252,12 +270,12 @@ IterationChequer gen_cipher(BackendContext* bctx,
     }
 
     if (iterArgs) {
-        if ((args.stage == "decrypt_c0") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
+        if (args.stage == "decrypt_c0" ) {
             bitFlip(c, args.withNTT, 0,
                     iterArgs->limb,
                     iterArgs->coeff,
                     iterArgs->bit);
-        } else if ((args.stage == "decrypt_c1") &&  (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)) {
+        } else if (args.stage == "decrypt_c1") {
             bitFlip(c, args.withNTT, 1,
                     iterArgs->limb,
                     iterArgs->coeff,

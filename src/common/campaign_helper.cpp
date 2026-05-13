@@ -82,7 +82,7 @@ void print_usage(const char* program_name) {
               << "  --attackModeSKA <value> Type of error injection for SKA (only heaan, default: complete)\n"
               << "  --thresholdSKA <value>  Bits for threshold for SKA (only heaan, default: 5.0)\n"
               << "  --dnum <value>          Digit number (default: 3)\n"
-              << "  --scaleTech <value>     Scaling technique (default: FIXEDMANUAL)\n"
+              << "  --scaleTech <value>     Scaling technique (default: FIXEDMANUAL, others: FIXEDAUTO, FLEXIBLEAUTO or FLEXIBLEAUTOEXT)\n"
               << "  --results_dir <path>    Results directory (default: results)\n"
               << "  --verbose, -v           Verbose output\n"
               << "  --help, -h              Show this help\n\n"
