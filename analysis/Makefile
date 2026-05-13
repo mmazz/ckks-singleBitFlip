@@ -20,9 +20,13 @@ ANALYSIS_TARGETS_RNS := \
 	add_rot_analysis_RNS \
 	rot_analysis_RNS
 
+TEST_PARAMS = --logN 6 --logQ 60 --bitPerCoeff 64 --logDelta 40 --stage decrypt_c0 --logSlots 4 --scaleTech FLEXIBLEAUTO
 .PHONY: $(ANALYSIS_TARGETS) $(ANALYSIS_TARGETS_RNS) all_analysis
 
 all_analysis: $(ANALYSIS_TARGETS)
+
+test_schale:
+	python3 simple_test.py --library heaan $(TEST_PARAMS)
 
 ASPLOS:
 	python asplos_NN_Plotter.py --library heaanNN --stage cheby_tanh3  --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title cheby1

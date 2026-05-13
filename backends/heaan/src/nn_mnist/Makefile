@@ -42,7 +42,7 @@ UTILS_OBJ := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(UTILS_SRC))
 # ------------------------------------------------
 
 BIN_RANDOM     := ./build/bin/nn_mnist_randomBitFlip
-SEEDS := 1 2 3 4 5
+SEEDS := 1 2 3
 RUN_IDS_CLIENT := 0 1 2 3 4 5
 RUN_IDS_SERVER := 0 1 2 3 4 5 6 7 8 9
 RUNS := dirs $(addprefix run,$(RUN_IDS))
