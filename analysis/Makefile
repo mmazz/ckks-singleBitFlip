@@ -20,16 +20,16 @@ ANALYSIS_TARGETS_RNS := \
 	add_rot_analysis_RNS \
 	rot_analysis_RNS
 
-TEST_PARAMS = --logN 6 --logQ 60 --bitPerCoeff 64 --logDelta 40 --stage encode_c0 --doAdd 1 --logSlots 4
+TEST_PARAMS = --logN 6 --logQ 60 --bitPerCoeff 64 --logDelta 40 --stage encrypt_c0 --doAdd 1 --logSlots 4
 .PHONY: $(ANALYSIS_TARGETS) $(ANALYSIS_TARGETS_RNS) all_analysis
 
 all_analysis: $(ANALYSIS_TARGETS)
 
 test_scaleTech:
 	python3 simple_test.py --library openfhe $(TEST_PARAMS) && \
+	python3 simple_test.py --library openfhe $(TEST_PARAMS) --scaleTech FLEXIBLEAUTO && \
 	python3 simple_test.py --library openfhe $(TEST_PARAMS) --mult_depth 2 && \
-	python3 simple_test.py --library openfhe $(TEST_PARAMS) --scaleTech FLEXIBLEAUTO --mult_depth 2&& \
-	python3 simple_test.py --library openfhe $(TEST_PARAMS) --scaleTech FLEXIBLEAUTO
+	python3 simple_test.py --library openfhe $(TEST_PARAMS) --scaleTech FLEXIBLEAUTO --mult_depth 2
 
 ASPLOS:
 	python asplos_NN_Plotter.py --library heaanNN --stage cheby_tanh3  --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title cheby1

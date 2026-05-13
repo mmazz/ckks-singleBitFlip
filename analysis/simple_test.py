@@ -13,33 +13,42 @@ from utils.io_utils import load_campaign_data, load_and_filter_campaigns
 
 show = config.show
 width = int(config.width)
-
 def plot_l2_per_coeff_bit(
     df,
     coeff_col="coeff",
     bit_col="bit",
     value_col="l2_norm",
     title="L2 norm per (coeff, bit)",
+    tick_step=5
 ):
-    """
-    Plot a value (default: l2_norm) ordered by (coeff, bit).
-
-    X axis: coeff * bits_per_coeff + bit
-    """
-
     bits_per_coeff = df[bit_col].max() + 1
 
-    df_plot = df.copy()
+
+    df_plot = df[df[coeff_col] < 8].copy()
+
     df_plot["x"] = df_plot[coeff_col] * bits_per_coeff + df_plot[bit_col]
     df_plot = df_plot.sort_values("x")
 
     plt.figure()
     plt.plot(df_plot["x"], df_plot[value_col])
-    plt.xlabel("Coefficient-bit index")
+
+    # 👉 Submuestreo de ticks
+    x_vals = df_plot["x"].values
+    ticks = x_vals[::tick_step]
+    labels = (ticks % bits_per_coeff).astype(int)
+
+    plt.xticks(ticks=ticks, labels=labels)
+
+    plt.xlabel("Bit position (cyclic)")
     plt.ylabel(value_col)
+    plt.ylim(0)
     plt.yscale("symlog")
     plt.title(title)
+
+    plt.tight_layout()
     plt.show()
+
+
 
 def main():
     args = parse_args()

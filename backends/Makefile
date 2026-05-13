@@ -9,7 +9,7 @@ MULTIPLE_SEEDS := 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
 ANALYSES = seeds_analysis encode_analysis_heaan encode_analysis_openfhe encrypt_analysis logN_analysis logQ_analysis logDelta_analysis gap_analysis gap_analysis_c1 add_rot_analysis plain_mul_analysis mul_analysis_c1 mul_analysis_c0  add_analysis rot_analysis
 ANALYSES_RNS = mul_analysis_c0_RNS mul_analysis_c1_RNS limb_analysis
 
-TEST_PARAMS = --logN 6 --logQ 60 --bitPerCoeff 64 --logDelta 40 --stage encode_c0  --doAdd 1 --logSlots 4 --verbose
+TEST_PARAMS = --logN 6 --logQ 60 --bitPerCoeff 64 --logDelta 40 --stage encrypt_c0  --doAdd 1 --logSlots 4 --verbose
 EXTRAS = seeds_analysis_mul
 
 .PHONY: all_analysis $(ANALYSES) $(ANALYSES_RNS)

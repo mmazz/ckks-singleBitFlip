@@ -188,6 +188,22 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
             case 'S':
                 args.stage = optarg;
+                if (args.stage != "encode" &&
+                    args.stage != "encrypt_c0" &&
+                    args.stage != "encrypt_c1" &&
+                    args.stage != "decrypt_c0" &&
+                    args.stage != "decrypt_c1" &&
+                    args.stage != "decode" &&
+                    args.stage != "cheby_tanh3" &&
+                    args.stage != "hidden_layer" &&
+                    args.stage != "mul_inside" &&
+                    args.stage != "mul_outside")
+                {
+                    std::cerr << "Error: invalid stage '" << args.stage
+                              << "' (expected: encode, encrypt_c0, encrypt_c1, decrypt_c0, decrypt_c1"
+                              " decode, cheby_tanh3, hidden_layer,  mul_inside or mul_outside)\n";
+                    std::exit(EXIT_FAILURE);
+                }
                 break;
 
             case 'X':
