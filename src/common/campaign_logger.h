@@ -41,6 +41,7 @@ public:
     uint64_t total() const { return total_; }
     uint64_t sdc() const { return sdc_; }
     ~CampaignLogger();
+    bool contains(const IterationArgs& args) const;
 
 private:
     std::ofstream file_;

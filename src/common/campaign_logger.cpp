@@ -89,3 +89,40 @@ void CampaignLogger::compress_and_cleanup() {
     // gzip ya borra el .csv si usás -f
     std::cout << "[INFO] Compressed campaign data → " << gz_path << std::endl;
 }
+
+bool CampaignLogger::contains(const IterationArgs& args) const
+{
+    std::ifstream file(csv_path_);
+
+    if (!file.is_open())
+        return false;
+
+    std::string line;
+
+    // header
+    std::getline(file, line);
+
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string field;
+
+        std::getline(ss, field, ',');
+        uint32_t limb = std::stoul(field);
+
+        std::getline(ss, field, ',');
+        uint32_t coeff = std::stoul(field);
+
+        std::getline(ss, field, ',');
+        uint32_t bit = std::stoul(field);
+
+        if (limb == args.limb &&
+            coeff == args.coeff &&
+            bit == args.bit)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}

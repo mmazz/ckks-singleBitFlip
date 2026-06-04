@@ -4,13 +4,15 @@
 #include "backend_interface.h"
 #include "utils_ckks.h"
 
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Fail;
+
 int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "heaan";
     args.isExhaustive = true;
     args.mult_depth = 0;
-
+    args.existing_policy = ExistingCampaignPolicy::Fail;
     if (args.verbose) {
         args.print();
     }
@@ -34,13 +36,10 @@ int main(int argc, char* argv[]) {
     if(AcceptCKKSResult(baseline_metrics))
     {
         try{
-            CampaignRegistry registry(args);
-            uint32_t campaign_id = registry.allocate_campaign_id();
+            CampaignRegistry registry(args, existing_policy );
             std::cout << "\n=== Registring Campaign "<< std::endl;
-            registry.register_start({
-                    campaign_id,
-                    args,
-                    ""});
+            uint32_t campaign_id = registry.campaign_id;
+            registry.register_start({campaign_id, args, ""});
 
             std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
@@ -68,6 +67,14 @@ int main(int argc, char* argv[]) {
                 for(size_t bit=0; bit<bits_per_coeff; bit++)
                 {
                     IterationArgs iterArgs(0, coeff, bit);
+                    // Aca me gustaria poder fijarme si es que quiero si es una iteracion nueva
+
+
+                    if (logger.contains(iterArgs))
+                    {
+                        std::cout << "Skipping already computed iteration\n";
+                        return 1;
+                    }
                     IterationResult res = run_iteration(ctx, args, iterArgs);
 
                     CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);

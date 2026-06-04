@@ -5,8 +5,8 @@
 #include <string>
 #include <cstdint>
 #include <iostream>
-
 #include <optional>
+#include <fstream>
 #include <vector>
 
 inline std::string timestamp_now() {
@@ -70,6 +70,7 @@ struct CampaignArgs {
     ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Fail;
     void print(std::ostream& os = std::cout) const;
 };
+
 
 void print_usage(const char* program_name);
 CampaignArgs parse_arguments(int argc, char* argv[]);

@@ -43,7 +43,7 @@ std::string CampaignRegistry::makeCampaignKey(const CampaignArgs& args)
     return oss.str();
 }
 
-CampaignRegistry::CampaignRegistry(const CampaignArgs& args) {
+CampaignRegistry::CampaignRegistry(const CampaignArgs& args, ExistingCampaignPolicy policy) {
     const std::string& results_dir = args.results_dir;
     fs::create_directories(results_dir);
     start_csv_ = results_dir + "/campaigns_start.csv";
@@ -55,13 +55,17 @@ CampaignRegistry::CampaignRegistry(const CampaignArgs& args) {
     auto campaign_id = findCampaignId(start_csv_, key);
 
     if (campaign_id != INVALID_CAMPAIGN_ID) {
-        if (args.existing_policy ==
-            ExistingCampaignPolicy::Fail)
+        if (policy == ExistingCampaignPolicy::Fail)
         {
             throw std::runtime_error(
                 "Campaign with those parameters already exists. campaign_id=" +
                 std::to_string(campaign_id));
+        }else{
+            this->campaign_id = campaign_id;
         }
+    }
+    else{
+        this->campaign_id = this->allocate_campaign_id();
     }
     if (!fs::exists(start_csv_)) {
         std::ofstream f(start_csv_);

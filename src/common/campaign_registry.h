@@ -24,19 +24,19 @@ struct CampaignEndRecord {
 
 class CampaignRegistry {
 public:
-    explicit CampaignRegistry(const CampaignArgs& args);
+    explicit CampaignRegistry(const CampaignArgs& args,  ExistingCampaignPolicy policy = ExistingCampaignPolicy::Fail);
     uint32_t findCampaignId(const std::string& csvFile,
                         const std::string& key);
     std::string makeCampaignKey(const CampaignArgs& args);
     uint32_t allocate_campaign_id();
     void register_start(const CampaignStartRecord& rec);
     void register_end(const CampaignEndRecord& rec);
+    uint32_t campaign_id;
 
 private:
     std::string start_csv_;
     std::string end_csv_;
     std::string lockfile_;
-
     void lock_file(int& fd);
     void unlock_file(int fd);
 };
