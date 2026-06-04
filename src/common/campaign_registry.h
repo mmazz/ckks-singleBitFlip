@@ -20,6 +20,8 @@ struct CampaignEndRecord {
     std::string timestamp_end;
 };
 
+
+
 class CampaignRegistry {
 public:
     explicit CampaignRegistry(const CampaignArgs& args);

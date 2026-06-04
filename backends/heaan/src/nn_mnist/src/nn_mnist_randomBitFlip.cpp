@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     if(res.detected)
     {
         args.results_dir = "../../../../results_NN";
-        CampaignRegistry registry(args.results_dir);
+        CampaignRegistry registry(args);
         uint32_t campaign_id = registry.allocate_campaign_id();
         std::cout << "\n=== Registring Campaign "<< std::endl;
         registry.register_start({

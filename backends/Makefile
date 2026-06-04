@@ -14,6 +14,11 @@ EXTRAS = seeds_analysis_mul
 
 .PHONY: all_analysis $(ANALYSES) $(ANALYSES_RNS)
 
+test:
+	@cd $(LIBRARY) && \
+		$(BIN_EXHAUSTIVE) --logN 4 --logQ 40 --bitPerCoeff 44 --logDelta 20  --stage encode  --logSlots 2 --verbose && \
+		$(BIN_EXHAUSTIVE) --logN 4 --logQ 40 --bitPerCoeff 44 --logDelta 20  --stage encode  --logSlots 3 --verbose
+
 all_analysis: $(ANALYSES)
 
 RNS_analysis: $(ANALYSES_RNS)

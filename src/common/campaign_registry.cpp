@@ -10,7 +10,7 @@ namespace fs = std::filesystem;
 constexpr uint32_t INVALID_CAMPAIGN_ID =
     std::numeric_limits<uint32_t>::max();
 
-std::string makeCampaignKey(const CampaignArgs& args)
+std::string CampaignRegistry::makeCampaignKey(const CampaignArgs& args)
 {
     std::ostringstream oss;
 
@@ -55,9 +55,13 @@ CampaignRegistry::CampaignRegistry(const CampaignArgs& args) {
     auto campaign_id = findCampaignId(start_csv_, key);
 
     if (campaign_id != INVALID_CAMPAIGN_ID) {
-        throw std::runtime_error(
-            "Campaign with those parameters already exists. campaign_id=" +
-            std::to_string(campaign_id));
+        if (args.existing_policy ==
+            ExistingCampaignPolicy::Fail)
+        {
+            throw std::runtime_error(
+                "Campaign with those parameters already exists. campaign_id=" +
+                std::to_string(campaign_id));
+        }
     }
     if (!fs::exists(start_csv_)) {
         std::ofstream f(start_csv_);
@@ -75,7 +79,7 @@ CampaignRegistry::CampaignRegistry(const CampaignArgs& args) {
     }
 }
 
-uint32_t findCampaignId(const std::string& csvFile,
+uint32_t CampaignRegistry::findCampaignId(const std::string& csvFile,
                     const std::string& key)
 {
     std::ifstream file(csvFile);

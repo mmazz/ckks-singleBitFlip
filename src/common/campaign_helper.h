@@ -25,6 +25,12 @@ struct IterationArgs{
         : limb(l), coeff(c), bit(b) {}
 };
 
+enum class ExistingCampaignPolicy {
+    Fail, // Exist the iteration if already exists.
+    Reuse, // Allow to make the use of that id
+    CreateNew // Create a new one even if already an existing one
+};
+
 struct CampaignArgs {
     std::string library = "none";
     std::string stage = "none";
@@ -61,7 +67,7 @@ struct CampaignArgs {
     std::optional<AttackModeSKA> openfhe_attack_mode = AttackModeSKA::CompleteInjection;
     std::optional<double> openfhe_threshold_bits = 5.0;
     bool logSlots_provided = false;
-
+    ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Fail;
     void print(std::ostream& os = std::cout) const;
 };
 
