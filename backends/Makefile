@@ -18,6 +18,23 @@ all_analysis: $(ANALYSES)
 
 RNS_analysis: $(ANALYSES_RNS)
 
+FullRNS:
+	@cd openfhe && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage encode     --logSlots 3 --seed 0 --seed_input 0 --mult_depth 4 --doMul 2 --withNTT 1  && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage encrypt_c0 --logSlots 3 --seed 0 --seed_input 0 --mult_depth 4 --doMul 2 --withNTT 1  && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage encrypt_c1 --logSlots 3 --seed 0 --seed_input 0 --mult_depth 4 --doMul 2 --withNTT 1  && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage decrypt_c0 --logSlots 3 --seed 0 --seed_input 0 --mult_depth 4 --doMul 2 --withNTT 1  && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage decrypt_c1 --logSlots 3 --seed 0 --seed_input 0 --mult_depth 4 --doMul 2 --withNTT 1  && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage decode     --logSlots 3 --seed 0 --seed_input 0 --mult_depth 4 --doMul 2 --withNTT 1   \
+
+VanillaOpenfhe:
+	@cd openfhe && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage encode     --logSlots 3 --seed 0 --seed_input 0 --mult_depth 0   && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage encrypt_c0 --logSlots 3 --seed 0 --seed_input 0 --mult_depth 0   && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage encrypt_c1 --logSlots 3 --seed 0 --seed_input 0 --mult_depth 0   && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage decrypt_c0 --logSlots 3 --seed 0 --seed_input 0 --mult_depth 0   && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage decrypt_c1 --logSlots 3 --seed 0 --seed_input 0 --mult_depth 0   && \
+	$(BIN_EXHAUSTIVE) --logN 6 --logQ 60   --logDelta 32 --stage decode     --logSlots 3 --seed 0 --seed_input 0 --mult_depth 0    \
 
 test_scaleTech:
 	@cd openfhe && \

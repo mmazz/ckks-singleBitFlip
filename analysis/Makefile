@@ -119,20 +119,24 @@ openfheNN_deco:
 	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage decode     --logSlots 10  --withNTT 0 --mult_depth 5
 	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage decode     --logSlots 10  --withNTT 1 --mult_depth 5
 
+HEAAN_NN_PARAMS = --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --logSlots 10  --withNTT 0 --mult_depth 0
+
+heaanNN_TACO: heaanNN_enco heaanNN_encrC0 heaanNN_encrC1 heaanNN_decC0 heaanNN_decC1 heaanNN_deco
+
 heaanNN_enco:
-	python3 NN_gap.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encode     --logSlots 10  --withNTT 0 --mult_depth 0
+	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage encode     --title encode-NN-heaan
 
 heaanNN_encrC0:
-	python3 NN_gap.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0 --mult_depth 0
+	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage encrypt_c0 --title encryptC0-NN-heaan
 
 heaanNN_encrC1:
-	python3 NN_gap.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c1 --logSlots 10  --withNTT 0 --mult_depth 0
+	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage encrypt_c1 --title encryptC1-NN-heaan
 
 heaanNN_decC0:
-	python3 NN_gap.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decrypt_c0 --logSlots 10  --withNTT 0 --mult_depth 0
+	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage decrypt_c0 --title decryptC0-NN-heaan
 
 heaanNN_decC1:
-	python3 NN_gap.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decrypt_c1 --logSlots 10  --withNTT 0 --mult_depth 0
+	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage decrypt_c1 --title decryptC1-NN-heaan
 
 heaanNN_deco:
-	python3 NN_gap.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage decode     --logSlots 10  --withNTT 0 --mult_depth 0
+	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage decode     --title decode-NN-heaan

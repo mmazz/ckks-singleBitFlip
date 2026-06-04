@@ -164,6 +164,19 @@ def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=True,
     ax.grid(True, which="both")
     ax.legend()
 
+def get_colors(values):
+    colors = []
+    for v in values:
+        if v <= 0.05:
+            colors.append("green")
+        elif v <= 0.4:
+            colors.append("yellow")
+        elif v <= 0.8:
+            colors.append("orange")
+        else:
+            colors.append("red")
+    return colors
+
 
 
 def plot_bit_cat(stats, ax=None, label_prefix="", color=colors["red"], scatter=True, xlabel="Bit index", size=40, plot_std=False, alpha=1.0, dataType="sdc"):
@@ -175,9 +188,11 @@ def plot_bit_cat(stats, ax=None, label_prefix="", color=colors["red"], scatter=T
     mean = stats[f"mean_{dataType}"].to_numpy()
     std = stats[f"std_{dataType}"]
     if scatter:
+        point_colors = get_colors(mean)
         ax.scatter(
             x,
-            mean, color=color,
+            mean,
+            color=point_colors,
             alpha=alpha,
             s=size,
             zorder=4,
@@ -194,9 +209,8 @@ def plot_bit_cat(stats, ax=None, label_prefix="", color=colors["red"], scatter=T
             zorder=2,
             label=f"{label_prefix} Mean SDC"
         )
-
     if plot_std:
-        plt.fill_between(
+        ax.fill_between(
             x,
             mean - std,
             mean + std,
@@ -204,13 +218,14 @@ def plot_bit_cat(stats, ax=None, label_prefix="", color=colors["red"], scatter=T
             label="±1 std",
             zorder=1
         )
+
     ax.set_ylim(-0.1, 1.1)
     ax.set_yticks([0.0, 1.0])
     ax.set_yticklabels(["Mask", "SDC"])
     ax.set_xlabel(xlabel)
     ax.set_ylabel("SDC rate")
     ax.grid(True, which="both")
-    ax.legend()
+   # ax.legend()
 
 
 def add_legend(fig, mrep_max, fontSize):

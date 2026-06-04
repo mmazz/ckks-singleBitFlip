@@ -7,19 +7,65 @@
 #include <iomanip>
 
 namespace fs = std::filesystem;
+constexpr uint32_t INVALID_CAMPAIGN_ID =
+    std::numeric_limits<uint32_t>::max();
 
-CampaignRegistry::CampaignRegistry(const std::string& results_dir) {
+std::string makeCampaignKey(const CampaignArgs& args)
+{
+    std::ostringstream oss;
+
+    oss << args.library << ","
+        << args.stage << ","
+        << args.logN << ","
+        << args.logQ << ","
+        << args.bitPerCoeff << ","
+        << args.logDelta << ","
+        << args.logSlots << ","
+        << (args.withNTT ? 1 : 0) << ","
+        << args.mult_depth << ","
+        << (args.doAdd ? 1 : 0) << ","
+        << args.doPlainMul << ","
+        << args.doMul << ","
+        << args.doScalarMul << ","
+        << args.doRot << ","
+        << args.doBoot << ","
+        << args.op_index << ","
+        << args.op_step << ","
+        << args.seed << ","
+        << args.seed_input << ","
+        << args.isComplex << ","
+        << args.logMin << ","
+        << args.logMax << ","
+        << args.isExhaustive << ","
+        << args.dnum << ","
+        << args.scaleTech;
+
+    return oss.str();
+}
+
+CampaignRegistry::CampaignRegistry(const CampaignArgs& args) {
+    const std::string& results_dir = args.results_dir;
     fs::create_directories(results_dir);
     start_csv_ = results_dir + "/campaigns_start.csv";
     end_csv_   = results_dir + "/campaigns_end.csv";
     lockfile_  = results_dir + "/.registry.lock";
 
+
+    auto key = makeCampaignKey(args);
+    auto campaign_id = findCampaignId(start_csv_, key);
+
+    if (campaign_id != INVALID_CAMPAIGN_ID) {
+        throw std::runtime_error(
+            "Campaign with those parameters already exists. campaign_id=" +
+            std::to_string(campaign_id));
+    }
     if (!fs::exists(start_csv_)) {
         std::ofstream f(start_csv_);
         f << "campaign_id,library,stage,logN,logQ,bitPerCoeff,logDelta,logSlots,"
              "withNTT,mult_depth,doAdd,doPlainMul,doMul,doScalarMul,doRot,doBoot,op_index,"
              "op_step,seed,seed_input,"
              "isComplex,logMin,logMax,isExhaustive,dnum,scaleTech,timestamp_start\n";
+
     }
 
     if (!fs::exists(end_csv_)) {
@@ -27,6 +73,45 @@ CampaignRegistry::CampaignRegistry(const std::string& results_dir) {
         f << "campaign_id,total_bitflips,sdc_count,"
              "duration_seconds,l2_P95, l2_P99, timestamp_end\n";
     }
+}
+
+uint32_t findCampaignId(const std::string& csvFile,
+                    const std::string& key)
+{
+    std::ifstream file(csvFile);
+    if (!file.is_open())
+        return -1;
+
+    std::string line;
+
+    // Saltear header
+    std::getline(file, line);
+
+    while (std::getline(file, line))
+    {
+        // campaign_id
+        auto firstComma = line.find(',');
+        if (firstComma == std::string::npos)
+            continue;
+
+        long campaignId =
+            std::stol(line.substr(0, firstComma));
+
+        // quitar campaign_id al inicio
+        // quitar timestamp_start al final
+        auto lastComma = line.rfind(',');
+        if (lastComma == std::string::npos || lastComma <= firstComma)
+            continue;
+
+        std::string existingKey =
+            line.substr(firstComma + 1,
+                        lastComma - firstComma - 1);
+
+        if (existingKey == key)
+            return campaignId;
+    }
+
+    return INVALID_CAMPAIGN_ID;
 }
 
 void CampaignRegistry::lock_file(int& fd) {
@@ -63,32 +148,9 @@ void CampaignRegistry::register_start(const CampaignStartRecord& r) {
     std::cout << "lock"<< std::endl;
 
     std::ofstream f(start_csv_, std::ios::app);
-    f << r.campaign_id << ","
-      << r.args.library << ","
-      << r.args.stage<< ","
-      << r.args.logN << ","
-      << r.args.logQ << ","
-      << r.args.bitPerCoeff<< ","
-      << r.args.logDelta << ","
-      << r.args.logSlots << ","
-      << (r.args.withNTT ? 1 : 0) << ","
-      << r.args.mult_depth << ","
-      << (r.args.doAdd? 1 : 0) << ","
-      << r.args.doPlainMul << ","
-      << r.args.doMul << ","
-      << r.args.doScalarMul << ","
-      << r.args.doRot << ","
-      << r.args.doBoot << ","
-      << r.args.op_index<< ","
-      << r.args.op_step<< ","
-      << r.args.seed << ","
-      << r.args.seed_input << ","
-      << r.args.isComplex<< ","
-      << r.args.logMin << ","
-      << r.args.logMax << ","
-      << r.args.isExhaustive << ","
-      << r.args.dnum<< ","
-      << r.args.scaleTech<< ","
+
+    auto key = makeCampaignKey(r.args);
+    f << r.campaign_id << "," << key << ","
       << r.timestamp_start << "\n";
 
     unlock_file(fd);
