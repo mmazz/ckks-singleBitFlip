@@ -169,6 +169,19 @@ Parallelism is achieved by running **multiple independent campaigns in parallel*
 CSV flushing and file appends are **not fully synchronized across processes**.
 Race conditions are avoided by design assumptions (append-only files, campaign-level isolation), but no explicit locking is implemented.
 
+
+### CSV config
+
+To Have some sort of control, we implement an enum call ExistingCampaignPolicy.
+
+There are 3 values
+
+- Fail      : If a campaing with certain parameters is already in the output
+  csv, it will be skip.
+- Reuse     : If already exist, will take that campaign id, and appeds the new
+  injections
+- CreateNew : Creates simply a new one, even if already exists.
+
 ---
 
 ## Core Components

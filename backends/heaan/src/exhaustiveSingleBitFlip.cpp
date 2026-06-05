@@ -4,7 +4,7 @@
 #include "backend_interface.h"
 #include "utils_ckks.h"
 
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Fail;
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
 
 int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
