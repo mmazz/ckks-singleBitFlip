@@ -44,7 +44,49 @@ void printVector(const std::vector<cdouble>& v,
 
     std::cout << " ]\n";
 }
+std::vector<uint32_t> extraBitsBetweenDeltaAndQ(const CampaignArgs& args)
+{
+    constexpr uint32_t NUM_POINTS = 11;
 
+    std::vector<uint32_t> res;
+
+    // Valores ya utilizados por la función original
+    std::vector<uint32_t> used = bitsToFlipGenerator(args);
+
+    const uint32_t logDelta = args.logDelta;
+    const uint32_t logQ     = args.logQ;
+    const uint32_t M        = args.bitPerCoeff - 1;
+
+    auto clamp = [&](uint32_t v) {
+        return std::min(v, M);
+    };
+
+    auto is_used = [&](uint32_t v) {
+        return std::find(used.begin(), used.end(), v) != used.end();
+    };
+
+    if (logQ <= logDelta)
+        return res;
+
+    const double step =
+        static_cast<double>(logQ - logDelta) / (NUM_POINTS + 1);
+
+    for (uint32_t i = 1; i <= NUM_POINTS; ++i)
+    {
+        uint32_t v = static_cast<uint32_t>(
+            std::llround(logDelta + i * step));
+
+        v = clamp(v);
+
+        if (!is_used(v) &&
+            std::find(res.begin(), res.end(), v) == res.end())
+        {
+            res.push_back(v);
+        }
+    }
+
+    return res;
+}
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 {
     std::vector<uint32_t> res;
