@@ -45,9 +45,15 @@ print("Evaluation in root of unity")
 print(p(x))
 print(p2(x))
 
-# Por lo que entiendo, al evaluar un polinomio en las raices de la unidad, se toma hasta la potencia N/2. Y estas
-# tiene la particularidad de que N/4 es simetrica en la parte real e imaginaria.
-# Mientras que el resto cumplen que La potencia N-k tiene los valores alternados de real e imaginarios que k
+# Por lo que entiendo, al evaluar un polinomio en las raices de la unidad, se toma hasta la potencia N-1. Y estas
+# que de forma es espejada las potencias N/2 a N-1 cambia sola la parte real de signo:q
+
 
 for i in range(N//2):
     print(f"k={i} and N/2-k={N//2-i}" , rootOfUnityPow(M, k, i))
+
+
+# Si esto es asi cumple, por que quiero evaluar el polinomio en las mismas raices y obtener el resutaldo conjugado
+# Si expando veo que el coeff 0 no esta multiplciado por nada, asi que simplemente conjugo eso.
+# Y luego puedo usar propiedades de reemplazar las potencias N//4 hasta N//2 con su version dada vuelta.
+# si hago la cuenta veo que haciendo ese cambio de variables obtengo lo mismo negando la parte imaginaria
