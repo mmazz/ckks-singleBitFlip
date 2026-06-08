@@ -43,7 +43,7 @@ std::string CampaignRegistry::makeCampaignKey(const CampaignArgs& args)
     return oss.str();
 }
 
-CampaignRegistry::CampaignRegistry(const CampaignArgs& args, ExistingCampaignPolicy policy) {
+CampaignRegistry::CampaignRegistry(const CampaignArgs& args) {
     const std::string& results_dir = args.results_dir;
     fs::create_directories(results_dir);
     start_csv_ = results_dir + "/campaigns_start.csv";
@@ -53,7 +53,7 @@ CampaignRegistry::CampaignRegistry(const CampaignArgs& args, ExistingCampaignPol
 
     auto key = makeCampaignKey(args);
     auto campaign_id = findCampaignId(start_csv_, key);
-
+    auto policy = args.existing_policy;
     if (campaign_id != INVALID_CAMPAIGN_ID) {
         if (policy == ExistingCampaignPolicy::Fail)
         {

@@ -24,7 +24,7 @@ struct CampaignEndRecord {
 
 class CampaignRegistry {
 public:
-    explicit CampaignRegistry(const CampaignArgs& args,  ExistingCampaignPolicy policy = ExistingCampaignPolicy::Fail);
+    explicit CampaignRegistry(const CampaignArgs& args);
     uint32_t findCampaignId(const std::string& csvFile,
                         const std::string& key);
     std::string makeCampaignKey(const CampaignArgs& args);
