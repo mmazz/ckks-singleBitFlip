@@ -17,6 +17,7 @@ std::string BitflipResult::row() const {
     return ss.str();
 }
 
+
 CampaignLogger::CampaignLogger(uint32_t id,
                                const std::string& dir,
                                size_t flush_th)
@@ -29,9 +30,18 @@ CampaignLogger::CampaignLogger(uint32_t id,
          << std::setfill('0') << id << ".csv";
     csv_path_ = path.str();
 
-    file_.open(path.str());
-    file_ << BitflipResult::header() << "\n";
+    const bool write_header =
+        !fs::exists(csv_path_) || fs::file_size(csv_path_) == 0;
+
+    file_.open(csv_path_, std::ios::out | std::ios::app);
+
+    if (write_header) {
+        file_ << BitflipResult::header() << "\n";
+    }
 }
+
+
+
 
 CampaignLogger::~CampaignLogger() {
     close();
