@@ -44,95 +44,43 @@ void printVector(const std::vector<cdouble>& v,
 
     std::cout << " ]\n";
 }
-std::vector<uint32_t> extraBitsBetweenDeltaAndQ(const CampaignArgs& args)
-{
-    constexpr uint32_t NUM_POINTS = 11;
 
-    std::vector<uint32_t> res;
-
-    // Valores ya utilizados por la función original
-    std::vector<uint32_t> used = bitsToFlipGenerator(args);
-
-    const uint32_t logDelta = args.logDelta;
-    const uint32_t logQ     = args.logQ;
-    const uint32_t M        = args.bitPerCoeff - 1;
-
-    auto clamp = [&](uint32_t v) {
-        return std::min(v, M);
-    };
-
-    auto is_used = [&](uint32_t v) {
-        return std::find(used.begin(), used.end(), v) != used.end();
-    };
-
-    if (logQ <= logDelta)
-        return res;
-
-    const double step =
-        static_cast<double>(logQ - logDelta) / (NUM_POINTS + 1);
-
-    for (uint32_t i = 1; i <= NUM_POINTS; ++i)
-    {
-        uint32_t v = static_cast<uint32_t>(
-            std::llround(logDelta + i * step));
-
-        v = clamp(v);
-
-        if (!is_used(v) &&
-            std::find(res.begin(), res.end(), v) == res.end())
-        {
-            res.push_back(v);
-        }
-    }
-
-    return res;
-}
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 {
     std::vector<uint32_t> res;
-    res.reserve(14);
+    res.reserve(25);
 
-    const uint32_t logQ         = args.logQ;
-    const uint32_t logDelta     = args.logDelta;
-    const uint32_t maxBits      = args.bitPerCoeff;
-    const uint32_t M            = maxBits - 1;
+    const uint32_t logQ     = args.logQ;
+    const uint32_t logDelta = args.logDelta;
+    const uint32_t maxBits  = args.bitPerCoeff;
+    const uint32_t M        = maxBits - 1;
 
-    auto clamp = [&](uint32_t v) {
-        return std::min(v, M);
+    auto addRange = [&](uint32_t start, uint32_t end, uint32_t count)
+    {
+        if (count == 1) {
+            res.push_back(start);
+            return;
+        }
+
+        for (uint32_t i = 0; i < count; i++) {
+            uint32_t v = start + (uint64_t)(end - start) * i / (count - 1);
+
+            if (res.empty() || res.back() != v)
+                res.push_back(v);
+        }
     };
 
-    auto push_unique = [&](uint32_t v) {
-        v = clamp(v);
-        if (std::find(res.begin(), res.end(), v) == res.end())
-            res.push_back(v);
-    };
-    // zone 1
-    push_unique(0);
-    push_unique(logDelta / 4);
-    push_unique(logDelta / 2);
-    if (logDelta > 0)
-        push_unique(logDelta - 1);
+    // 5 puntos: [0, logDelta]
+    addRange(0, logDelta, 5);
 
-    // zone 2
-    push_unique(logDelta);
- //   if(logQ>=120){
-        push_unique((logDelta + logQ) / 6);
-        push_unique((logDelta + logQ) / 4);
-        push_unique((logDelta + logQ) / 3);
-        push_unique(logQ-logDelta);
- //   }
-    push_unique((logDelta + logQ) / 2);
+    // 15 puntos: [logDelta, logQ]
+    addRange(logDelta+5, logQ, 15);
 
-    if (logQ > 0)
-        push_unique(logQ);
-    push_unique(logQ+1);
-
-    push_unique((logQ + M) / 2);
-    push_unique(M);
+    // 5 puntos: [logQ, M]
+    addRange(logQ+5, M, 5);
 
     return res;
 }
-
 
 
 CKKSAccuracyMetrics EvaluateCKKSAccuracy(

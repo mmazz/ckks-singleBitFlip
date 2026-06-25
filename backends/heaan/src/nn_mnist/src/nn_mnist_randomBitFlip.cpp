@@ -125,8 +125,8 @@ int main(int argc, char* argv[]) {
 
             std::mt19937 rng(args.seed);
 
-            std::vector<uint32_t> bits_to_flip = extraBitsBetweenDeltaAndQ(args); // 11 values
-            //std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 14 values
+           // std::vector<uint32_t> bits_to_flip = extraBitsBetweenDeltaAndQ(args); // 11 values
+            std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 14 values
             for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
                 uint32_t bit = bits_to_flip[bitIndex];
                 for (size_t i = 0; i < num_bitFlips; i++) {
