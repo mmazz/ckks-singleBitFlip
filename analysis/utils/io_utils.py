@@ -3,6 +3,15 @@ import numpy as np
 from pathlib import Path
 import sys
 import os
+import gzip
+
+def is_valid_gzip(path):
+    try:
+        with gzip.open(path, "rb") as f:
+            f.read(1)
+        return True
+    except Exception:
+        return False
 
 REQUIRED_FILTERS = {"library", "stage"}
 
@@ -100,10 +109,10 @@ def load_campaign_data(selected_campaigns, data_dir):
         cid = int(row["campaign_id"])
         filename = f"campaign_{cid:06d}.csv.gz"
         path = data_dir / filename
-
-        if not path.exists():
-            print(f"WARNING: {path} does not exist, is skipped")
+        if not is_valid_gzip(path):
+            print(f"WARNING: {path} is not valid gzip, skipped")
             continue
+
 
         df = pd.read_csv(path, compression="gzip")
         df["campaign_id"] = cid

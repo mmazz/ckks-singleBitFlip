@@ -39,9 +39,8 @@ int main(int argc, char* argv[]) {
 
     if(AcceptCKKSResult(baseline_metrics))
     {
-        auto start_time = std::chrono::high_resolution_clock::now();
         std::cout << "\n=== Registring Campaign "<< std::endl;
-        CampaignRegistry registry(args, start_time);
+        CampaignRegistry registry(args);
         uint32_t campaign_id = registry.allocate_campaign_id();
         std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
@@ -70,6 +69,7 @@ int main(int argc, char* argv[]) {
         size_t bits_per_coeff = args.bitPerCoeff;
 
         std::mt19937 rng(args.seed);
+        auto start_time = std::chrono::high_resolution_clock::now();
 
         std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 10 values
         for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {

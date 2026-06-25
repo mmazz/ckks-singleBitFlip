@@ -36,8 +36,7 @@ int main(int argc, char* argv[]) {
     if(AcceptCKKSResult(baseline_metrics))
     {
         try{
-            auto start_time = std::chrono::high_resolution_clock::now();
-            CampaignRegistry registry(args, start_time);
+            CampaignRegistry registry(args);
             std::cout << "\n=== Registring Campaign "<< std::endl;
             uint32_t campaign_id = registry.campaign_id;
         //    registry.register_start({campaign_id, args, ""});
@@ -62,6 +61,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Expected bit flips: " << total_expected << std::endl;
 
 
+            auto start_time = std::chrono::high_resolution_clock::now();
             for (size_t coeff = 0; coeff<num_coeffs; coeff++)
             {
                 for(size_t bit=0; bit<bits_per_coeff; bit++)
