@@ -28,69 +28,75 @@ int main(int argc, char* argv[]) {
 
 
     if(AcceptCKKSResult(baseline_metrics)){
-        CampaignRegistry registry(args.results_dir);
-        uint32_t campaign_id = registry.allocate_campaign_id();
-        std::cout << "\n=== Registring Campaign "<< std::endl;
-        registry.register_start({campaign_id, args,  "" });
+        try{
+            CampaignRegistry registry(args);
+            uint32_t campaign_id = registry.campaign_id;
+            std::cout << "\n=== Registring Campaign "<< std::endl;
+            registry.register_start({campaign_id, args,  "" });
 
-        std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
+            std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
-        CampaignLogger logger(campaign_id, args.results_dir + "/data", 10000);
-        std::cout << "Campaign " << campaign_id << " registered" << std::endl;
+            CampaignLogger logger(campaign_id, args.results_dir + "/data", 10000);
+            std::cout << "Campaign " << campaign_id << " registered" << std::endl;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
+            auto start_time = std::chrono::high_resolution_clock::now();
 
 
-        std::cout << "\nStarting bit flip campaign..." << std::endl;
+            std::cout << "\nStarting bit flip campaign..." << std::endl;
 
-        uint32_t N = 1 << args.logN;
-        size_t num_coeffs = N;
-        size_t bits_per_coeff = args.bitPerCoeff;
-        size_t total_expected = (args.mult_depth + 1) * num_coeffs * bits_per_coeff ;
-        std::vector<double> norms;
-        norms.reserve(total_expected);
+            uint32_t N = 1 << args.logN;
+            size_t num_coeffs = N;
+            size_t bits_per_coeff = args.bitPerCoeff;
+            size_t total_expected = (args.mult_depth + 1) * num_coeffs * bits_per_coeff ;
+            std::vector<double> norms;
+            norms.reserve(total_expected);
 
-        std::cout << "Expected bit flips: " << total_expected << std::endl;
+            std::cout << "Expected bit flips: " << total_expected << std::endl;
 
-        for (size_t limb = 0; limb < (args.mult_depth + 1); limb++)
-        {
-            for (size_t coeff = 0; coeff < num_coeffs; coeff++)
+            for (size_t limb = 0; limb < (args.mult_depth + 1); limb++)
             {
-                for(size_t bit=0; bit<bits_per_coeff; bit++)
+                for (size_t coeff = 0; coeff < num_coeffs; coeff++)
                 {
-                    IterationArgs iterArgs(limb, coeff, bit);
-                    if (logger.contains(iterArgs))
+                    for(size_t bit=0; bit<bits_per_coeff; bit++)
                     {
-                        std::cout << "Skipping already computed iteration\n";
-                    }
-                    else{
+                        IterationArgs iterArgs(limb, coeff, bit);
+                        if (logger.contains(iterArgs))
+                        {
+                            std::cout << "Skipping already computed iteration\n";
+                        }
+                        else{
 
-                        IterationResult res = run_iteration(ctx, args, iterArgs);
-                        CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
-                        auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
-                        logger.log(iterArgs.limb,
-                                iterArgs.coeff,
-                                iterArgs.bit,
-                                exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
-                                exp_metrics.linf_abs_error,
-                                res.detected,
-                                slot_stats
-                            );
+                            IterationResult res = run_iteration(ctx, args, iterArgs);
+                            CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
+                            auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
+                            logger.log(iterArgs.limb,
+                                    iterArgs.coeff,
+                                    iterArgs.bit,
+                                    exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
+                                    exp_metrics.linf_abs_error,
+                                    res.detected,
+                                    slot_stats
+                                );
 
-                        norms.push_back(exp_metrics.l2_rel_error);
+                            norms.push_back(exp_metrics.l2_rel_error);
+                        }
                     }
                 }
             }
-        }
-        std::sort(norms.begin(), norms.end());
-        double l2_P95 = percentile(norms, 0.95);
-        double l2_P99 = percentile(norms, 0.99);
-        auto end_time = std::chrono::high_resolution_clock::now();
-        std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-        auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
-        uint64_t mins = minutes.count();
+            std::sort(norms.begin(), norms.end());
+            double l2_P95 = percentile(norms, 0.95);
+            double l2_P99 = percentile(norms, 0.99);
+            auto end_time = std::chrono::high_resolution_clock::now();
+            std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+            auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
+            uint64_t mins = minutes.count();
 
-        registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
+            registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
+        }
+        catch (const std::runtime_error& e) {
+            std::cerr << e.what() << '\n';
+            return 0;
+        }
     } else {
         printBaselineComparison(
             goldenOutput,
