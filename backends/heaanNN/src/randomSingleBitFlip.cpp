@@ -11,7 +11,7 @@ const size_t OUTPUT_DIM = 10;
 const double PIXEL_MAX = 255.0;
 const std::string path = "data/mnist_train.csv";
 size_t NUM_BITFLIPS = 50;
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 
 int main(int argc, char* argv[]) {
 
@@ -91,6 +91,7 @@ int main(int argc, char* argv[]) {
             args.results_dir = "../../results_NN";
             std::cout << "\n=== Registring Campaign "<< std::endl;
             CampaignRegistry registry(args);
+
             uint32_t campaign_id = registry.campaign_id;
 
 
@@ -125,9 +126,12 @@ int main(int argc, char* argv[]) {
                     uint32_t coeff = random_int(0, (1<<logN)-1);
                     //uint32_t coeff = random_int(0, 8-1);
                     IterationArgs iterArgs(0, coeff, bit);
-                    if (logger.contains(iterArgs))
-                    {
-                        std::cout << "Skipping already computed iteration\n";
+
+                    if(args.existing_policy == ExistingCampaignPolicy::Reuse){
+                        if (logger.contains(iterArgs))
+                        {
+                            std::cout << "Skipping already computed iteration\n";
+                        }
                     }
                     else{
                         IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, iterArgs);

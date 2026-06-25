@@ -244,12 +244,12 @@ def gen_boot_analysis():
 
 def gen_heaanNN_analysis():
     variants = [
-        {"stage": "encode"     , "bitPerCoeff": 500, "title": "encode-NN-heaan" },
-        {"stage": "encrypt_c0" , "bitPerCoeff": 250, "title": "encryptC0-NN-heaan"},
-        {"stage": "encrypt_c1" , "bitPerCoeff": 250, "title": "encryptC1-NN-heaan"},
-        {"stage": "decrypt_c0" , "bitPerCoeff": 250, "title": "decryptC0-NN-heaan"},
-        {"stage": "decrypt_c1" , "bitPerCoeff": 250, "title": "decryptC1-NN-heaan"},
-        {"stage": "decode"     , "bitPerCoeff": 250, "title": "decode-NN-heaan"},
+        {"stage": "encode"     , "bitPerCoeff": 500},
+        {"stage": "encrypt_c0" , "bitPerCoeff": 250},
+        {"stage": "encrypt_c1" , "bitPerCoeff": 250},
+        {"stage": "decrypt_c0" , "bitPerCoeff": 250},
+        {"stage": "decrypt_c1" , "bitPerCoeff": 250},
+        {"stage": "decode"     , "bitPerCoeff": 250},
     ]
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
@@ -274,12 +274,12 @@ def gen_heaanNN_analysis():
 
 def gen_openfheNN_analysis():
     variants = [
-        {"stage": "encode"     , "title": "encode-NN-openfhe" },
-        {"stage": "encrypt_c0" , "title": "encryptC0-NN-openfhe"},
-        {"stage": "encrypt_c1" , "title": "encryptC1-NN-openfhe"},
-        {"stage": "decrypt_c0" , "title": "decryptC0-NN-openfhe"},
-        {"stage": "decrypt_c1" , "title": "decryptC1-NN-openfhe"},
-        {"stage": "decode"     , "title": "decode-NN-openfhe"},
+        {"stage": "encode"      },
+        {"stage": "encrypt_c0"  },
+        {"stage": "encrypt_c1"  },
+        {"stage": "decrypt_c0"  },
+        {"stage": "decrypt_c1"  },
+        {"stage": "decode"      },
     ]
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
@@ -301,7 +301,7 @@ def gen_openfheNN_analysis():
         }
         rows += cartesian_product_rows(fixed, sweep)
 
-    write_csv("heaanNN_analysis", rows)
+    write_csv("openfheNN_analysis", rows)
 
 
 
