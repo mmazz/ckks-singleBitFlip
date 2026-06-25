@@ -3,6 +3,7 @@
 #include "campaign_registry.h"
 #include "backend_interface.h"
 #include "utils_ckks.h"
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
 
 size_t NUM_BITFLIPS = 500;
 
@@ -11,7 +12,9 @@ int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "heaan";
     args.isExhaustive= false;
+    args.existing_policy = existing_policy;
     args.mult_depth = 0;
+    args.existing_policy = existing_policy;
     args.results_dir = "../../results_multibit";
     if (args.verbose) {
         args.print();

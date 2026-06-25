@@ -137,17 +137,18 @@ int main(int argc, char* argv[]) {
                     if (logger.contains(iterArgs))
                     {
                         std::cout << "Skipping already computed iteration\n";
-                        return 1;
                     }
-                    IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, iterArgs);
-                    SlotErrorStats  stats;
-                    logger.log(iterArgs.limb,
-                            iterArgs.coeff,
-                            iterArgs.bit,
-                            0.0, 0.0,
-                            !res.detected,     // is_sdc: predict correct or not, we need to negate. 1 will be sdc, bad. 0 will be mask, good.
-                            stats
-                            );
+                    else{
+                        IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, iterArgs);
+                        SlotErrorStats  stats;
+                        logger.log(iterArgs.limb,
+                                iterArgs.coeff,
+                                iterArgs.bit,
+                                0.0, 0.0,
+                                !res.detected,     // is_sdc: predict correct or not, we need to negate. 1 will be sdc, bad. 0 will be mask, good.
+                                stats
+                                );
+                    }
                 }
 
             }

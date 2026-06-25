@@ -55,13 +55,27 @@ std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
     const uint32_t maxBits  = args.bitPerCoeff;
     const uint32_t M        = maxBits - 1;
 
-    auto addRange = [&](uint32_t start, uint32_t end, uint32_t count)
+    auto addRange = [&](uint32_t start, uint32_t end)
     {
+        uint32_t count = 0;
         if (count == 1) {
             res.push_back(start);
             return;
         }
-
+        uint32_t diff = end - start + 1;
+        if (diff == 0) {
+            res.push_back(start);
+            return;
+        }
+        if (diff < 3){
+            return;
+        }else if (diff < 5) {
+            count = diff - 1;
+        } else if (diff < 30) {
+            count = 5;
+        } else {
+            count = 15;
+        }
         for (uint32_t i = 0; i < count; i++) {
             uint32_t v = start + (uint64_t)(end - start) * i / (count - 1);
 
@@ -69,19 +83,21 @@ std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
                 res.push_back(v);
         }
     };
+    uint32_t gapDelta = 1;
+    if (logDelta>=50)
+        gapDelta = 5;
+    else if (logDelta>=30)
+        gapDelta = 3;
+    addRange(0, logDelta-gapDelta);
+    addRange(logDelta, logQ);
 
-    // 5 puntos: [0, logDelta]
-    addRange(0, logDelta, 5);
-
-    // 15 puntos: [logDelta, logQ]
-    addRange(logDelta+5, logQ, 15);
-
-    // 5 puntos: [logQ, M]
-    addRange(logQ+5, M, 5);
-
+    uint32_t gapQ = 1;
+    uint32_t diffQ = maxBits-logQ;
+    if (diffQ>10)
+        gapQ = 3;
+    addRange(logQ+gapQ, M);
     return res;
 }
-
 
 CKKSAccuracyMetrics EvaluateCKKSAccuracy(
     const std::vector<double>& golden,
