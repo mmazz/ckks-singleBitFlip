@@ -6,7 +6,7 @@
 
 
 ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
-size_t NUM_BITFLIPS = 500;
+size_t NUM_BITFLIPS = 50;
 
 int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;

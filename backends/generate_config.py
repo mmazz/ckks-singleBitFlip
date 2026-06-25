@@ -2,16 +2,8 @@
 """
 generate_config.py — Genera un CSV de config para run_campaign.py a partir de
 un producto cartesiano de parámetros, definido en un diccionario Python.
-
-Esto reemplaza los `for s in SEEDS; do for s_input in SEEDS; do ...` del Makefile.
-
-Editá la sección "DEFINIR ACA" más abajo para cada análisis que quieras generar,
-o copiá este archivo como base para nuevos análisis (ej: generate_seeds_analysis.py,
-generate_mul_inside.py, etc.) si preferís tener un generador por análisis versionado.
-
 Uso:
-  python generate_config.py
-  -> escribe configs/<nombre>.csv
+  python generate_config.py  -> escribe configs/<nombre>.csv
 """
 
 import csv
@@ -24,6 +16,7 @@ SEEDS_PRNG = 4
 SEEDS_INP = 3
 def cartesian_product_rows(fixed: dict, sweep: dict) -> list[dict]:
     """
+    variants: parámetros que varian en pares o solos
     fixed: parámetros que NO varían (mismo valor en todas las filas)
     sweep: parámetros que SÍ varían -> se genera el producto cartesiano de sus listas
 
@@ -68,8 +61,8 @@ def write_csv(name: str, rows: list[dict]):
 
 def gen_logN_analysis():
     variants = [
-    {"logN": 16, "logSlots": 15},
-    {"logN": 6,  "logSlots": 5},
+        {"logN": 16, "logSlots": 15, "binary": "randomSingleBitFlip"},
+        {"logN": 6,  "logSlots": 5, "binary": "exhaustiveSingleBitFlip"},
     ]
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
@@ -78,7 +71,6 @@ def gen_logN_analysis():
     rows = []
     for v in variants:
         fixed = {
-            "binary": "exhaustiveSingleBitFlip",
             "library": "heaan",
             "logQ": 60,
             "bitPerCoeff": 64,
@@ -90,6 +82,90 @@ def gen_logN_analysis():
         rows += cartesian_product_rows(fixed, sweep)
 
     write_csv("logN_analysis", rows)
+
+
+def gen_logQ_analysis():
+    variants = [
+        {"logQ": 40, "bitPerCoeff": 50, "logDelta": 30},
+        {"logQ": 60, "bitPerCoeff": 75, "logDelta": 45},
+        {"logQ": 80, "bitPerCoeff": 100, "logDelta": 60},
+        {"logQ": 100, "bitPerCoeff": 125, "logDelta": 75},
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "exhaustiveSingleBitFlip",
+            "library": "heaan",
+            "logN": 6,
+            "logSlots": 5,
+            "stage": "encrypt_c0",
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("logQ_analysis", rows)
+
+def gen_logDelta_analysis():
+    variants = [
+        {"logDelta": 25},
+        {"logDelta": 35},
+        {"logDelta": 45},
+        {"logDelta": 55},
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "exhaustiveSingleBitFlip",
+            "library": "heaan",
+            "logN": 6,
+            "logSlots": 5,
+            "bitPerCoeff": 64,
+            "logQ": 60,
+            "stage": "encrypt_c0",
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("logDelta_analysis", rows)
+
+
+
+def gen_gap_analysis():
+    variants = [
+        {"logSlots": 5},
+        {"logSlots": 4},
+        {"logSlots": 3},
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "exhaustiveSingleBitFlip",
+            "library": "heaan",
+            "logN": 6,
+            "logDelta": 40,
+            "bitPerCoeff": 64,
+            "logQ": 60,
+            "stage": "encrypt_c0",
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("gap_analysis", rows)
 
 
 def gen_seeds_analysis():
@@ -134,7 +210,108 @@ def gen_mul_inside():
     write_csv("mul_inside", cartesian_product_rows(fixed, sweep))
 
 
+
+def gen_boot_analysis():
+    variants = [
+        {"stage": "encode" ,     "bitPerCoeff": 1280},
+        {"stage": "encrypt_c0" , "bitPerCoeff": 640},
+        {"stage": "encrypt_c1" , "bitPerCoeff": 640},
+        {"stage": "decrypt_c0" , "bitPerCoeff": 640},
+        {"stage": "decrypt_c1" , "bitPerCoeff": 640},
+        {"stage": "decode" , "bitPerCoeff": 640},
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "doBoot": list(range(0,2)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "library": "heaan",
+            "logN": 6,
+            "logDelta": 34,
+            "logSlots": 4,
+            "logQ": 620,
+            "doMul": 4,
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("boot_analysis", rows)
+
+def gen_heaanNN_analysis():
+    variants = [
+        {"stage": "encode"     , "bitPerCoeff": 500, "title": "encode-NN-heaan" },
+        {"stage": "encrypt_c0" , "bitPerCoeff": 250, "title": "encryptC0-NN-heaan"},
+        {"stage": "encrypt_c1" , "bitPerCoeff": 250, "title": "encryptC1-NN-heaan"},
+        {"stage": "decrypt_c0" , "bitPerCoeff": 250, "title": "decryptC0-NN-heaan"},
+        {"stage": "decrypt_c1" , "bitPerCoeff": 250, "title": "decryptC1-NN-heaan"},
+        {"stage": "decode"     , "bitPerCoeff": 250, "title": "decode-NN-heaan"},
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "library": "heaanNN",
+            "logN": 12,
+            "logQ": 220,
+            "logDelta": 30,
+            "logSlots": 10,
+            "mult_depth": 0,
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("heaanNN_analysis", rows)
+
+def gen_openfheNN_analysis():
+    variants = [
+        {"stage": "encode"     , "title": "encode-NN-openfhe" },
+        {"stage": "encrypt_c0" , "title": "encryptC0-NN-openfhe"},
+        {"stage": "encrypt_c1" , "title": "encryptC1-NN-openfhe"},
+        {"stage": "decrypt_c0" , "title": "decryptC0-NN-openfhe"},
+        {"stage": "decrypt_c1" , "title": "decryptC1-NN-openfhe"},
+        {"stage": "decode"     , "title": "decode-NN-openfhe"},
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "withNTT": list(range(1,3)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "library": "openfheNN",
+            "logN": 12,
+            "logQ": 60,
+            "bitPerCoeff": 64,
+            "logDelta": 50,
+            "logSlots": 10,
+            "mult_depth": 5,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("heaanNN_analysis", rows)
+
+
+
 if __name__ == "__main__":
     gen_seeds_analysis()
     gen_logN_analysis()
+    gen_logQ_analysis()
+    gen_logDelta_analysis()
+    gen_gap_analysis()
     gen_mul_inside()
+    gen_boot_analysis()
+    gen_heaanNN_analysis()
+    gen_openfheNN_analysis()
