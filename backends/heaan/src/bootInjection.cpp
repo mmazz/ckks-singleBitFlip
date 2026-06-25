@@ -6,11 +6,13 @@
 
 size_t NUM_BITFLIPS = 5;
 
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     std::cout << "\n=== Starting Campaign "<< std::endl;
     args.library = "heaan";
     args.isExhaustive = true;
+    args.existing_policy = existing_policy;
     args.mult_depth = 0;
 
     if (args.verbose) {
@@ -69,21 +71,30 @@ int main(int argc, char* argv[]) {
             {
                 IterationArgs iterArgs(0, coeff, bit);
 
-                IterationResult res = run_iteration(ctx, args, iterArgs);
+                if(args.existing_policy == ExistingCampaignPolicy::Reuse){
+                    if (logger.contains(iterArgs))
+                    {
+                        std::cout << "Skipping already computed iteration\n";
+                    }
+                }
+                else{
 
-                CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
+                    IterationResult res = run_iteration(ctx, args, iterArgs);
 
-                auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
-                logger.log(iterArgs.limb,
-                        iterArgs.coeff,
-                        iterArgs.bit,
-                        exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
-                        exp_metrics.linf_rel_error,
-                        res.detected,
-                        slot_stats
-                    );
+                    CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
 
-                norms.push_back(exp_metrics.l2_rel_error);
+                    auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
+                    logger.log(iterArgs.limb,
+                            iterArgs.coeff,
+                            iterArgs.bit,
+                            exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
+                            exp_metrics.linf_rel_error,
+                            res.detected,
+                            slot_stats
+                        );
+
+                    norms.push_back(exp_metrics.l2_rel_error);
+                }
             }
         }
         std::sort(norms.begin(), norms.end());

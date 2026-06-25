@@ -3,7 +3,7 @@
 #include "campaign_registry.h"
 #include "backend_interface.h"
 #include "utils_ckks.h"
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 
 size_t NUM_BITFLIPS = 500;
 
@@ -78,20 +78,28 @@ int main(int argc, char* argv[]) {
             for (size_t i = 0; i < num_bitFlips; i++) {
                 uint32_t coeff = random_int(0, N-1);
                 IterationArgs iterArgs(0, coeff, bit);
-                IterationResult res = run_iteration_multiBit(ctx, args, iterArgs);
-                CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
+                if(args.existing_policy == ExistingCampaignPolicy::Reuse){
+                    if (logger.contains(iterArgs))
+                    {
+                        std::cout << "Skipping already computed iteration\n";
+                    }
+                }
+                else{
+                    IterationResult res = run_iteration_multiBit(ctx, args, iterArgs);
+                    CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
 
-                auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
-                logger.log(iterArgs.limb,
-                        iterArgs.coeff,
-                        iterArgs.bit,
-                        exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
-                        exp_metrics.linf_rel_error,
-                        res.detected,
-                        slot_stats
-                    );
+                    auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
+                    logger.log(iterArgs.limb,
+                            iterArgs.coeff,
+                            iterArgs.bit,
+                            exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
+                            exp_metrics.linf_rel_error,
+                            res.detected,
+                            slot_stats
+                        );
 
-                norms.push_back(exp_metrics.l2_rel_error);
+                    norms.push_back(exp_metrics.l2_rel_error);
+                }
             }
 
         }

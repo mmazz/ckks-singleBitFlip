@@ -27,7 +27,8 @@ struct IterationArgs{
 
 enum class ExistingCampaignPolicy {
     Fail, // Exist the iteration if already exists.
-    Reuse, // Allow to make the use of that id
+    Reuse, // Allow to make the use of that id. Check if each iteration is already done
+    ReuseStrict, // Allow to make the use of that id but make a new log
     CreateNew // Create a new one even if already an existing one
 };
 

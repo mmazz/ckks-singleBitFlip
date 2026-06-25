@@ -200,8 +200,7 @@ uint32_t CampaignRegistry::allocate_campaign_id()
     return scanCsv(start_csv_, std::string()).max_id + 1;
 }
 
-CampaignRegistry::CampaignRegistry(
-    const CampaignArgs& args)
+CampaignRegistry::CampaignRegistry(const CampaignArgs& args)
 {
     // NOTA: start_time se recibe pero no se persiste en ningun lado (igual
     // que en la version anterior). Si la idea es loguear cuando arranco

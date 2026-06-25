@@ -47,8 +47,6 @@ def write_csv(name: str, rows: list[dict]):
     if not rows:
         print(f"[{name}] no se generaron filas, se omite.")
         return
-    # Unimos todas las claves que aparecen en cualquier fila, preservando orden:
-    # run_id primero, control después, parámetros después.
     all_keys = []
     for row in rows:
         for k in row.keys():
@@ -67,13 +65,34 @@ def write_csv(name: str, rows: list[dict]):
     print(f"[{name}] {len(rows)} filas -> {out_path}")
 
 
-# ============================================================
-# DEFINIR ACA: un bloque por análisis. Comentá/descomentá o
-# agregá los que necesites.
-# ============================================================
+
+def gen_logN_analysis():
+    variants = [
+    {"logN": 16, "logSlots": 15},
+    {"logN": 6,  "logSlots": 5},
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "exhaustiveSingleBitFlip",
+            "library": "heaan",
+            "logQ": 60,
+            "bitPerCoeff": 64,
+            "logDelta": 40,
+            "stage": "encrypt_c0",
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("logN_analysis", rows)
+
 
 def gen_seeds_analysis():
-    """Equivalente a 'seeds_analysis' del Makefile original: 15x15 = 225 corridas."""
     fixed = {
         "binary": "exhaustiveSingleBitFlip",
         "library": "heaan",
@@ -117,4 +136,5 @@ def gen_mul_inside():
 
 if __name__ == "__main__":
     gen_seeds_analysis()
+    gen_logN_analysis()
     gen_mul_inside()

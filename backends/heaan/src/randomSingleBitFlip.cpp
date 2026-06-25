@@ -5,7 +5,7 @@
 #include "utils_ckks.h"
 
 
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 size_t NUM_BITFLIPS = 500;
 
 int main(int argc, char* argv[]) {
@@ -77,9 +77,12 @@ int main(int argc, char* argv[]) {
             for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
                 uint32_t bit = bits_to_flip[bitIndex];
                 IterationArgs iterArgs(0, coeff, bit);
-                if (logger.contains(iterArgs))
-                {
-                    std::cout << "Skipping already computed iteration\n";
+
+                if(args.existing_policy == ExistingCampaignPolicy::Reuse){
+                    if (logger.contains(iterArgs))
+                    {
+                        std::cout << "Skipping already computed iteration\n";
+                    }
                 }
                 else{
                     IterationResult res = run_iteration(ctx, args, iterArgs);

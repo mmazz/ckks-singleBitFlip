@@ -4,7 +4,7 @@
 #include "backend_interface.h"
 #include "utils_ckks.h"
 
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 
 int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
@@ -67,10 +67,11 @@ int main(int argc, char* argv[]) {
                 for(size_t bit=0; bit<bits_per_coeff; bit++)
                 {
                     IterationArgs iterArgs(0, coeff, bit);
-
-                    if (logger.contains(iterArgs))
-                    {
-                        std::cout << "Skipping already computed iteration\n";
+                    if(args.existing_policy == ExistingCampaignPolicy::Reuse){
+                        if (logger.contains(iterArgs))
+                        {
+                            std::cout << "Skipping already computed iteration\n";
+                        }
                     }
                     else{
                         IterationResult res = run_iteration(ctx, args, iterArgs);
