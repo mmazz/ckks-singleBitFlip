@@ -36,13 +36,11 @@ int main(int argc, char* argv[]) {
 
     if(AcceptCKKSResult(baseline_metrics))
     {
-        CampaignRegistry registry(args);
-        uint32_t campaign_id = registry.allocate_campaign_id();
+        auto start_time = std::chrono::high_resolution_clock::now();
         std::cout << "\n=== Registring Campaign "<< std::endl;
-        registry.register_start({
-                campaign_id,
-                args,
-                ""});
+        CampaignRegistry registry(args, start_time);
+        uint32_t campaign_id = registry.allocate_campaign_id();
+
 
         std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
@@ -50,7 +48,6 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Campaign " << campaign_id << " registered" << std::endl;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
 
         std::cout << "\nStarting bit flip campaign..." << std::endl;
 

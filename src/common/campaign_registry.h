@@ -7,7 +7,6 @@
 struct CampaignStartRecord {
     uint32_t campaign_id;
     CampaignArgs args;
-    std::string timestamp_start;
 };
 
 struct CampaignEndRecord {
@@ -17,14 +16,14 @@ struct CampaignEndRecord {
     uint64_t duration_seconds;
     double l2_P95;
     double l2_P99;
-    std::string timestamp_end;
+    std::string duration;
 };
 
 
 
 class CampaignRegistry {
 public:
-    explicit CampaignRegistry(const CampaignArgs& args);
+    explicit CampaignRegistry(const CampaignArgs& args, std::chrono::time_point<std::chrono::high_resolution_clock> time_start);
     uint32_t findCampaignId(const std::string& csvFile,
                         const std::string& key);
     std::string makeCampaignKey(const CampaignArgs& args);

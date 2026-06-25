@@ -58,6 +58,13 @@ def filter_coeff_by_library(data, library=None, logN=1):
     if library == "heaan":
         print("No N/2 coeff")
         data = data[data["coeff"] != target_coeff]
+    print(data["coeff"])
+    data = data.astype({
+        "coeff": "int",
+        "bit": "int",
+        "l2_norm": "double",
+    })
+
     return data
 
 def stats_by_bit_sdc(data):
@@ -87,9 +94,16 @@ def stats_by_bit_sdc(data):
 
     return per_bit
 
-
 def stats_by_bit(data):
-    # (1) global extremes by bit
+    data = data.copy()
+
+    data["bit"] = pd.to_numeric(data["bit"], errors="coerce")
+    data["l2_norm"] = pd.to_numeric(data["l2_norm"], errors="coerce")
+
+    data = data.dropna(subset=["bit", "l2_norm"])
+
+    data["bit"] = data["bit"].astype(int)
+
     extrema = (
         data
         .groupby("bit", as_index=False)
@@ -99,14 +113,12 @@ def stats_by_bit(data):
         )
     )
 
-    # if many seeds, we take average.
     per_coeff = (
         data
         .groupby(["bit", "coeff"], as_index=False)
         .agg(l2_mean=("l2_norm", "mean"))
     )
 
-    # (3) stats entre coeficientes por bit
     stats = (
         per_coeff
         .groupby("bit", as_index=False)
@@ -115,8 +127,8 @@ def stats_by_bit(data):
             std_l2=("l2_mean", lambda x: x.std(ddof=0)),
         )
     )
-    return stats.merge(extrema, on="bit")
 
+    return stats.merge(extrema, on="bit")
 
 def stats_by_bit_sdc(data):
 

@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 import sys
 import os
 sys.path.append(os.path.abspath('./'))
@@ -36,9 +37,9 @@ def main():
         raise RuntimeError("No hay campañas que cumplan los filtros")
 
     data = load_campaign_data(selected, config.DATA_DIR)
-
     ########################## STATS ###############################
     data_filter = filter_coeff_by_library(data, "heaan", args.logN)
+    print(data_filter[data_filter["coeff"] == 32])
     stats = stats_by_bit(data_filter)
 
     ########################## PLOT ################################

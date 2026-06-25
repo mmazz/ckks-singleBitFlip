@@ -86,6 +86,8 @@ def plot_bit_max_min(stats, ax=None, label_prefix="",  size=40):
     if ax is None:
         ax = plt.gca()
 
+    stats = stats.sort_values("bit")
+    stats = stats.dropna(subset=["bit"])
     x = stats["bit"]
     mean = stats["mean_l2"]
     std = stats["std_l2"]

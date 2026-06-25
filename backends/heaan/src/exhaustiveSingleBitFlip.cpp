@@ -13,7 +13,6 @@ int main(int argc, char* argv[]) {
     args.isExhaustive = true;
     args.existing_policy = existing_policy;
     args.mult_depth = 0;
-    args.existing_policy = existing_policy;
     if (args.verbose) {
         args.print();
     }
@@ -37,10 +36,11 @@ int main(int argc, char* argv[]) {
     if(AcceptCKKSResult(baseline_metrics))
     {
         try{
-            CampaignRegistry registry(args);
+            auto start_time = std::chrono::high_resolution_clock::now();
+            CampaignRegistry registry(args, start_time);
             std::cout << "\n=== Registring Campaign "<< std::endl;
             uint32_t campaign_id = registry.campaign_id;
-            registry.register_start({campaign_id, args, ""});
+        //    registry.register_start({campaign_id, args, ""});
 
             std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
@@ -48,7 +48,6 @@ int main(int argc, char* argv[]) {
 
             std::cout << "Campaign " << campaign_id << " registered" << std::endl;
 
-            auto start_time = std::chrono::high_resolution_clock::now();
 
             std::cout << "\nStarting bit flip campaign..." << std::endl;
 

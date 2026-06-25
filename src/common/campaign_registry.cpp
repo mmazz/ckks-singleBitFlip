@@ -42,78 +42,107 @@ std::string CampaignRegistry::makeCampaignKey(const CampaignArgs& args)
 
     return oss.str();
 }
+CampaignRegistry::CampaignRegistry(const CampaignArgs& args, std::chrono::high_resolution_clock::time_point start_time) {
 
-CampaignRegistry::CampaignRegistry(const CampaignArgs& args) {
     const std::string& results_dir = args.results_dir;
+
     fs::create_directories(results_dir);
+
     start_csv_ = results_dir + "/campaigns_start.csv";
     end_csv_   = results_dir + "/campaigns_end.csv";
     lockfile_  = results_dir + "/.registry.lock";
 
 
-    auto key = makeCampaignKey(args);
-    auto campaign_id = findCampaignId(start_csv_, key);
-    auto policy = args.existing_policy;
-    if (campaign_id != INVALID_CAMPAIGN_ID) {
-        if (policy == ExistingCampaignPolicy::Fail)
-        {
-            throw std::runtime_error(
-                "Campaign with those parameters already exists. campaign_id=" +
-                std::to_string(campaign_id));
-        }else{
-            this->campaign_id = campaign_id;
-        }
-    }
-    else{
-        this->campaign_id = this->allocate_campaign_id();
-    }
+    int fd;
+    lock_file(fd);
+
+
+    // Crear archivos y headers antes de buscar IDs
     if (!fs::exists(start_csv_)) {
         std::ofstream f(start_csv_);
+
         f << "campaign_id,library,stage,logN,logQ,bitPerCoeff,logDelta,logSlots,"
              "withNTT,mult_depth,doAdd,doPlainMul,doMul,doScalarMul,doRot,doBoot,op_index,"
              "op_step,seed,seed_input,"
-             "isComplex,logMin,logMax,isExhaustive,dnum,scaleTech,timestamp_start\n";
-
+             "isComplex,logMin,logMax,isExhaustive,dnum,scaleTech\n";
     }
+
 
     if (!fs::exists(end_csv_)) {
         std::ofstream f(end_csv_);
+
         f << "campaign_id,total_bitflips,sdc_count,"
-             "duration_seconds,l2_P95, l2_P99, timestamp_end\n";
+             "duration_seconds,l2_P95,l2_P99,duration\n";
     }
+
+
+    auto key = makeCampaignKey(args);
+
+
+    auto existing_id = findCampaignId(start_csv_, key);
+
+
+    if (existing_id != INVALID_CAMPAIGN_ID) {
+
+        if (args.existing_policy == ExistingCampaignPolicy::Fail) {
+
+            unlock_file(fd);
+
+            throw std::runtime_error(
+                "Campaign already exists id=" +
+                std::to_string(existing_id));
+        }
+
+
+        this->campaign_id = existing_id;
+
+    }
+    else {
+
+        this->campaign_id = allocate_campaign_id();
+
+
+        // IMPORTANTE:
+        // Registrar acá mientras el lock sigue tomado
+        // para que el próximo proceso vea este ID.
+
+        std::ofstream f(start_csv_, std::ios::app);
+        f << this->campaign_id
+          << "," << key
+          << "\n";
+    }
+
+
+    unlock_file(fd);
 }
 
-uint32_t CampaignRegistry::findCampaignId(const std::string& csvFile,
-                    const std::string& key)
+uint32_t CampaignRegistry::findCampaignId(
+    const std::string& csvFile,
+    const std::string& key)
 {
     std::ifstream file(csvFile);
     if (!file.is_open())
-        return -1;
+        return INVALID_CAMPAIGN_ID;
 
     std::string line;
 
-    // Saltear header
+    // header
     std::getline(file, line);
 
     while (std::getline(file, line))
     {
-        // campaign_id
-        auto firstComma = line.find(',');
-        if (firstComma == std::string::npos)
+        if (line.empty())
             continue;
 
-        long campaignId =
-            std::stol(line.substr(0, firstComma));
-
-        // quitar campaign_id al inicio
-        // quitar timestamp_start al final
-        auto lastComma = line.rfind(',');
-        if (lastComma == std::string::npos || lastComma <= firstComma)
+        auto comma = line.find(',');
+        if (comma == std::string::npos)
             continue;
+
+        uint32_t campaignId =
+            std::stoul(line.substr(0, comma));
 
         std::string existingKey =
-            line.substr(firstComma + 1,
-                        lastComma - firstComma - 1);
+            line.substr(comma + 1);
 
         if (existingKey == key)
             return campaignId;
@@ -132,38 +161,34 @@ void CampaignRegistry::unlock_file(int fd) {
     close(fd);
 }
 
-uint32_t CampaignRegistry::allocate_campaign_id() {
-    int fd;
-    lock_file(fd);
-
+uint32_t CampaignRegistry::allocate_campaign_id()
+{
     std::ifstream f(start_csv_);
+
     std::string line;
+
     uint32_t max_id = 0;
-    std::getline(f, line);
-    while (std::getline(f, line)) {
-        if (line.empty()) continue;
-        max_id = std::max(max_id, (uint32_t)std::stoul(line));
+
+    std::getline(f,line); // header
+
+    while(std::getline(f,line))
+    {
+        if(line.empty())
+            continue;
+
+        auto comma = line.find(',');
+
+        if(comma == std::string::npos)
+            continue;
+
+        uint32_t id =
+            std::stoul(line.substr(0,comma));
+
+        max_id = std::max(max_id,id);
     }
 
-    unlock_file(fd);
     return max_id + 1;
 }
-
-void CampaignRegistry::register_start(const CampaignStartRecord& r) {
-    std::cout << "lock"<< std::endl;
-    int fd;
-    lock_file(fd);
-    std::cout << "lock"<< std::endl;
-
-    std::ofstream f(start_csv_, std::ios::app);
-
-    auto key = makeCampaignKey(r.args);
-    f << r.campaign_id << "," << key << ","
-      << r.timestamp_start << "\n";
-
-    unlock_file(fd);
-}
-
 void CampaignRegistry::register_end(const CampaignEndRecord& r) {
     int fd;
     lock_file(fd);
@@ -175,7 +200,7 @@ void CampaignRegistry::register_end(const CampaignEndRecord& r) {
       << r.duration_seconds << ","
       << r.l2_P95<< ","
       << r.l2_P99<< ","
-      << r.timestamp_end << "\n";
+      << r.duration<< "\n";
 
     unlock_file(fd);
 }
