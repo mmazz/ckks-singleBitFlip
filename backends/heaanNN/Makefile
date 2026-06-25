@@ -1,4 +1,4 @@
-PROJECT_ROOT := $(shell cd ../../../.. && pwd)
+PROJECT_ROOT := $(shell cd ../.. && pwd)
 
 HEAAN_SRC  := $(PROJECT_ROOT)/src/HEAAN-PRNG-Control
 COMMON_SRC := $(PROJECT_ROOT)/src/common

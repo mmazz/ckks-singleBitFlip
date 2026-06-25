@@ -88,12 +88,11 @@ int main(int argc, char* argv[]) {
     if(res.detected)
     {
         try{
-            args.results_dir = "../../../../results_NN";
+            args.results_dir = "../../results_NN";
+            std::cout << "\n=== Registring Campaign "<< std::endl;
             CampaignRegistry registry(args);
             uint32_t campaign_id = registry.campaign_id;
 
-            std::cout << "\n=== Registring Campaign "<< std::endl;
-            registry.register_start({campaign_id, args, ""});
 
             std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 

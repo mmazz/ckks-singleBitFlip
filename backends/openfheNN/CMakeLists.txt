@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16.3)
-get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../.." ABSOLUTE)
+get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 
 ### To use gcc/g++ on a Macintosh, you must set the Compilers
 ### here, not inside the project
@@ -62,7 +62,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../..")
+set(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 
 add_library(mainlib_common
     ${PROJECT_ROOT}/src/common/utils_ckks.cpp
@@ -74,7 +74,7 @@ add_library(mainlib_common
 
 add_library(backend_openfhe
     ${PROJECT_ROOT}/backends/openfhe/src/backend.cpp
-    ${PROJECT_ROOT}/backends/openfhe/src/nn_mnist/src/utils_nn.cpp
+    ${PROJECT_ROOT}/backends/openfheNN/src/utils_nn.cpp
 )
 
 target_include_directories(backend_openfhe PUBLIC

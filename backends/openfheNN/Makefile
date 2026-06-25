@@ -1,4 +1,4 @@
-PROJECT_ROOT := $(shell cd ../../../.. && pwd)
+PROJECT_ROOT := $(shell cd ../.. && pwd)
 RUN_IDS := 0 1 2 3
 RUNS := dirs $(addprefix run,$(RUN_IDS))
 RUNS_nonNTT := dirs $(addprefix run_nonNTT,$(RUN_IDS))
