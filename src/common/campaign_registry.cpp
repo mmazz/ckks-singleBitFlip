@@ -13,8 +13,6 @@ namespace fs = std::filesystem;
 
 namespace {
 
-// Concatena los campos con "," aplicando csvEscape solo a los que son
-// std::string (los numericos/bool se imprimen tal cual, igual que antes).
 template <typename... Ts>
 std::string joinCsvFields(const Ts&... fields)
 {
@@ -39,13 +37,6 @@ std::string joinCsvFields(const Ts&... fields)
 
 } // namespace
 
-// ---------------------------------------------------------------------------
-// FileLock: RAII sobre flock(). Se toma en el constructor y se libera
-// siempre en el destructor, incluso si entre medio se lanza una excepcion.
-// Esto reemplaza el patron anterior de lock_file()/unlock_file() manual,
-// que dejaba el lockfile tomado para siempre si algo lanzaba antes del
-// unlock.
-// ---------------------------------------------------------------------------
 CampaignRegistry::FileLock::FileLock(const std::string& path)
 {
     fd_ = open(path.c_str(), O_CREAT | O_RDWR, 0666);
@@ -73,13 +64,6 @@ CampaignRegistry::FileLock::~FileLock()
     }
 }
 
-// ---------------------------------------------------------------------------
-// csvEscape: encierra el campo entre comillas si contiene "," '"' o saltos
-// de linea, duplicando las comillas internas (regla estandar de CSV/RFC4180).
-// Sin esto, un valor de string (library, stage, scaleTech, etc.) que
-// contenga una coma corrompe el numero de columnas para cualquier
-// herramienta externa que lea el CSV (pandas, Excel, ...).
-// ---------------------------------------------------------------------------
 std::string CampaignRegistry::csvEscape(const std::string& field)
 {
     bool needsQuoting = field.find_first_of(",\"\n\r") != std::string::npos;
@@ -131,17 +115,7 @@ void CampaignRegistry::ensureCsvFilesExist()
     }
 }
 
-// ---------------------------------------------------------------------------
-// scanCsv: un solo pase por el archivo que busca `key` y a la vez calcula
-// el mayor campaign_id visto. Antes esto eran dos lecturas completas del
-// archivo bajo el lock (findCampaignId + allocate_campaign_id); ahora es
-// una sola, lo que ademas acorta el tiempo que se mantiene el flock.
-//
-// Tambien es resiliente: si una linea esta corrupta o vacia (por ejemplo
-// porque un proceso anterior murio a mitad de un write), se ignora esa
-// linea en vez de propagar una excepcion de std::stoul que tumbaria a
-// TODOS los procesos que lean el registro despues.
-// ---------------------------------------------------------------------------
+
 CampaignRegistry::ScanResult CampaignRegistry::scanCsv(
     const std::string& csvFile,
     const std::string& key)
@@ -156,9 +130,7 @@ CampaignRegistry::ScanResult CampaignRegistry::scanCsv(
     std::getline(file, line); // header
 
     while (std::getline(file, line)) {
-        // Tolerar CRLF si el archivo fue tocado en Windows: si no se
-        // recorta el '\r', queda pegado al ultimo campo de la key y el
-        // matching de campanias duplicadas falla en silencio.
+
         while (!line.empty() && (line.back() == '\r' || line.back() == '\n'))
             line.pop_back();
 
@@ -192,22 +164,8 @@ uint32_t CampaignRegistry::findCampaignId(const std::string& csvFile, const std:
     return scanCsv(csvFile, key).existing_id;
 }
 
-uint32_t CampaignRegistry::allocate_campaign_id()
-{
-    // Key vacia: nunca deberia matchear contra una key real, asi que esto
-    // solo se usa por su max_id. Se mantiene por compatibilidad con quien
-    // ya llame a este metodo; el constructor ya no lo usa (ver scanCsv).
-    return scanCsv(start_csv_, std::string()).max_id + 1;
-}
-
 CampaignRegistry::CampaignRegistry(const CampaignArgs& args)
 {
-    // NOTA: start_time se recibe pero no se persiste en ningun lado (igual
-    // que en la version anterior). Si la idea es loguear cuando arranco
-    // la campania, falta agregar una columna en campaigns_start.csv y
-    // escribirla aca. Lo dejo afuera para no cambiar el formato del CSV
-    // sin confirmar que es lo que se quiere.
-
     const std::string& results_dir = args.results_dir;
     fs::create_directories(results_dir);
 
@@ -252,15 +210,9 @@ void CampaignRegistry::register_end(const CampaignEndRecord& r)
     std::ofstream f(end_csv_, std::ios::app);
     if (!f)
         throw std::runtime_error("CampaignRegistry: no se pudo abrir " + end_csv_ + " para escritura");
-
-    f << r.campaign_id << ","
-      << r.total_bitflips << ","
-      << r.sdc_count << ","
-      << r.duration_seconds << ","
-      << r.l2_P95 << ","
-      << r.l2_P99 << ","
-      << r.duration << "\n";
-
+    f << joinCsvFields(r.campaign_id, r.total_bitflips, r.sdc_count,
+                        r.duration_seconds, r.l2_P95, r.l2_P99, r.duration)
+      << "\n";
     if (!f)
         throw std::runtime_error("CampaignRegistry: fallo al escribir en " + end_csv_);
 }
