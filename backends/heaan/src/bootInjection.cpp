@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     {
         std::cout << "\n=== Registring Campaign "<< std::endl;
         CampaignRegistry registry(args);
-        uint32_t campaign_id = registry.allocate_campaign_id();
+        uint32_t campaign_id = registry.campaign_id;
 
 
         std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;

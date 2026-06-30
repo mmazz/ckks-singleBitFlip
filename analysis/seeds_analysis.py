@@ -15,7 +15,7 @@ width = int(config.width)
 s = config.size
 colors = config.colors
 dir = "img/"
-SAVENAME = "encode"
+SAVENAME = "seed_encrypt"
 
 
 

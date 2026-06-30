@@ -12,8 +12,10 @@ from pathlib import Path
 
 CONFIG_DIR = Path(__file__).resolve().parent / "configs"
 
-SEEDS_PRNG = 4
-SEEDS_INP = 3
+SEEDS_PRNG = 5
+SEEDS_INP = 5
+EXTRA_SEEDS = 20
+
 def cartesian_product_rows(fixed: dict, sweep: dict) -> list[dict]:
     """
     variants: parámetros que varian en pares o solos
@@ -56,6 +58,25 @@ def write_csv(name: str, rows: list[dict]):
         writer.writeheader()
         writer.writerows(rows)
     print(f"[{name}] {len(rows)} filas -> {out_path}")
+
+def gen_seeds_analysis():
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "heaan",
+        "logN": 6,
+        "logQ": 60,
+        "bitPerCoeff": 64,
+        "logDelta": 40,
+        "stage": "encrypt_c0",
+        "logSlots": 5,
+        "withNTT": 0,
+    }
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1+EXTRA_SEEDS)),
+        "seed_input": list(range(1, SEEDS_INP+1+EXTRA_SEEDS)),
+    }
+    write_csv("seeds_analysis", cartesian_product_rows(fixed, sweep))
+
 
 
 
@@ -166,25 +187,6 @@ def gen_gap_analysis():
         rows += cartesian_product_rows(fixed, sweep)
 
     write_csv("gap_analysis", rows)
-
-
-def gen_seeds_analysis():
-    fixed = {
-        "binary": "exhaustiveSingleBitFlip",
-        "library": "heaan",
-        "logN": 6,
-        "logQ": 60,
-        "bitPerCoeff": 64,
-        "logDelta": 40,
-        "stage": "encrypt_c0",
-        "logSlots": 5,
-        "withNTT": 0,
-    }
-    sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
-    }
-    write_csv("seeds_analysis", cartesian_product_rows(fixed, sweep))
 
 
 def gen_mul_inside():

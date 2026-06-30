@@ -124,7 +124,7 @@ HEAAN_NN_PARAMS = --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --
 heaanNN_TACO: heaanNN_enco heaanNN_encrC0 heaanNN_encrC1 heaanNN_decC0 heaanNN_decC1 heaanNN_deco
 
 heaanNN_enco:
-	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage encode     --title encode-NN-heaan
+	python3 NN_gap.py $(HEAAN_NN_PARAMS) --bitPerCoeff 500 --stage encode     --title encode-NN-heaan
 
 heaanNN_encrC0:
 	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage encrypt_c0 --title encryptC0-NN-heaan
