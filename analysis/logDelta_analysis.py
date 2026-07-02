@@ -67,14 +67,16 @@ def main():
     fig, ax = plt.subplots(figsize=(12, 5))
     i = 0
     s = config.size
-    for logQ, df in all_stats.items():
-        plot_bit(df, ax=ax, label_prefix=f"logQ={logQ}", color=c[i], size=s-i*20, alpha=alpha)
+    for logDelta, df in all_stats.items():
+        plot_bit(df, ax=ax, label_prefix=f"logDelta={logDelta}", color=c[i], size=s-i*20, alpha=alpha)
         i+=1
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
     plt.savefig(dir+f"{savename}.png", bbox_inches='tight')
     if show:
         plt.show()
+
+    print(dir+f"{savename}.png")
 
 
 if __name__ == "__main__":

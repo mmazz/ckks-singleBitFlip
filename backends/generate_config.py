@@ -15,6 +15,7 @@ CONFIG_DIR = Path(__file__).resolve().parent / "configs"
 SEEDS_PRNG = 5
 SEEDS_INP = 5
 EXTRA_SEEDS = 20
+stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 
 def cartesian_product_rows(fixed: dict, sweep: dict) -> list[dict]:
     """
@@ -37,7 +38,6 @@ def cartesian_product_rows(fixed: dict, sweep: dict) -> list[dict]:
         rows.append(row)
     return rows
 
-
 def write_csv(name: str, rows: list[dict]):
     if not rows:
         print(f"[{name}] no se generaron filas, se omite.")
@@ -59,6 +59,61 @@ def write_csv(name: str, rows: list[dict]):
         writer.writerows(rows)
     print(f"[{name}] {len(rows)} filas -> {out_path}")
 
+def gen_heaan_VS_openfhe_plain_analysis():
+    variants = [
+        {"library": "heaan",   "bitPerCoeff": 128},
+        {"library": "openfhe", "bitPerCoeff": 64},
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "exhaustiveSingleBitFlip",
+            "logN": 6,
+            "logSlots": 5,
+            "logQ": 60,
+            "logDelta": 40,
+            "stage": "encode",
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("heaan_VS_openfhe_plain_analysis", rows)
+
+
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "library": ["heaan", "openfhe"],
+    }
+    fixed = {
+
+    }
+    write_csv("heaan_plain_VS_c0_analysis", cartesian_product_rows(fixed, sweep))
+
+
+def gen_heaan_plain_VS_c0_analysis():
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "stage": stages,
+        "library": ["heaan", "openfhe"],
+    }
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "logN": 6,
+        "logSlots": 5,
+        "bitPerCoeff": 64,
+        "logQ": 60,
+        "logDelta": 40,
+        "withNTT": 0,
+    }
+    write_csv("heaan_plain_VS_c0_analysis", cartesian_product_rows(fixed, sweep))
+
 def gen_seeds_analysis():
     fixed = {
         "binary": "exhaustiveSingleBitFlip",
@@ -77,9 +132,6 @@ def gen_seeds_analysis():
     }
     write_csv("seeds_analysis", cartesian_product_rows(fixed, sweep))
 
-
-
-
 def gen_logN_analysis():
     variants = [
         {"logN": 16, "logSlots": 15, "binary": "randomSingleBitFlip"},
@@ -88,6 +140,7 @@ def gen_logN_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
+        "stage":stages
     }
     rows = []
     for v in variants:
@@ -96,14 +149,13 @@ def gen_logN_analysis():
             "logQ": 60,
             "bitPerCoeff": 64,
             "logDelta": 40,
-            "stage": "encrypt_c0",
+            #"stage": "encrypt_c0",
             "withNTT": 0,
             **v,
         }
         rows += cartesian_product_rows(fixed, sweep)
 
     write_csv("logN_analysis", rows)
-
 
 def gen_logQ_analysis():
     variants = [
@@ -160,7 +212,6 @@ def gen_logDelta_analysis():
     write_csv("logDelta_analysis", rows)
 
 
-
 def gen_gap_analysis():
     variants = [
         {"logSlots": 5},
@@ -188,7 +239,6 @@ def gen_gap_analysis():
 
     write_csv("gap_analysis", rows)
 
-
 def gen_mul_inside():
     """Equivalente a 'mul_inside' del Makefile original: 13 corridas (antes copiadas a mano)."""
     fixed = {
@@ -210,8 +260,6 @@ def gen_mul_inside():
         "op_index": list(range(13)),  # 0..12
     }
     write_csv("mul_inside", cartesian_product_rows(fixed, sweep))
-
-
 
 def gen_boot_analysis():
     variants = [
@@ -305,9 +353,9 @@ def gen_openfheNN_analysis():
 
     write_csv("openfheNN_analysis", rows)
 
-
-
 if __name__ == "__main__":
+    gen_heaan_VS_openfhe_plain_analysis()
+    gen_heaan_plain_VS_c0_analysis()
     gen_seeds_analysis()
     gen_logN_analysis()
     gen_logQ_analysis()
@@ -315,5 +363,8 @@ if __name__ == "__main__":
     gen_gap_analysis()
     gen_mul_inside()
     gen_boot_analysis()
+
+
+    # NN
     gen_heaanNN_analysis()
     gen_openfheNN_analysis()

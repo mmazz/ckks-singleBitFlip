@@ -54,6 +54,7 @@ def main():
     Delta_openfhe = filters_openfhe["logDelta"][1]
     Q_HEAAN       = 2*filters_heaan["logQ"][1]
     Delta_HEAAN   = filters_heaan["logDelta"][1] + filters_heaan["logQ"][1]
+    Delta_HEAAN   = filters_heaan["logDelta"][1] + filters_heaan["logQ"][1]
 
     openfhe_norm = normalizer(openfhe, Q_openfhe, Delta_openfhe)
     heaan_norm   = normalizer(heaan,   Q_HEAAN,   Delta_HEAAN)

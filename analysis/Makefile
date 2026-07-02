@@ -50,7 +50,8 @@ seeds_analysis_mul:
 	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0 --doMul 2
 
 encode_analysis:
-	python3 encode_analysis.py   --library $(LIBRARY) --logN 3  --logSlots 2  --logQ 60  --logDelta 40 --bitPerCoeff 130 --stage encode   --withNTT 0
+	python3 encode_analysis.py   --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 128 --stage encode   --withNTT 0
+	#python3 encode_analysis.py   --library $(LIBRARY) --logN 3  --logSlots 2  --logQ 60  --logDelta 40 --bitPerCoeff 130 --stage encode   --withNTT 0
 
 encrypt_analysis:
 	python3 encrypt_analysis.py  --library $(LIBRARY) --logN 2  --logSlots 1  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0  --withNTT 0
