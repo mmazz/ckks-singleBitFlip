@@ -46,7 +46,6 @@ def main():
 
     data = load_campaign_data(selected, DATA_PATH)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
-    i = 0
     s = config.size
     alpha = config.alpha
 
