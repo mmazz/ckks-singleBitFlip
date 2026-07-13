@@ -5,7 +5,7 @@
 #include "backend_interface.h"
 #include "utils_ckks.h"
 
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 
 
 
@@ -30,9 +30,8 @@ int main(int argc, char* argv[]) {
     if(AcceptCKKSResult(baseline_metrics)){
         try{
             CampaignRegistry registry(args);
-            uint32_t campaign_id = registry.campaign_id;
             std::cout << "\n=== Registring Campaign "<< std::endl;
-            registry.register_start({campaign_id, args,  "" });
+            uint32_t campaign_id = registry.campaign_id;
 
             std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
@@ -59,14 +58,21 @@ int main(int argc, char* argv[]) {
                 {
                     for(size_t bit=0; bit<bits_per_coeff; bit++)
                     {
+                        std::cout << "Iter args\n";
                         IterationArgs iterArgs(limb, coeff, bit);
-                        if (logger.contains(iterArgs))
-                        {
-                            std::cout << "Skipping already computed iteration\n";
+                        std::cout << "Iter args end\n";
+                        if(args.existing_policy == ExistingCampaignPolicy::Reuse){
+                            if (logger.contains(iterArgs))
+                            {
+                                std::cout << "Skipping already computed iteration\n";
+                            }
                         }
+
                         else{
 
+                            std::cout << "Starting iteration\n";
                             IterationResult res = run_iteration(ctx, args, iterArgs);
+                            std::cout << "end iteration\n";
                             CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
                             auto slot_stats = categorize_slots_relative(goldenCKKS_output.values, res.values, slots);
                             logger.log(iterArgs.limb,

@@ -85,18 +85,7 @@ def gen_heaan_VS_openfhe_plain_analysis():
     write_csv("heaan_VS_openfhe_plain_analysis", rows)
 
 
-    sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
-        "library": ["heaan", "openfhe"],
-    }
-    fixed = {
-
-    }
-    write_csv("heaan_plain_VS_c0_analysis", cartesian_product_rows(fixed, sweep))
-
-
-def gen_heaan_plain_VS_c0_analysis():
+def gen_heaan_plain_VS_c0_VS_c1_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
@@ -112,7 +101,7 @@ def gen_heaan_plain_VS_c0_analysis():
         "logDelta": 40,
         "withNTT": 0,
     }
-    write_csv("heaan_plain_VS_c0_analysis", cartesian_product_rows(fixed, sweep))
+    write_csv("heaan_plain_VS_c0_VS_c1_analysis", cartesian_product_rows(fixed, sweep))
 
 def gen_seeds_analysis():
     fixed = {
@@ -355,7 +344,7 @@ def gen_openfheNN_analysis():
 
 if __name__ == "__main__":
     gen_heaan_VS_openfhe_plain_analysis()
-    gen_heaan_plain_VS_c0_analysis()
+    gen_heaan_plain_VS_c0_VS_c1_analysis()
     gen_seeds_analysis()
     gen_logN_analysis()
     gen_logQ_analysis()
