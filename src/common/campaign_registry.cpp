@@ -173,8 +173,6 @@ CampaignRegistry::CampaignRegistry(const CampaignArgs& args)
     end_csv_   = results_dir + "/campaigns_end.csv";
     lockfile_  = results_dir + "/.registry.lock";
 
-    // RAII: el lock se libera solo al salir del scope del constructor,
-    // sea por return normal o por cualquier excepcion lanzada mas abajo.
     FileLock lock(lockfile_);
 
     ensureCsvFilesExist();
