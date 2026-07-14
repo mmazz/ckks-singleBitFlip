@@ -89,8 +89,8 @@ def gen_heaan_plain_VS_c0_VS_c1_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
-        "stage": stages,
-        "library": ["heaan", "openfhe"],
+        "stage": ["encode", "encrypt_c0", "encrypt_c1"],
+        "library": ["openfhe", "heaan"],
     }
     fixed = {
         "binary": "exhaustiveSingleBitFlip",
@@ -210,6 +210,7 @@ def gen_gap_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
+        "stage": ["encrypt_c0", "encrypt_c1"],
     }
     rows = []
     for v in variants:
@@ -220,7 +221,6 @@ def gen_gap_analysis():
             "logDelta": 40,
             "bitPerCoeff": 64,
             "logQ": 60,
-            "stage": "encrypt_c0",
             "withNTT": 0,
             **v,
         }

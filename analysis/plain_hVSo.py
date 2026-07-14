@@ -18,28 +18,17 @@ c = [colors["red"], colors["blue"], colors["green"], colors["orange"], colors["v
 s = config.size
 
 dir = "img/"
-SAVENAME = "logQ"
+SAVENAME = "plain_hean_VS_openfhe"
 
 
 BASELINE_LOGN = 6
+BASELINE_LOGQ = 60
 BASELINE_LOGSLOTS = 5
-BASELINE_LIBRARY = "heaan"
-BASELINE_STAGE = "encrypt_c0"
-LOGQ_VALUES = [40, 60, 80, 100]
-LOGDELTA_VALUES = {
-        40:30,
-        60:45,
-        80:60,
-        100:75
-    }
+LIBRARYS = { 128: "heaan", 64: "openfhe"}
+BASELINE_STAGE = "encode"
+BASELINE_LOGDELTA =  40
 
-BIT_PER_COEFF = {
-    40: 50,
-    60: 75,
-    80: 100,
-    100: 125,
-}
-
+BIT_PER_COEFF = [ 128, 64]
 
 
 def main():
@@ -51,30 +40,30 @@ def main():
 
     base_filters = build_filters(args)
     all_stats = {}
-    for logQ in LOGQ_VALUES:
+    for bit_per_coeff in BIT_PER_COEFF:
         filters = base_filters.copy()
-        filters["library"]    =  ("str", BASELINE_LIBRARY)
+        filters["library"]    =  ("str", LIBRARYS[bit_per_coeff])
         filters["stage"]      =  ("str", BASELINE_STAGE)
         filters["logN"]       =  ("int", BASELINE_LOGN)
         filters["logSlots"]   =  ("int", BASELINE_LOGSLOTS)
-        filters["logQ"]       =  ("int", logQ)
-        filters["logDelta"]   =  ("int", LOGDELTA_VALUES[logQ])
-        filters["bitPerCoeff"]= ("int", BIT_PER_COEFF[logQ])
+        filters["logQ"]       =  ("int", BASELINE_LOGQ)
+        filters["logDelta"]   =  ("int", BASELINE_LOGDELTA)
+        filters["bitPerCoeff"]= ("int", bit_per_coeff)
 
     ########################## DATA ################################
         selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
 
         if selected.empty:
-            print(f"[WARN] No campaigns for logQ={logQ}")
+            print(f"[WARN] No campaigns for bit_per_coeff={bit_per_coeff}")
             continue
 
         data = load_campaign_data(selected, config.DATA_DIR)
         if data.empty:
-            print(f"[WARN] No bitflip data for logQ={logQ}")
+            print(f"[WARN] No bitflip data for bit_per_coeff={bit_per_coeff}")
             continue
     ########################## STATS ###############################
         stats = stats_by_bit(data)
-        all_stats[logQ] = stats
+        all_stats[bit_per_coeff] = stats
 
     if not all_stats:
         raise RuntimeError("No data loaded for any logQ")
@@ -83,9 +72,12 @@ def main():
     fig, ax = plt.subplots(figsize=(12, 5))
     i = 0
     s = config.size
-    for logQ, df in all_stats.items():
-        df["bit"] = df["bit"]/logQ
-        plot_bit(df, ax=ax, label_prefix=f"logQ={logQ}", color=c[i], size=s-i*20, alpha=alpha, xlabel="Bit index relative to logQ")
+    for bit_per_coeff, df in all_stats.items():
+        if LIBRARYS[bit_per_coeff] == "heaan":
+            # Eliminar las filas con bit <= logQ
+            df = df[df["bit"] > BASELINE_LOGQ].copy()
+            df["bit"] = df["bit"] - BASELINE_LOGQ
+        plot_bit(df, ax=ax, label_prefix=f"library={LIBRARYS[bit_per_coeff]}", color=c[i], size=s-i*20, alpha=alpha)
         i+=1
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')

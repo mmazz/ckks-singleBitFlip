@@ -132,7 +132,7 @@ def plot_bit_max_min(stats, ax=None, label_prefix="", size=40):
 
     return ax
 
-def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=True, xlabel="Bit index", label="Mean $L_2$", size=40, plot_std=False, alpha=1.0, dataType="l2"):
+def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=True, xlabel="Bit index", label="Mean $L_2$", size=40, plot_std=False, alpha=1.0, dataType="l2", legend=True):
 
     if ax is None:
         ax = plt.gca()
@@ -175,7 +175,8 @@ def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=True,
     ax.set_xlabel(xlabel)
     ax.set_ylabel("$L_2$ norm (symlog)")
     ax.grid(True, which="both")
-    ax.legend()
+    if legend:
+        ax.legend()
 
 def get_colors(values):
     colors = []

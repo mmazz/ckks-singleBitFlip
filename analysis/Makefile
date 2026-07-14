@@ -66,7 +66,8 @@ logDelta_analysis:
 	python3 logDelta_analysis.py --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 50 --bitPerCoeff 64  --stage encrypt_c0
 
 gap_analysis:
-	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0
+	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0 --title gap_c0
+	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c1 --title gap_c1
 
 mul_analysis:
 	python3 mul_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 120 --logDelta 30 --bitPerCoeff 150 --stage encrypt_c0 --doMul 3 --mult_depth 0 --isComplex $(ISCOMPLEX)
