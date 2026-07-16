@@ -139,6 +139,7 @@ def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=True,
     x = stats["bit"].to_numpy()
 
     mean = stats[f"mean_{dataType}"].to_numpy()
+    std = 0
     if plot_std:
         std  = stats[f"std_{dataType}"]
     if scatter:
@@ -163,7 +164,7 @@ def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=True,
         )
 
     if plot_std:
-        plt.fill_between(
+        ax.fill_between(
             x,
             mean - std,
             mean + std,

@@ -164,8 +164,8 @@ IterationResult run_iteration(BackendContext* bctx,
         }
     }
 
-    if(args.doAdd)
-        ctx.cc->EvalAddInPlace(c,c_clean);
+    for (uint32_t i = 0; i < args.doAdd; ++i)
+        c = ctx.cc->EvalAdd(c, c_clean);
 
     for (uint32_t i = 0; i < args.doPlainMul; ++i)
         c = ctx.cc->EvalMult(c, ptxt_clean);
@@ -250,8 +250,8 @@ IterationChequer gen_cipher(BackendContext* bctx,
         }
     }
 
-    if(args.doAdd)
-        ctx.cc->EvalAddInPlace(c,c_clean);
+    for (uint32_t i = 0; i < args.doAdd; ++i)
+        c = ctx.cc->EvalAdd(c, c_clean);
 
     for (uint32_t i = 0; i < args.doPlainMul; ++i)
         c = ctx.cc->EvalMult(c, ptxt_clean);

@@ -155,7 +155,6 @@ CampaignRegistry::ScanResult CampaignRegistry::scanCsv(
             result.existing_id = id;
         }
     }
-
     return result;
 }
 

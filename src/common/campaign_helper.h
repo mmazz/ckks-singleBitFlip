@@ -49,7 +49,7 @@ struct CampaignArgs {
     uint32_t seed_input = 0;
 
     bool withNTT = false;
-    bool doAdd = false;
+    uint32_t doAdd = false;
     uint32_t doPlainMul = 0;
     uint32_t doMul = 0;
     double doScalarMul = 0;

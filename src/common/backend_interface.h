@@ -38,15 +38,14 @@ inline void compute_plain_io(const CampaignArgs& args,
         printVector(base, "Flat input", 10);
 
     golden = base;
-    if (args.doAdd) {
+    for (uint32_t i = 0; i < args.doAdd; ++i) {
         std::transform(
-            golden.begin(), golden.end(),
-            base.begin(),
-            golden.begin(),
-            std::plus<double>()
-        );
+                golden.begin(), golden.end(),
+                base.begin(),
+                golden.begin(),
+                std::plus<double>()
+                );
     }
-
     std::cout << "doPlainMul "  << args.doPlainMul << std::endl;
     for (uint32_t i = 0; i < args.doPlainMul+args.doMul; ++i) {
         std::transform(
@@ -110,15 +109,15 @@ inline void compute_plain_io(const CampaignArgs& args,
         printVector(base, "Flat complex input", 10);
 
     golden = base;
-
-    if (args.doAdd) {
+    for (uint32_t i = 0; i < args.doAdd; ++i) {
         std::transform(
-            golden.begin(), golden.end(),
-            base.begin(),
-            golden.begin(),
-            std::plus<cdouble>()
-        );
+                golden.begin(), golden.end(),
+                base.begin(),
+                golden.begin(),
+                std::plus<cdouble>()
+                );
     }
+
     const uint32_t nMul = args.doPlainMul + args.doMul;
     for (uint32_t i = 0; i < nMul; ++i) {
         std::transform(

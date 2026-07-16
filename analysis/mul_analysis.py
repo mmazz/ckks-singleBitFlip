@@ -56,14 +56,15 @@ def main():
         print(f"Loaded data shape: {data.shape}")
         # si quiero ver limbs individuales.
         #data = data[data["limb"]==3]
+
     ########################## STATS ###############################
         stats_gaps, gap   = split_by_gap(data, args.logN, args.logSlots)
         stats_aligned     = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="aligned"])
         stats_non_aligned = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="non_aligned"])
 
     ########################## PLOT ################################
-        plot_bit(stats_aligned,     ax=ax[0], label_prefix="Mult depth", label=mulDepth, color=c[i], size=s-i*20, alpha=alpha)
-        plot_bit(stats_non_aligned, ax=ax[1], label_prefix="Mult depth", label=mulDepth,color=c[i],  size=s-i*20, alpha=alpha)
+        plot_bit(stats_aligned,     ax=ax[0], label_prefix="Mult depth", label=mulDepth, color=c[i], size=s-i*20, alpha=alpha, plot_std=False)
+        plot_bit(stats_non_aligned, ax=ax[1], label_prefix="Mult depth", label=mulDepth, color=c[i], size=s-i*20, alpha=alpha, plot_std=False, legend=False)
         i+=1
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')

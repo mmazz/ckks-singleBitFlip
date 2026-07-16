@@ -59,7 +59,7 @@ def main():
         stats_gaps, gap   = split_by_gap(data, args.logN, logSlot)
         stats_aligned     = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="aligned"])
         stats_non_aligned = stats_by_bit(stats_gaps[stats_gaps["gap_class"] =="non_aligned"])
-
+        stats_non_aligned = stats_non_aligned[stats_non_aligned["coeff"]!=0]
     ########################## PLOT ################################
         plot_bit(stats_aligned,     ax=ax[0], label_prefix=f"logSlots={logSlot}", label="", color=c[i], size=s-i*20, alpha=alpha)
         plot_bit(stats_non_aligned, ax=ax[1], label_prefix=f"logSlots={logSlot}", label="", color=c[i],  size=s-i*20, alpha=alpha, legend=False)

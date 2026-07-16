@@ -50,8 +50,8 @@ def main():
     fig, ax = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
 
     ########################## PLOT ################################
-    plot_bit(stats_aligned,     ax=ax[0], label_prefix="Add+Rot",  color=c[1], size=s)
-    plot_bit(stats_non_aligned, ax=ax[1], label_prefix="Add+Rot",  color=c[1],  size=s)
+    plot_bit(stats_aligned,     ax=ax[0], label_prefix="Add+Rot", label="", color=c[1], size=s)
+    plot_bit(stats_non_aligned, ax=ax[1], label_prefix="Add+Rot", label="", color=c[1],  size=s)
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')
     plt.savefig(dir+f"{savename}.png", bbox_inches='tight')

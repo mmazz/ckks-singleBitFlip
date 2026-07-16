@@ -385,7 +385,7 @@ def gen_opClientAdd_analysis():
     rows = []
     for v in variants:
         fixed = {
-            "binary": "randomSingleBitFlip",
+            "binary": "exhaustiveSingleBitFlip",
             "library": "heaan",
             "logN": 6,
             "logQ": 60,
@@ -397,34 +397,6 @@ def gen_opClientAdd_analysis():
         rows += cartesian_product_rows(fixed, sweep)
 
     write_csv("opClientAdd_analysis", rows)
-
-def gen_opClientAddRot_analysis():
-    variants = [
-        {"stage": "encode" ,     "bitPerCoeff": 128},
-        {"stage": "encrypt_c0" , "bitPerCoeff": 64},
-        {"stage": "encrypt_c1" , "bitPerCoeff": 64},
-    ]
-    sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
-    }
-    rows = []
-    for v in variants:
-        fixed = {
-            "binary": "randomSingleBitFlip",
-            "library": "heaan",
-            "logN": 6,
-            "logQ": 60,
-            "logDelta": 30,
-            "logSlots": 4,
-            "withNTT": 0,
-            "doAdd": 1,
-            "doRot": 1,
-            **v,
-        }
-        rows += cartesian_product_rows(fixed, sweep)
-
-    write_csv("opClientAddRot_analysis", rows)
 
 def gen_opClientRot_analysis():
     variants = [
@@ -440,7 +412,7 @@ def gen_opClientRot_analysis():
     rows = []
     for v in variants:
         fixed = {
-            "binary": "randomSingleBitFlip",
+            "binary": "exhaustiveSingleBitFlip",
             "library": "heaan",
             "logN": 6,
             "logQ": 60,
@@ -453,7 +425,7 @@ def gen_opClientRot_analysis():
 
     write_csv("opClientRot_analysis", rows)
 
-def gen_opClientMul_analysis():
+def gen_opClientAddRot_analysis():
     variants = [
         {"stage": "encode" ,     "bitPerCoeff": 128},
         {"stage": "encrypt_c0" , "bitPerCoeff": 64},
@@ -462,23 +434,87 @@ def gen_opClientMul_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
-        "doMul": [1, 2, 3]
     }
     rows = []
     for v in variants:
         fixed = {
-            "binary": "randomSingleBitFlip",
+            "binary": "exhaustiveSingleBitFlip",
             "library": "heaan",
             "logN": 6,
             "logQ": 60,
-            "logDelta": 50,
+            "logDelta": 30,
             "logSlots": 4,
             "withNTT": 0,
+            "doAdd": 3,
+            "doRot": 2,
             **v,
         }
         rows += cartesian_product_rows(fixed, sweep)
 
-    write_csv("opClientMul_analysis", rows)
+    write_csv("opClientAddRot_analysis", rows)
+
+
+
+def gen_opClientMul_analysis():
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "doMul": [1, 2, 3],
+        "stage": ["encode", "encrypt_c0", "encrypt_c1"]
+    }
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "heaan",
+        "logN": 6,
+        "logQ": 120,
+        "bitPerCoeff": 150,
+        "logDelta": 30,
+        "logSlots": 4,
+        "withNTT": 0,
+    }
+
+    write_csv("opClientMul_analysis", cartesian_product_rows(fixed, sweep))
+
+def gen_opClientAddRot_RNS_analysis():
+
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "stage": ["encode", "encrypt_c0", "encrypt_c1"]
+    }
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "openfhe",
+        "logN": 6,
+        "logQ": 60,
+        "logDelta": 30,
+        "logSlots": 4,
+        "withNTT": 0,
+        "doAdd": 3,
+        "doRot": 2,
+        "mult_depth": 3,
+    }
+    write_csv("opClientAddRot_RNS_analysis", cartesian_product_rows(fixed, sweep))
+def gen_opClientMul_RNS_analysis():
+
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "stage": ["encode", "encrypt_c0", "encrypt_c1"]
+    }
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "openfhe",
+        "logN": 6,
+        "logQ": 60,
+        "logDelta": 30,
+        "logSlots": 4,
+        "withNTT": 0,
+        "doMul": 1,
+        "mult_depth": 3,
+    }
+    write_csv("opClientAddRot_RNS_analysis", cartesian_product_rows(fixed, sweep))
+
 
 if __name__ == "__main__":
     gen_heaan_VS_openfhe_plain_analysis()
@@ -497,6 +533,7 @@ if __name__ == "__main__":
     gen_opClientRot_analysis()
     gen_opClientAddRot_analysis()
     gen_opClientMul_analysis()
+    gen_opClientAddRot_RNS_analysis()
 
 
     # NN

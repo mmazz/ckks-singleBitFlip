@@ -164,8 +164,9 @@ IterationResult run_iteration(
     }
 
 
-    if(args.doAdd>0)
+    for (uint32_t i = 0; i < args.doAdd; ++i) {
         c = ctx.scheme.add(c, c_clean);
+    }
 
     for (uint32_t i = 0; i < args.doPlainMul; ++i) {
         c = ctx.scheme.multByPoly(c, plain_clean.mx, args.logDelta);

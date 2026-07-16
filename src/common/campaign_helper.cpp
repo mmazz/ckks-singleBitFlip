@@ -176,10 +176,8 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'n':  // --withNTT 0/1
                 args.withNTT = std::stoul(optarg) != 0;
                 break;
-            case 'A':
-                args.doAdd = std::stoul(optarg) != 0;
-                break;
 
+            case 'A': args.doAdd = std::stoul(optarg); break;
             case 'p': args.doPlainMul = std::stoul(optarg); break;
             case 'M': args.doMul = std::stoul(optarg); break;
             case 'L':
