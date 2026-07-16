@@ -342,6 +342,38 @@ def gen_openfheNN_analysis():
 
     write_csv("openfheNN_analysis", rows)
 
+def gen_input_analysis():
+    variants = [
+            {"logMin": 9,  "logMax": 10},
+            {"logMin": 19,  "logMax": 20},
+            {"logMin": 29,  "logMax": 30},
+            {"logMin": 39,  "logMax": 40},
+        ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1+EXTRA_SEEDS)),
+        "seed_input": list(range(1, SEEDS_INP+1+EXTRA_SEEDS)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "exhaustiveSingleBitFlip",
+            "library": "openfhe",
+            "logN": 6,
+            "logQ": 60,
+            "bitPerCoeff": 64,
+            "logDelta": 20,
+            "stage": "encrypt_c0",
+            "logSlots": 5,
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("input_analysis", rows)
+
+
+
+
 if __name__ == "__main__":
     gen_heaan_VS_openfhe_plain_analysis()
     gen_heaan_plain_VS_c0_VS_c1_analysis()
@@ -352,6 +384,7 @@ if __name__ == "__main__":
     gen_gap_analysis()
     gen_mul_inside()
     gen_boot_analysis()
+    gen_input_analysis()
 
 
     # NN

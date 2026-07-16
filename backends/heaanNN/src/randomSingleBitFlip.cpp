@@ -160,6 +160,7 @@ int main(int argc, char* argv[]) {
         }
     } else {
         std::cout << "Wrong prediction of clean NN" << std::endl;
+        return 1;
     }
 
     return 0;

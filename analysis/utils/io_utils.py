@@ -30,6 +30,8 @@ OPTIONAL_DEFAULTS = {
     "doScalarMul": 0,
     "doRot": 0,
     "doBoot": 0,
+    "logMin": 0,
+    "logMax": 0,
     "op_index": 0,
     "op_step": 0,
     "doBoot": 0,

@@ -118,6 +118,7 @@ int main(int argc, char* argv[]) {
             goldenCKKS_output.values,
             baseline_metrics
         );
+        return 1;
     }
 
     return 0;

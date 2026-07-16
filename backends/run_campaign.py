@@ -74,6 +74,13 @@ def run_one(row: dict, dry_run: bool, log_path: Path, lock: Lock) -> tuple[str, 
             text=True,
             timeout=None,  # ajustar si querés un timeout por corrida
         )
+        print("CMD:", cmd)
+        print("CWD:", cwd)
+        print("RET:", result.returncode)
+        print("STDOUT:")
+        print(result.stdout)
+        print("STDERR:")
+        print(result.stderr)
         elapsed = time.time() - start
         ok = result.returncode == 0
         msg = f"exit={result.returncode} time={elapsed:.1f}s"
