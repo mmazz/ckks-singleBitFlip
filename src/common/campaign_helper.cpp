@@ -10,49 +10,54 @@
 
 
 void CampaignArgs::print(std::ostream& os) const {
-    os << "Campaign configuration:\n"
-       << "  library: " << library << "\n"
-       << "  stage: " << stage<< "\n"
-       << "  bitPerCoeff: " << bitPerCoeff << "\n"
-       << "  logN: " << logN << "\n"
-       << "  logQ: " << logQ << "\n"
-       << "  logDelta: " << logDelta << "\n"
-       << "  logSlots: " << logSlots << "\n"
-       << "  mult_depth: " << mult_depth << "\n"
-       << "  seed: " << seed << "\n"
-       << "  seed_input: " << seed_input << "\n"
-       << "  withNTT: " << withNTT << "\n"
-       << "  logMin: " << logMin << "\n"
-       << "  logMax: " << logMax << "\n"
-       << "  doAdd: " << doAdd << "\n"
-       << "  doPlainMul: " << doPlainMul << "\n"
-       << "  doMul: " << doMul << "\n"
-       << "  doScalarMul: " << doScalarMul << "\n"
-       << "  doRot: " << doRot << "\n"
-       << "  doBoot: " << doBoot << "\n"
-       << "  op_index: " << op_index << "\n"
-       << "  op_step: " << op_step<< "\n"
-       << "  isComplex : " << isComplex<< "\n"
-       << "  isExhaustive: " << isExhaustive << "\n"
-       << "  dnum: " << dnum << "\n"
-       << "  scaleTech: " << scaleTech << "\n";
-           /* -------- OpenFHE-only knobs -------- */
-        if (library == "openfhe") {
-            os << "  attackModeSKA: ";
-            if (openfhe_attack_mode)
-                os << to_string(*openfhe_attack_mode) << "\n";
-            else
-                os << "(default)\n";
+    os << "===== CampaignArgs =====\n";
+    os << "library: " << library << '\n';
+    os << "stage: " << stage << '\n';
 
-            os << "  thresholdBitsSKA: ";
-            if (openfhe_threshold_bits)
-                os << *openfhe_threshold_bits << "\n";
-            else
-                os << "(default)\n";
-        }
-    os << "  results_dir: " << results_dir << "\n";
+    os << "bitPerCoeff: " << bitPerCoeff << '\n';
+    os << "logN: " << logN << '\n';
+    os << "logQ: " << logQ << '\n';
+    os << "logDelta: " << logDelta << '\n';
+    os << "logSlots: " << logSlots << '\n';
+    os << "mult_depth: " << mult_depth << '\n';
+    os << "logMin: " << logMin << '\n';
+    os << "logMax: " << logMax << '\n';
 
+    os << "seed: " << seed << '\n';
+    os << "seed_input: " << seed_input << '\n';
+
+    os << "withNTT: " << std::boolalpha << withNTT << '\n';
+    os << "doAdd: " << doAdd << '\n';
+    os << "doPlainMul: " << doPlainMul << '\n';
+    os << "doMul: " << doMul << '\n';
+    os << "doScalarMul: " << doScalarMul << '\n';
+    os << "doRot: " << doRot << '\n';
+    os << "doBoot: " << doBoot << '\n';
+    os << "op_index: " << op_index << '\n';
+    os << "op_step: " << op_step << '\n';
+
+    os << "isComplex: " << isComplex << '\n';
+    os << "isExhaustive: " << isExhaustive << '\n';
+    os << "verbose: " << verbose << '\n';
+
+    os << "dnum: " << dnum << '\n';
+    os << "scaleTech: " << scaleTech << '\n';
+    os << "results_dir: " << results_dir << '\n';
+
+    if (openfhe_attack_mode)
+        os << "openfhe_attack_mode: " << static_cast<int>(*openfhe_attack_mode) << '\n';
+    else
+        os << "openfhe_attack_mode: <none>\n";
+
+    if (openfhe_threshold_bits)
+        os << "openfhe_threshold_bits: " << *openfhe_threshold_bits << '\n';
+    else
+        os << "openfhe_threshold_bits: <none>\n";
+
+    os << "========================\n";
 }
+
+
 
 void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [OPTIONS]\n\n"

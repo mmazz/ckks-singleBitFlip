@@ -68,7 +68,7 @@ def main():
     i = 0
     s = config.size
     for logDelta, df in all_stats.items():
-        plot_bit(df, ax=ax, label_prefix=f"logDelta={logDelta}", color=c[i], size=s-i*20, alpha=alpha)
+        plot_bit(df, ax=ax, label_prefix=f"logDelta={logDelta}", label="", color=c[i], size=s-i*20, alpha=alpha)
         i+=1
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')

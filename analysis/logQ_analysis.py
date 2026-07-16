@@ -85,7 +85,7 @@ def main():
     s = config.size
     for logQ, df in all_stats.items():
         df["bit"] = df["bit"]/logQ
-        plot_bit(df, ax=ax, label_prefix=f"logQ={logQ}", color=c[i], size=s-i*20, alpha=alpha, xlabel="Bit index relative to logQ")
+        plot_bit(df, ax=ax, label_prefix=f"logQ={logQ}", label="", color=c[i], size=s-i*20, alpha=alpha, xlabel="Bit index relative to logQ")
         i+=1
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')

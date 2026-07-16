@@ -114,6 +114,7 @@ int main(int argc, char* argv[]) {
         registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
     } else {
         printBaselineComparison(
+            args,
             goldenOutput,
             goldenCKKS_output.values,
             baseline_metrics

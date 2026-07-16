@@ -74,21 +74,22 @@ def run_one(row: dict, dry_run: bool, log_path: Path, lock: Lock) -> tuple[str, 
             text=True,
             timeout=None,  # ajustar si querés un timeout por corrida
         )
-        print("CMD:", cmd)
-        print("CWD:", cwd)
-        print("RET:", result.returncode)
-        print("STDOUT:")
-        print(result.stdout)
-        print("STDERR:")
-        print(result.stderr)
         elapsed = time.time() - start
         ok = result.returncode == 0
         msg = f"exit={result.returncode} time={elapsed:.1f}s"
+
         if not ok:
-            # Guardamos stderr en un archivo separado para no inundar la consola
             err_file = LOG_DIR / f"{run_id}.stderr.log"
-            err_file.write_text(result.stderr)
-            msg += f" -> stderr guardado en {err_file}"
+
+            err_file.write_text(
+                "===== STDOUT =====\n"
+                + result.stdout
+                + "\n\n===== STDERR =====\n"
+                + result.stderr
+            )
+
+            msg += f" -> stdout/stderr guardados en {err_file}"
+
     except Exception as e:
         elapsed = time.time() - start
         ok = False

@@ -26,15 +26,14 @@ BASELINE_LOGQ = 60
 BASELINE_LOGDELTA = 20
 BASELINE_LOGSLOTS = 5
 BASELINE_LIBRARY = "heaan"
-BASELINE_LIBRARY = "openfhe"
 
 BASELINE_STAGE = "encrypt_c0"
-LOGMIN_VALUES= [9, 19, 29, 39]
+LOGMIN_VALUES= [0, 9, 19, 29]
 LOGMAX_VALUES = {
+        0:1,
         9:10,
         19:20,
         29:30,
-        39:40
     }
 
 BIT_PER_COEFF = 64
@@ -84,7 +83,7 @@ def main():
     i = 0
     s = config.size
     for logMin, df in all_stats.items():
-        plot_bit(df, ax=ax, label_prefix=f"logMin={logMin}", color=c[i], size=s-i*20, alpha=alpha, xlabel="Bit index")
+        plot_bit(df, ax=ax, label_prefix=f"$[2^{logMin},2^{LOGMAX_VALUES[logMin]}]$", label="", color=c[i], size=s-i*20, alpha=alpha, xlabel="Bit index")
         i+=1
 
     plt.savefig(dir+f"{savename}.pdf", bbox_inches='tight')

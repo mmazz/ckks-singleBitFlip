@@ -68,6 +68,7 @@ logDelta_analysis:
 gap_analysis:
 	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0 --title gap_c0
 	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c1 --title gap_c1
+	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage decode --title gap_dec
 
 mul_analysis:
 	python3 mul_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 120 --logDelta 30 --bitPerCoeff 150 --stage encrypt_c0 --doMul 3 --mult_depth 0 --isComplex $(ISCOMPLEX)
@@ -82,13 +83,13 @@ add_rot_analysis_RNS:
 	python3 add_rot_analysis.py  --library openfhe --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 1 --doAdd 1 --mult_depth 3 --title add_rot_RNS
 
 add_analysis:
-	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doAdd 1 --title add
+	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doAdd 1 --title add
 
 add_analysis_RNS:
-	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doAdd 1 --mult_depth 3 --title add_RNS
+	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doAdd 1 --mult_depth 3 --title add_RNS
 
 rot_analysis:
-	python3 rot_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 0
+	python3 rot_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 0
 
 rot_analysis_RNS:
 	python3 rot_analysis.py      --library openfhe --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 3 --title rot_RNS

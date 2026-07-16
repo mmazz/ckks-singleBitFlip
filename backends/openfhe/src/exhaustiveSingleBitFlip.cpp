@@ -105,6 +105,7 @@ int main(int argc, char* argv[]) {
         }
     } else {
         printBaselineComparison(
+            args,
             goldenOutput,
             goldenCKKS_output.values,
             baseline_metrics

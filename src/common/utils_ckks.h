@@ -67,11 +67,13 @@ void printVector(const std::vector<cdouble>& v,
 
 template <typename T>
 void printBaselineComparison(
+    const CampaignArgs& args,
     const std::vector<T>& goldenOutput,
     const std::vector<T>& goldenCKKSValues,
     const CKKSAccuracyMetrics& baseline_metrics,
     bool print_elements = true
 ) {
+    args.print(std::cerr);
     std::cout << "GoldenCKKSOutput vs output "
               << goldenOutput.size() << "\n";
 

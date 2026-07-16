@@ -173,7 +173,7 @@ def plot_bit(stats, ax=None, label_prefix="", color=colors["red"], scatter=True,
         )
     ax.set_yscale("symlog")
     ax.set_xlabel(xlabel)
-    ax.set_ylabel("$L_2$ norm (symlog)")
+    ax.set_ylabel("mean $L_2$ norm (symlog)")
     ax.grid(True, which="both")
     if legend:
         ax.legend()

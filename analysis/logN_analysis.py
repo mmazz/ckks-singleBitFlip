@@ -58,8 +58,8 @@ def main():
     ########################## PLOT ################################
     fig, ax = plt.subplots(figsize=(12, 5))
 
-    plot_bit(df_small, ax=ax, color=colors["blue"], label_prefix=f"logN={BASELINE_SMALL_LOGN} – ", scatter=True)
-    plot_bit(df_large, ax=ax, color=colors["red"],label_prefix=f"logN={args.logN} – ", scatter=True)
+    plot_bit(df_small, ax=ax, color=colors["blue"], label_prefix=f"logN={BASELINE_SMALL_LOGN}", label="", scatter=True)
+    plot_bit(df_large, ax=ax, color=colors["red"],label_prefix=f"logN={args.logN}", label="", scatter=True)
 
     plt.savefig(dir + f"{savename}.pdf", bbox_inches="tight")
     plt.savefig(dir + f"{savename}.png", bbox_inches="tight")
