@@ -199,8 +199,10 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                     args.stage != "decode" &&
                     args.stage != "cheby_tanh3" &&
                     args.stage != "hidden_layer" &&
+                    args.stage != "add_inside" &&
                     args.stage != "mul_inside" &&
-                    args.stage != "mul_outside")
+                    args.stage != "rescale_inside" &&
+                    args.stage != "rot_inside")
                 {
                     std::cerr << "Error: invalid stage '" << args.stage
                               << "' (expected: encode, encrypt_c0, encrypt_c1, decrypt_c0, decrypt_c1"
