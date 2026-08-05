@@ -63,12 +63,12 @@ allRuns_server_layers_new: $(RUNS_SERVER_LAYERS_new)
 
 run_server_layer_new1:
 	for s in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 2 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 2 ; \
 	done
 
 run_server_layer_new2:
 	for s in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 3 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 3 ; \
 	done
 allRuns: $(RUNS)
 allRuns_client: $(RUNS_CLIENT)
@@ -148,68 +148,68 @@ run_stages5:
 run_server0:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 0 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_step 0 ; \
 		done; \
 	done
 
 run_server1:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 1 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_step 1 ; \
 		done; \
 	done
 run_server2:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_index 2 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_step 2 ; \
 		done; \
 	done
 
 run_server3:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 3 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_step 3 ; \
 		done; \
 	done
 
 run_server4:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_index 4 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_step 4 ; \
 		done; \
 	done
 
 run_server5:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 5 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_step 5 ; \
 		done; \
 	done
 run_server6:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_index 6 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input  --op_step 6 ; \
 		done; \
 	done
 
 run_server7:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 7 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_step 7 ; \
 		done; \
 	done
 
 run_server8:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 8 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_step 8 ; \
 		done; \
 	done
 
 run_server9:
 	for s in $(SEEDS); do \
 		for s_input in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_index 9 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage cheby_tanh3 --seed $$s --seed_input $$s_input --op_step 9 ; \
 		done; \
 	done
 
@@ -217,33 +217,33 @@ run_server9:
 ## HIDDEN LAYER
 run_server_layer0:
 	for s in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 0 ; \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 1 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 0 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 1 ; \
 	done
 run_server_layer1:
 	for s in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 2 ; \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 3 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 2 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 3 ; \
 	done
 run_server_layer2:
 	for s in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 4 ; \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 5 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 4 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 5 ; \
 	done
 run_server_layer3:
 	for s in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 6 ; \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 7 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 6 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 7 ; \
 	done
 run_server_layer4:
 	for s in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 8 ; \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 9 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 8 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 9 ; \
 	done
 run_server_layer5:
 	for s in $(SEEDS); do \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 10 ; \
-		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_index 11 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 10 ; \
+		$(BIN_RANDOM) $(COMMON_PARAMS) --stage hidden_layer --seed $$s --seed_input $$s --op_step 11 ; \
 	done
 dirs:
 	@mkdir -p $(BIN_DIR)

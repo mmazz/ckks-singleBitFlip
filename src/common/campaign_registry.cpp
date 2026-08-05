@@ -87,7 +87,7 @@ std::string CampaignRegistry::makeCampaignKey(const CampaignArgs& args)
         args.library, args.stage, args.logN, args.logQ, args.bitPerCoeff,
         args.logDelta, args.logSlots, args.withNTT, args.mult_depth,
         args.doAdd, args.doPlainMul, args.doMul, args.doScalarMul,
-        args.doRot, args.doBoot, args.op_index, args.op_step, args.seed,
+        args.doRot, args.doBoot, args.op_step, args.op_depth, args.seed,
         args.seed_input, args.isComplex, args.logMin, args.logMax,
         args.isExhaustive, args.dnum, args.scaleTech);
 }
@@ -100,8 +100,8 @@ void CampaignRegistry::ensureCsvFilesExist()
             throw std::runtime_error("CampaignRegistry: no se pudo crear " + start_csv_);
 
         f << "campaign_id,library,stage,logN,logQ,bitPerCoeff,logDelta,logSlots,"
-             "withNTT,mult_depth,doAdd,doPlainMul,doMul,doScalarMul,doRot,doBoot,op_index,"
-             "op_step,seed,seed_input,"
+             "withNTT,mult_depth,doAdd,doPlainMul,doMul,doScalarMul,doRot,doBoot,op_step,"
+             "op_depth,seed,seed_input,"
              "isComplex,logMin,logMax,isExhaustive,dnum,scaleTech\n";
     }
 

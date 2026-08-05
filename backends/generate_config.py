@@ -17,6 +17,12 @@ SEEDS_INP = 5
 EXTRA_SEEDS = 20
 stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 
+
+ADD_STEPS = 5
+MUL_STEPS = 25
+RESCALE_STEPS = 3
+ROT_STEPS = 11
+
 def cartesian_product_rows(fixed: dict, sweep: dict) -> list[dict]:
     """
     variants: parámetros que varian en pares o solos
@@ -227,28 +233,6 @@ def gen_gap_analysis():
         rows += cartesian_product_rows(fixed, sweep)
 
     write_csv("gap_analysis", rows)
-
-def gen_mul_inside():
-    """Equivalente a 'mul_inside' del Makefile original: 13 corridas (antes copiadas a mano)."""
-    fixed = {
-        "binary": "exhaustiveSingleBitFlip",
-        "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
-        "logN": 6,
-        "logQ": 120,
-        "bitPerCoeff": 144,
-        "logDelta": 40,
-        "stage": "mul_inside",
-        "op_step": 1,
-        "doMul": 1,
-        "mult_depth": 2,
-        "logSlots": 4,
-    }
-    sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
-        "op_index": list(range(13)),  # 0..12
-    }
-    write_csv("mul_inside", cartesian_product_rows(fixed, sweep))
 
 def gen_boot_analysis():
     variants = [
@@ -495,6 +479,7 @@ def gen_opClientAddRot_RNS_analysis():
         "mult_depth": 3,
     }
     write_csv("opClientAddRot_RNS_analysis", cartesian_product_rows(fixed, sweep))
+
 def gen_opClientMul_RNS_analysis():
 
     sweep = {
@@ -516,6 +501,113 @@ def gen_opClientMul_RNS_analysis():
     write_csv("opClientAddRot_RNS_analysis", cartesian_product_rows(fixed, sweep))
 
 
+def gen_opServerAdd_analysis():
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
+        "logN": 6,
+        "logQ": 120,
+        "bitPerCoeff": 144,
+        "logDelta": 40,
+        "stage": "add_inside",
+        "doAdd": 2,
+        "op_depth": 0,
+        "logSlots": 4,
+    }
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "op_depth": list(range(0,ADD_STEPS+1)),
+    }
+    write_csv("opServerAdd_analysis", cartesian_product_rows(fixed, sweep))
+
+
+def gen_opServerMul_analysis():
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
+        "logN": 6,
+        "logQ": 120,
+        "bitPerCoeff": 144,
+        "logDelta": 40,
+        "stage": "mul_inside",
+        "doMul": 1,
+        "op_depth": 0,
+        "mult_depth": 1,
+        "logSlots": 4,
+    }
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "op_depth": list(range(0,MUL_STEPS+1)),
+    }
+    write_csv("opServerMul_analysis", cartesian_product_rows(fixed, sweep))
+
+def gen_opServerMulDepth_analysis():
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
+        "logN": 6,
+        "logQ": 120,
+        "bitPerCoeff": 144,
+        "logDelta": 40,
+        "stage": "mul_inside",
+        "doMul": 2,
+        "op_depth": 0,
+        "mult_depth": 2,
+        "logSlots": 4,
+    }
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "op_depth": list(range(0,MUL_STEPS+1)),
+    }
+    write_csv("opServerMulDepth_analysis", cartesian_product_rows(fixed, sweep))
+
+
+def gen_opServerRescaleDepth_analysis():
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
+        "logN": 6,
+        "logQ": 120,
+        "bitPerCoeff": 144,
+        "logDelta": 40,
+        "stage": "rescale_inside",
+        "doMul": 2,
+        "mult_depth": 2,
+        "logSlots": 4,
+    }
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "op_depth": list(range(0,RESCALE_STEPS+1)),
+        "op_depth": [0,1],
+    }
+    write_csv("opServerRescaleDepth_analysis", cartesian_product_rows(fixed, sweep))
+
+def gen_opServerRot_analysis():
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
+        "logN": 6,
+        "logQ": 120,
+        "bitPerCoeff": 144,
+        "logDelta": 40,
+        "stage": "rot_inside",
+        "logSlots": 4,
+    }
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "op_depth": list(range(0,ROT_STEPS+1)),
+    }
+    write_csv("opServerRot_analysis", cartesian_product_rows(fixed, sweep))
+
+
+
+
+
 if __name__ == "__main__":
     gen_heaan_VS_openfhe_plain_analysis()
     gen_heaan_plain_VS_c0_VS_c1_analysis()
@@ -524,17 +616,23 @@ if __name__ == "__main__":
     gen_logQ_analysis()
     gen_logDelta_analysis()
     gen_gap_analysis()
-    gen_mul_inside()
     gen_boot_analysis()
     gen_input_analysis()
 
-    # ops
+    # ops client
     gen_opClientAdd_analysis()
     gen_opClientRot_analysis()
     gen_opClientAddRot_analysis()
     gen_opClientMul_analysis()
     gen_opClientAddRot_RNS_analysis()
 
+
+    # ops server
+    gen_opServerAdd_analysis()
+    gen_opServerMul_analysis()
+    gen_opServerMulDepth_analysis()
+    gen_opServerRescaleDepth_analysis()
+    gen_opServerRot_analysis()
 
     # NN
     gen_heaanNN_analysis()

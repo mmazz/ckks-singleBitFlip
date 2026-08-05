@@ -93,8 +93,8 @@ IterationResult run_iteration(
     std::optional<IterationArgs> iterArgs
     )
 {
-    uint32_t whichOpStep = args.op_step;
-    uint32_t index_atack = args.op_index;
+    uint32_t op_depth = args.op_depth;
+    uint32_t op_step = args.op_step;
 
     auto& ctx = static_cast<HEAANContext&>(*bctx);
 
@@ -163,9 +163,13 @@ IterationResult run_iteration(
         }
     }
 
-
+    // Server Side
     for (uint32_t i = 0; i < args.doAdd; ++i) {
-        c = ctx.scheme.add(c, c_clean);
+        if(iterArgs && args.stage == "add_inside" && i == op_depth-1){
+            c = ctx.scheme.addBitFlip(c, c_clean, op_step, iterArgs->coeff, iterArgs->bit);
+        }else {
+            c = ctx.scheme.add(c, c_clean);
+        }
     }
 
     for (uint32_t i = 0; i < args.doPlainMul; ++i) {
@@ -173,22 +177,28 @@ IterationResult run_iteration(
     }
 
     for (uint32_t i = 0; i < args.doMul; ++i) {
-        if(iterArgs && args.stage == "mul_inside" && i == whichOpStep-1){
-            c = ctx.scheme.multBitFlip(c, c_clean, index_atack, iterArgs->coeff, iterArgs->bit);
+        if(iterArgs && args.stage == "mul_inside" && i == op_depth-1){
+            c = ctx.scheme.multBitFlip(c, c_clean, op_step, iterArgs->coeff, iterArgs->bit);
         }else {
-            if(iterArgs && args.stage == "mul_outside" && i == whichOpStep-1)
-                c = ctx.scheme.multBitFlip(c, c_clean, index_atack, iterArgs->coeff, iterArgs->bit);
-            else
                 c = ctx.scheme.mult(c, c_clean);
         }
-        ctx.scheme.reScaleByAndEqual(c, args.logDelta);
+        if(iterArgs && args.stage == "rescale_inside" && i == op_depth-1){
+            ctx.scheme.reScaleByAndEqualBitFlip(c, args.logDelta, op_step, iterArgs->coeff, iterArgs->bit);
+        }else {
+                ctx.scheme.reScaleByAndEqual(c, args.logDelta);
+        }
     }
 
     if(args.doRot>0){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
-        c = ctx.scheme.leftRotateFast(c, rotIndex);
+        if(iterArgs && args.stage == "rot_inside"){
+            c = ctx.scheme.leftRotateFastBitFlip(c, rotIndex, op_step, iterArgs->coeff, iterArgs->bit);
+        }else {
+            c = ctx.scheme.leftRotateFast(c, rotIndex);
+        }
     }
 
+    // Back to client side
     if (iterArgs) {
         //if ((args.stage == "decrypt_c0") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
         if (args.stage == "decrypt_c0"){

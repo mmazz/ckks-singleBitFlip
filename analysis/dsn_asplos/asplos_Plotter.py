@@ -63,8 +63,8 @@ def main():
     mrep_max = 0
     for i, (step, ax) in enumerate(zip(steps, axes)):  # FIX: era (df, ax) pero zip era sobre stages
         filters = build_filters(args)
-        filters["op_index"] = ("int", step)
-        print(filters["op_index"])
+        filters["op_step"] = ("int", step)
+        print(filters["op_step"])
 
         selected = load_and_filter_campaigns(camp_csv, filters)
         data = load_campaign_data(selected, data_csv)
