@@ -13,7 +13,6 @@ from NNCampaigns import *
 
 
 
-stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 
 
 

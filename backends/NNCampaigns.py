@@ -30,6 +30,61 @@ def gen_heaanNN_analysis():
 
     write_csv("heaanNN_analysis", rows)
 
+def gen_heaanNN_hidden_analysis():
+    variants = [
+        {"op_step": list(range(0,13+1)) },
+
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "library": "heaanNN",
+            "logN": 12,
+            "logQ": 220,
+            "logDelta": 30,
+            "logSlots": 10,
+            "mult_depth": 0,
+            "withNTT": 0,
+            "stage": "hidden_layer",
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("heaanNN_hidden_analysis", rows)
+
+def gen_heaanNN_cheby_analysis():
+    variants = [
+        {"op_step": list(range(0,9+1)) },
+
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "library": "heaanNN",
+            "logN": 12,
+            "logQ": 220,
+            "logDelta": 30,
+            "logSlots": 10,
+            "mult_depth": 0,
+            "withNTT": 0,
+            "stage": "cheby_tanh3",
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("heaanNN_cheby_analysis", rows)
+
+
 def gen_openfheNN_analysis():
     variants = [
         {"stage": "encode"      },
@@ -60,5 +115,6 @@ def gen_openfheNN_analysis():
         rows += cartesian_product_rows(fixed, sweep)
 
     write_csv("openfheNN_analysis", rows)
+
 
 
