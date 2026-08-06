@@ -46,4 +46,6 @@ if __name__ == "__main__":
 
     # NN
     gen_heaanNN_analysis()
+    gen_heaanNN_cheby_analysis()
+    gen_heaanNN_hidden_analysis()
     gen_openfheNN_analysis()
