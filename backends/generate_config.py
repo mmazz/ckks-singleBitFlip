@@ -533,7 +533,7 @@ def gen_opServerMul_analysis():
         "stage": "mul_inside",
         "doMul": 1,
         "op_depth": 0,
-        "mult_depth": 1,
+        "mult_depth": 0,
         "logSlots": 4,
     }
     sweep = {
@@ -554,7 +554,7 @@ def gen_opServerMulDepth_analysis():
         "stage": "mul_inside",
         "doMul": 2,
         "op_depth": 0,
-        "mult_depth": 2,
+        "mult_depth": 0,
         "logSlots": 4,
     }
     sweep = {
@@ -575,7 +575,7 @@ def gen_opServerRescaleDepth_analysis():
         "logDelta": 40,
         "stage": "rescale_inside",
         "doMul": 2,
-        "mult_depth": 2,
+        "mult_depth": 0,
         "logSlots": 4,
     }
     sweep = {

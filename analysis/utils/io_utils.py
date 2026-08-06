@@ -43,8 +43,17 @@ OPTIONAL_DEFAULTS = {
 OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive", "scaleTech"}
 
 
-def load_and_filter_campaigns(csv_path, filters):
+def load_and_filter_campaigns(csv_path, filters, extra_optionals=None):
     campaigns = pd.read_csv(csv_path)
+
+
+    optional_no_filter = OPTIONAL_NO_FILTER.copy()
+    optional_defaults = OPTIONAL_DEFAULTS.copy()
+
+    if extra_optionals:
+        optional_no_filter.update(extra_optionals)
+        for key in extra_optionals:
+            optional_defaults.pop(key, None)
 
     # --- Normalization ---
     for c in campaigns.columns:
@@ -70,13 +79,13 @@ def load_and_filter_campaigns(csv_path, filters):
     for k in REQUIRED_FILTERS:
         effective_filters[k] = filters[k]
 
-    for k, default in OPTIONAL_DEFAULTS.items():
+    for k, default in optional_defaults.items():
         if k in filters:
             effective_filters[k] = filters[k]
         elif default is not None:
             effective_filters[k] = ("int", default)
 
-    for k in OPTIONAL_NO_FILTER:
+    for k in optional_no_filter:
         if k in filters:
             effective_filters[k] = filters[k]
 

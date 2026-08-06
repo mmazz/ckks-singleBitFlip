@@ -28,20 +28,13 @@ def main():
     args = copy.deepcopy(base_args)
     filters = build_filters(args)
 
-    # --- 1. Filtrar campañas SIN fijar op_step, para descubrir qué valores hay ---
-    selected_all = load_and_filter_campaigns("../"+config.CAMPAIGNS_CSV, filters)
 
-    if "op_step" not in selected_all.columns:
-        raise KeyError("The column 'op_step' does not exist in the CSV")
-
-    op_steps = sorted(selected_all["op_step"].dropna().unique())
-    print(f"\n=== op_step values found: {op_steps} ===")
-
+    op_type, op_step = filters["op_step"]
     ########################## LOOP POR op_step ################################
-    for op_step in op_steps:
+    while(op_step>=0):
+        filters["op_step"] = (op_type, op_step)
         print(f"\n--- Processing op_step={op_step} ---")
-
-        selected = selected_all[selected_all["op_step"] == op_step]
+        selected = load_and_filter_campaigns("../"+config.CAMPAIGNS_CSV, filters)
         if selected.empty:
             print(f"WARNING: no campaigns for op_step={op_step}, skipped")
             continue
@@ -66,6 +59,7 @@ def main():
             plt.show()
 
         plt.close(fig)
+        op_step -= 1
 
 
 if __name__ == "__main__":

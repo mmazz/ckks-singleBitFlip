@@ -165,7 +165,7 @@ IterationResult run_iteration(
 
     // Server Side
     for (uint32_t i = 0; i < args.doAdd; ++i) {
-        if(iterArgs && args.stage == "add_inside" && i == op_depth-1){
+        if(iterArgs && args.stage == "add_inside" && i == op_depth){
             c = ctx.scheme.addBitFlip(c, c_clean, op_step, iterArgs->coeff, iterArgs->bit);
         }else {
             c = ctx.scheme.add(c, c_clean);
@@ -177,12 +177,12 @@ IterationResult run_iteration(
     }
 
     for (uint32_t i = 0; i < args.doMul; ++i) {
-        if(iterArgs && args.stage == "mul_inside" && i == op_depth-1){
+        if(iterArgs && args.stage == "mul_inside" && i == op_depth){
             c = ctx.scheme.multBitFlip(c, c_clean, op_step, iterArgs->coeff, iterArgs->bit);
         }else {
                 c = ctx.scheme.mult(c, c_clean);
         }
-        if(iterArgs && args.stage == "rescale_inside" && i == op_depth-1){
+        if(iterArgs && args.stage == "rescale_inside" && i == op_depth){
             ctx.scheme.reScaleByAndEqualBitFlip(c, args.logDelta, op_step, iterArgs->coeff, iterArgs->bit);
         }else {
                 ctx.scheme.reScaleByAndEqual(c, args.logDelta);
