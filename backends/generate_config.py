@@ -517,7 +517,7 @@ def gen_opServerAdd_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
-        "op_depth": list(range(0,ADD_STEPS+1)),
+        "op_step": list(range(0,ADD_STEPS+1)),
     }
     write_csv("opServerAdd_analysis", cartesian_product_rows(fixed, sweep))
 
@@ -539,7 +539,7 @@ def gen_opServerMul_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
-        "op_depth": list(range(0,MUL_STEPS+1)),
+        "op_step": list(range(0,MUL_STEPS+1)),
     }
     write_csv("opServerMul_analysis", cartesian_product_rows(fixed, sweep))
 
@@ -560,7 +560,7 @@ def gen_opServerMulDepth_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
-        "op_depth": list(range(0,MUL_STEPS+1)),
+        "op_step": list(range(0,MUL_STEPS+1)),
     }
     write_csv("opServerMulDepth_analysis", cartesian_product_rows(fixed, sweep))
 
@@ -581,7 +581,7 @@ def gen_opServerRescaleDepth_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
-        "op_depth": list(range(0,RESCALE_STEPS+1)),
+        "op_step": list(range(0,RESCALE_STEPS+1)),
         "op_depth": [0,1],
     }
     write_csv("opServerRescaleDepth_analysis", cartesian_product_rows(fixed, sweep))
@@ -595,12 +595,13 @@ def gen_opServerRot_analysis():
         "bitPerCoeff": 144,
         "logDelta": 40,
         "stage": "rot_inside",
+        "doRot": 2,
         "logSlots": 4,
     }
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
         "seed_input": list(range(1, SEEDS_INP+1)),
-        "op_depth": list(range(0,ROT_STEPS+1)),
+        "op_step": list(range(0,ROT_STEPS+1)),
     }
     write_csv("opServerRot_analysis", cartesian_product_rows(fixed, sweep))
 
