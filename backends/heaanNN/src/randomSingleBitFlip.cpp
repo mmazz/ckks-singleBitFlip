@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
 
     if(verbose)
         std::cout << "Encrypting input..." << std::endl;
-    uint32_t hidden_layer = 0;
+    uint32_t hidden_layer    = 0;
     uint32_t reduceSum_layer = 0;
     IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, hidden_layer, reduceSum_layer);
     if(res.detected)

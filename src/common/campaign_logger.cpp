@@ -4,7 +4,7 @@
 namespace fs = std::filesystem;
 
 std::string BitflipResult::header() {
-    return "limb,coeff,bit,l2_norm,rel_error,is_sdc,correct,degraded,corrupted,failed";
+    return "limb,coeff,bit,l2_norm,rel_error,is_sdc,correct,degraded,corrupted,failed,hidden_layer,reduceSum_layer";
 }
 
 std::string BitflipResult::row() const {
@@ -13,7 +13,8 @@ std::string BitflipResult::row() const {
        << norm2 << ","
        << rel_error << "," << (is_sdc ? 1 : 0) << ","
        << stats.correct << "," << stats.degraded << ","
-       << stats.corrupted << "," << stats.failed;
+       << stats.corrupted << "," << stats.failed<< ","
+       << hidden_layer << "," << reduceSum_layer;
     return ss.str();
 }
 
@@ -59,8 +60,7 @@ void CampaignLogger::log(const BitflipResult& r) {
 
 void CampaignLogger::log(uint32_t limb, uint32_t coeff, uint32_t bit,
           double norm2, double rel_error, bool is_sdc, SlotErrorStats stats,
-          uint32_t hidden_layer,
-        uint32_t reduceSum_layer)
+          uint32_t hidden_layer, uint32_t reduceSum_layer)
     {
         BitflipResult r{
             limb,

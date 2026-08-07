@@ -22,7 +22,7 @@ at well-defined pipeline stages:
     - `rescale_inside`: op_step = [0, 3], op_depth = [0, doMul-1]
     - `rot_inside`: op_step = [0, 11]
     - `hidden_layer`: library=heaanNN, op_step = [0, 11]
-    - `chebyTanh3`: library=heaanNN, op_step = [0, 9]
+    - `cheby_tanh3`: library=heaanNN, op_step = [0, 9]
 
 The goal is to analyze numerical degradation, error propagation, and Silent Data Corruption (SDC) behavior under precise, low-level faults.
 
