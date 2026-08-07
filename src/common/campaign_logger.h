@@ -19,6 +19,8 @@ struct BitflipResult {
     double rel_error;
     bool is_sdc;
     SlotErrorStats stats;
+    uint32_t hidden_layer;
+    uint32_t reduceSum_layer;
 
     static std::string header();
     std::string row() const;
@@ -32,8 +34,9 @@ public:
 
     void log(const BitflipResult& r);
     void log(uint32_t limb, uint32_t coeff, uint32_t bit,
-         double norm2, double rel_error, bool is_sdc, SlotErrorStats stats);
-
+          double norm2, double rel_error, bool is_sdc, SlotErrorStats stats,
+            uint32_t hidden_layer = 0,
+            uint32_t reduceSum_layer = 0);
     void compress_and_cleanup();
     void flush();
     void close();

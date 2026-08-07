@@ -80,9 +80,10 @@ int main(int argc, char* argv[]) {
         cout << "Encrypting input..." << endl;
 
     auto start_time = std::chrono::high_resolution_clock::now();
+    uint32_t dummy=0;
     for(size_t i=0 ; i<LAPS;i++){
         args.seed++;
-        IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue);
+        IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, dummy, dummy);
     }
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end_time - start_time;

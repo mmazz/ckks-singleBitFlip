@@ -57,6 +57,7 @@ void reduceSum(
     HEEnv& he,
     Ciphertext& ct,
     long logSlots,
+    uint32_t &reduceSum_layer,
     CampaignArgs& args, std::optional<IterationArgs> iterArgs
 );
 
@@ -79,16 +80,23 @@ std::vector<std::vector<double>> loadCSVMatrix(const std::string& path, size_t r
 
 std::vector<double> loadCSVVector(const std::string& path, size_t size);
 
-IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs=std::nullopt);
-
+IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded,
+        const vector<double>& vals, CampaignArgs& args, size_t targetValue,
+        uint32_t &hidden_layer, uint32_t &reduceSum_layer,
+        std::optional<IterationArgs> iterArgs=std::nullopt
+);
 
 Ciphertext chebyTanh3(
     HEEnv& he,
     Ciphertext c,
-    long logP,
-    CampaignArgs& args, std::optional<IterationArgs> iterArgs, uint32_t hidden
+    long logP, CampaignArgs& args, uint32_t hidden,
+     std::optional<IterationArgs> iterArgs
 );
-IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs=std::nullopt);
+
+IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded,
+        const vector<double>& vals, CampaignArgs& args, size_t targetValue,
+        std::optional<IterationArgs> iterArgs=std::nullopt
+        );
 
 vector<Ciphertext> forward(
     HEEnv& he,
@@ -96,5 +104,7 @@ vector<Ciphertext> forward(
     EncodedWeights& ew,
     long logSlots,
     long logP,
+    uint32_t &hidden_layer,
+    uint32_t &reduceSum_layer,
     CampaignArgs& args, std::optional<IterationArgs> iterArgs
 );

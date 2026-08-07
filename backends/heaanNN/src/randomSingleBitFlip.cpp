@@ -83,8 +83,9 @@ int main(int argc, char* argv[]) {
 
     if(verbose)
         std::cout << "Encrypting input..." << std::endl;
-
-    IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue);
+    uint32_t hidden_layer = 0;
+    uint32_t reduceSum_layer = 0;
+    IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, hidden_layer, reduceSum_layer);
     if(res.detected)
     {
         try{
@@ -117,7 +118,7 @@ int main(int argc, char* argv[]) {
 
             std::mt19937 rng(args.seed);
 
-           // std::vector<uint32_t> bits_to_flip = extraBitsBetweenDeltaAndQ(args); // 11 values
+           // std::vector<uint32_t> bits_to_flip = extraBitsBetweenDeltaAndQ(args); // 10 values
             std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 14 values
             for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
                 uint32_t bit = bits_to_flip[bitIndex];
@@ -134,14 +135,18 @@ int main(int argc, char* argv[]) {
                         }
                     }
                     else{
-                        IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, iterArgs);
+                        IterationResult res = run_iteration_NN(he, encoded, vals,
+                                args, targetValue, hidden_layer,
+                                reduceSum_layer, iterArgs);
                         SlotErrorStats  stats;
                         logger.log(iterArgs.limb,
                                 iterArgs.coeff,
                                 iterArgs.bit,
                                 0.0, 0.0,
                                 !res.detected,     // is_sdc: predict correct or not, we need to negate. 1 will be sdc, bad. 0 will be mask, good.
-                                stats
+                                stats,
+                                hidden_layer,
+                                reduceSum_layer
                                 );
                     }
                 }

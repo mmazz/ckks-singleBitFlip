@@ -69,7 +69,8 @@ Ciphertext chebyTanh3(
     HEEnv& he,
     Ciphertext c,
     long logP,
-    CampaignArgs& args, std::optional<IterationArgs> iterArgs, bool doBitFlip
+    bool doBitFlip,
+    CampaignArgs& args, std::optional<IterationArgs> iterArgs
 ){
     // x^2
 
@@ -129,13 +130,14 @@ void reduceSum(
     HEEnv& he,
     Ciphertext& ct,
     long logSlots,
-    CampaignArgs& args, std::optional<IterationArgs> iterArgs
+    CampaignArgs& args,
+    uint32_t &reduceSum_layer, std::optional<IterationArgs> iterArgs
 ){
-    uint32_t selected_layer = random_int(0, logSlots-1);
+    reduceSum_layer = random_int(0, logSlots-1);
 
     for(int i=0;i<logSlots;i++){
         Ciphertext rot;
-        if (i==selected_layer && iterArgs && args.stage == "hidden_layer") {
+        if (i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
             Ciphertext c_copy = ct;
             if (args.op_step == 4) {
                 SwitchBit(c_copy.bx[iterArgs->coeff], iterArgs->bit);
@@ -145,7 +147,7 @@ void reduceSum(
             rot = he.scheme.leftRotateFast(c_copy, 1<<i);
         } else
             rot = he.scheme.leftRotateFast(ct, 1<<i);
-        if (i==selected_layer && iterArgs && args.stage == "hidden_layer") {
+        if (i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 6) {
                 SwitchBit(rot.bx[iterArgs->coeff], iterArgs->bit);
             } else if (args.op_step == 7) {
@@ -157,7 +159,7 @@ void reduceSum(
             }
         }
         he.scheme.addAndEqual(ct, rot);
-        if (i==selected_layer && iterArgs && args.stage == "hidden_layer") {
+        if (i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 10) {
                 SwitchBit(ct.bx[iterArgs->coeff], iterArgs->bit);
             }else if (args.op_step == 11) {
@@ -173,6 +175,8 @@ vector<Ciphertext> forward(
     EncodedWeights& ew,
     long logSlots,
     long logP,
+    uint32_t &hidden_layer,
+    uint32_t &reduceSum_layer,
     CampaignArgs& args, std::optional<IterationArgs> iterArgs
 )
 {
@@ -180,10 +184,10 @@ vector<Ciphertext> forward(
     size_t OUTPUT = ew.W2.size();
 
     vector<Ciphertext> layer1(HIDDEN);
-    uint32_t hidden = random_int(0, HIDDEN-1);
+    hidden_layer = random_int(0, HIDDEN-1);
     for(size_t j=0;j<HIDDEN;++j){
         Ciphertext s;
-        if (j==hidden && iterArgs && args.stage == "hidden_layer") {
+        if (j==hidden_layer && iterArgs && args.stage == "hidden_layer") {
             Ciphertext c_copy = c;
             if (args.op_step == 0) {
                 SwitchBit(c_copy.bx[iterArgs->coeff], iterArgs->bit);
@@ -194,7 +198,7 @@ vector<Ciphertext> forward(
         } else
             s = he.scheme.multByPoly(c, ew.W1[j], logP);
 
-        if (j==hidden && iterArgs && args.stage == "hidden_layer") {
+        if (j==hidden_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 2) {
                 SwitchBit(s.bx[iterArgs->coeff], iterArgs->bit);
             }else if (args.op_step == 3) {
@@ -204,17 +208,17 @@ vector<Ciphertext> forward(
 
         he.scheme.reScaleByAndEqual(s, logP);
 
-        reduceSum(he, s, logSlots, args, iterArgs);
+        reduceSum(he, s, logSlots, args, reduceSum_layer, iterArgs);
 
         he.scheme.addConstAndEqual(s, ew.b1[j]);
-        if (j==hidden && iterArgs && args.stage == "hidden_layer") {
+        if (j==hidden_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 12) {
                 SwitchBit(s.bx[iterArgs->coeff], iterArgs->bit);
             }else if (args.op_step == 13) {
                 SwitchBit(s.ax[iterArgs->coeff], iterArgs->bit);
             }
         }
-        s = chebyTanh3(he, std::move(s), logP, args, iterArgs, hidden==j);
+        s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
 
         layer1[j] = std::move(s);
     }
@@ -397,7 +401,10 @@ std::vector<double> loadCSVVector(const std::string& path, size_t size) {
 }
 
 
-IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs){
+IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded,
+        const vector<double>& vals, CampaignArgs& args, size_t targetValue,
+        uint32_t &hidden_layer,  uint32_t &reduceSum_layer,
+        std::optional<IterationArgs> iterArgs ){
 
     size_t logSlots = args.logSlots;
     size_t slots = 1 << logSlots;
@@ -434,6 +441,7 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector
         encoded,
         logSlots,
         logP,
+        hidden_layer, reduceSum_layer,
         args, iterArgs
     );
 

@@ -58,7 +58,9 @@ void CampaignLogger::log(const BitflipResult& r) {
 }
 
 void CampaignLogger::log(uint32_t limb, uint32_t coeff, uint32_t bit,
-          double norm2, double rel_error, bool is_sdc, SlotErrorStats stats)
+          double norm2, double rel_error, bool is_sdc, SlotErrorStats stats,
+          uint32_t hidden_layer,
+        uint32_t reduceSum_layer)
     {
         BitflipResult r{
             limb,
@@ -67,7 +69,9 @@ void CampaignLogger::log(uint32_t limb, uint32_t coeff, uint32_t bit,
             norm2,
             rel_error,
             is_sdc,
-            stats
+            stats,
+            hidden_layer,
+            reduceSum_layer
         };
         log(r);
     }
