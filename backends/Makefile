@@ -1,5 +1,6 @@
 JOBS := 10
 
+all: firstAnalysis clientOps serverOps NNServerOps
 
 firstAnalysis:
 	python3 run_campaign.py configs/logN_analysis.csv     --jobs $(JOBS) && \

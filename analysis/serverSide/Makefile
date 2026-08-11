@@ -42,3 +42,8 @@ rescale_analysis_registers:
 
 rot_analysis_registers:
 	python3 register_analysis.py --library $(LIBRARY) $(PARAMS) --stage rot_inside --doRot 2 --op_step 11 --title rot_inside_register
+
+
+
+temp:
+	python3 a.py --library $(LIBRARY) $(PARAMS) --stage mul_inside --doMul 1 --mult_depth 0 --op_step 12 --title mul_inside
