@@ -9,6 +9,7 @@
 
 const size_t MAX_H = 64;
 
+long logq_boot = 40;
 struct HEAANContext : BackendContext {
     Context cc;
     SecretKey sk;
@@ -72,7 +73,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     NTL::SetSeed(ctx->seed);
     std::srand(args.seed);
     if(args.doBoot)
-        ctx->scheme.addBootKey(ctx->sk, args.logSlots, 40+4);
+        ctx->scheme.addBootKey(ctx->sk, args.logSlots, logq_boot + 4);
 
     if(args.doRot){
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
@@ -211,8 +212,7 @@ IterationResult run_iteration(
     //cipher, logq, logQ, logT, logI=4
 
     if(args.doBoot>0){
-        c.logq = 40;
-        ctx.scheme.bootstrapAndEqual(c, c.logq, args.logQ, 3);
+        ctx.scheme.bootstrapAndEqual(c, logq_boot, args.logQ, 3, 4);
     }
 
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);

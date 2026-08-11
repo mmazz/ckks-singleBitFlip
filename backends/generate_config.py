@@ -12,12 +12,6 @@ from serverCampaigns import *
 from NNCampaigns import *
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
     gen_heaan_VS_openfhe_plain_analysis()
     gen_heaan_plain_VS_c0_VS_c1_analysis()

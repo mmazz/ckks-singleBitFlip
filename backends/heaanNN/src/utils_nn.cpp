@@ -485,11 +485,5 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded,
         else
             cout << "✘ Incorrect\n";
     }
-    else{
-        if(pred == targetValue)
-            cout << 1 << std::endl;
-        else
-            cout << 0 << std::endl;
-    }
     return res;
 }

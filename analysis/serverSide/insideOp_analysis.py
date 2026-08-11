@@ -18,7 +18,7 @@ c = [colors["red"], colors["blue"], colors["orange"], colors["green"], colors["g
 SAVENAME = "add"
 
 
-
+show = False
 def main():
     ########################## ARGS ################################
     base_args = parse_args()
@@ -37,6 +37,7 @@ def main():
         selected = load_and_filter_campaigns("../"+config.CAMPAIGNS_CSV, filters)
         if selected.empty:
             print(f"WARNING: no campaigns for op_step={op_step}, skipped")
+            op_step -= 1
             continue
 
         data = load_campaign_data(selected, Path("../")/config.DATA_DIR)

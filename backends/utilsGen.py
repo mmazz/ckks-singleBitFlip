@@ -6,6 +6,8 @@ from pathlib import Path
 CONFIG_DIR = Path(__file__).resolve().parent / "configs"
 SEEDS_PRNG = 5
 SEEDS_INP = 5
+SEEDS_PRNG_NN = 2
+SEEDS_INP_NN = 2
 EXTRA_SEEDS = 20
 stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 

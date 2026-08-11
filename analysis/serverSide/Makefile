@@ -3,9 +3,9 @@ ISCOMPLEX ?= 0
 ANALYSIS_TARGETS := \
 	add_analysis \
 	mul_analysis \
-	mulDepth_analysis \
 	rescale_analysis \
 	rot_analysis \
+	#mulDepth_analysis \
 
 PARAMS = --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40 --logSlots 4
 

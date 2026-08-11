@@ -1,4 +1,4 @@
-from utilsGen import cartesian_product_rows, write_csv, SEEDS_PRNG, SEEDS_INP, EXTRA_SEEDS, stages
+from utilsGen import cartesian_product_rows, write_csv, SEEDS_PRNG_NN, SEEDS_INP_NN, EXTRA_SEEDS, stages
 
 def gen_heaanNN_analysis():
     variants = [
@@ -10,8 +10,8 @@ def gen_heaanNN_analysis():
         {"stage": "decode"     , "bitPerCoeff": 250},
     ]
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed": list(range(1, SEEDS_PRNG_NN+1)),
+        "seed_input": list(range(1, SEEDS_INP_NN+1)),
     }
     rows = []
     for v in variants:
@@ -33,8 +33,8 @@ def gen_heaanNN_analysis():
 def gen_heaanNN_hidden_analysis():
 
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed": list(range(1, SEEDS_PRNG_NN+1)),
+        "seed_input": list(range(1, SEEDS_INP_NN+1)),
         "op_step": list(range(0,13+1))
     }
     fixed = {
@@ -53,8 +53,8 @@ def gen_heaanNN_hidden_analysis():
 
 def gen_heaanNN_cheby_analysis():
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed": list(range(1, SEEDS_PRNG_NN+1)),
+        "seed_input": list(range(1, SEEDS_INP_NN+1)),
         "op_step": list(range(0,9+1))
     }
     fixed = {
@@ -74,8 +74,8 @@ def gen_heaanNN_cheby_analysis():
 
 def gen_openfheNN_analysis():
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed": list(range(1, SEEDS_PRNG_NN+1)),
+        "seed_input": list(range(1, SEEDS_INP_NN+1)),
         "withNTT": list(range(0,2)),
         "stages": stages
     }
