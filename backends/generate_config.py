@@ -37,7 +37,6 @@ if __name__ == "__main__":
     gen_opServerMulDepth_analysis()
     gen_opServerRescaleDepth_analysis()
     gen_opServerRot_analysis()
-    gen_temp()
 
     # NN
     gen_heaanNN_analysis()

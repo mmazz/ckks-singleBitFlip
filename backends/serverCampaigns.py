@@ -111,24 +111,6 @@ def gen_opServerRot_analysis():
     write_csv("opServerRot_analysis", cartesian_product_rows(fixed, sweep))
 
 
-def gen_temp():
-    fixed = {
-        "binary": "exhaustiveSingleBitFlip",
-        "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
-        "logN": 6,
-        "logQ": 120,
-        "bitPerCoeff": 144,
-        "logDelta": 40,
-        "stage": "rot_inside",
-        "doRot": 2,
-        "logSlots": 4,
-        "op_step": 12
-    }
-    sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
-    }
-    write_csv("temp", cartesian_product_rows(fixed, sweep))
 
 
 

@@ -17,8 +17,14 @@ dir = "../img/"
 c = [colors["red"], colors["blue"], colors["orange"], colors["green"], colors["green"], colors["green"]]
 SAVENAME = "add"
 
-
 show = False
+test_gap = False
+
+mul_gap_coeffs = [22,23,25]
+add_gap_coeffs = [2,3,5]
+rescale_gap_coeffs = [1,3]
+rot_gap_coeffs = [0,7,8,9,10]
+
 def main():
     ########################## ARGS ################################
     base_args = parse_args()
@@ -41,16 +47,32 @@ def main():
             continue
 
         data = load_campaign_data(selected, Path("../")/config.DATA_DIR)
+        gap_coeffs = []
+        stage = filters["stage"][1]
+        print(stage)
+        if(stage == "mul_inside"):
+            gap_coeffs = mul_gap_coeffs
+        elif(stage == "add_inside"):
+            gap_coeffs = add_gap_coeffs
+        elif(stage == "rescale_inside"):
+            gap_coeffs = rescale_gap_coeffs
+        elif(stage == "rot_inside"):
+            gap_coeffs = rot_gap_coeffs
 
-        stats_gaps, gap   = split_by_gap(data, args.logN, args.logSlots)
-        stats_aligned     = stats_by_bit(stats_gaps[stats_gaps["gap_class"] == "aligned"])
-        stats_non_aligned = stats_by_bit(stats_gaps[stats_gaps["gap_class"] == "non_aligned"])
+        if(test_gap or (op_step in gap_coeffs)):
+            stats_gaps, gap   = split_by_gap(data, args.logN, args.logSlots)
+            stats_aligned     = stats_by_bit(stats_gaps[stats_gaps["gap_class"] == "aligned"])
+            stats_non_aligned = stats_by_bit(stats_gaps[stats_gaps["gap_class"] == "non_aligned"])
+            fig, ax = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
 
-        fig, ax = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
+            ########################## PLOT ################################
+            plot_bit(stats_aligned,     ax=ax[0], label_prefix="", color=c[1], size=s, legend=False)
+            plot_bit(stats_non_aligned, ax=ax[1], label_prefix="", color=c[1], size=s, legend=False)
 
-        ########################## PLOT ################################
-        plot_bit(stats_aligned,     ax=ax[0], label_prefix="Addition", color=c[1], size=s)
-        plot_bit(stats_non_aligned, ax=ax[1], label_prefix="Addition", color=c[1], size=s)
+        else:
+            stats = stats_by_bit(data)
+            fig, ax = plt.subplots(1, 1, figsize=(15, 5), sharey=True)
+            plot_bit(stats,     ax=ax, label_prefix="", color=c[1], size=s, legend=False)
 
         op_savename = f"{savename}_op_step_{op_step}"
         plt.savefig(dir + f"{op_savename}.pdf", bbox_inches='tight')
