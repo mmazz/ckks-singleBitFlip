@@ -1,6 +1,6 @@
 JOBS := 10
 
-all: firstAnalysis clientOps serverOps NNServerOps
+all: firstAnalysis clientOps serverOps serverOps_boot NNServerOps
 
 firstAnalysis:
 	python3 run_campaign.py configs/logN_analysis.csv     --jobs $(JOBS) && \
@@ -35,4 +35,6 @@ serverOps:
 	python3 run_campaign.py configs/opServerRescaleDepth_analysis.csv  --jobs $(JOBS) && \
 	python3 run_campaign.py configs/opServerRot_analysis.csv      --jobs $(JOBS)
 
-
+serverOps_boot:
+	python3 run_campaign.py configs/bootEval_analysis.csv      --jobs $(JOBS) && \
+	python3 run_campaign.py configs/bootOutside_analysis.csv      --jobs $(JOBS)

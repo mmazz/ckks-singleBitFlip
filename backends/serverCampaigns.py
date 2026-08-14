@@ -1,8 +1,10 @@
-from utilsGen import cartesian_product_rows, write_csv, SEEDS_PRNG, SEEDS_INP, EXTRA_SEEDS
+from utilsGen import cartesian_product_rows, write_csv, SEEDS_PRNG, SEEDS_INP, EXTRA_SEEDS, SEEDS_PRNG_NN, SEEDS_INP_NN
 ADD_STEPS = 5
 MUL_STEPS = 26
 RESCALE_STEPS = 3
 ROT_STEPS = 11
+BOOTOUT_STEPS = 1
+BOOTEVAL_STEPS = 15
 
 
 
@@ -111,6 +113,47 @@ def gen_opServerRot_analysis():
     write_csv("opServerRot_analysis", cartesian_product_rows(fixed, sweep))
 
 
+def gen_opServerBootOutside_analysis():
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG_NN+1)),
+        "seed_input": list(range(1, SEEDS_INP_NN+1)),
+        "op_step": list(range(0,BOOTOUT_STEPS+1)),
+    }
+    fixed = {
+        "binary": "randomSingleBitFlip",
+        "library": "heaan",
+        "stage": "boot_outside",
+        "logN": 6,
+        "logDelta": 34,
+        "bitPerCoeff": 640,
+        "logSlots": 4,
+        "logQ": 620,
+        "doMul": 4,
+        "doBoot": 1,
+        "withNTT": 0,
+    }
 
+    write_csv("bootOutside_analysis", cartesian_product_rows(fixed, sweep))
 
+def gen_opServerBootEval_analysis():
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG_NN+1)),
+        "seed_input": list(range(1, SEEDS_INP_NN+1)),
+        "op_step": list(range(0,BOOTEVAL_STEPS+1)),
+    }
+    fixed = {
+        "binary": "randomSingleBitFlip",
+        "library": "heaan",
+        "stage": "boot_eval",
+        "logN": 6,
+        "logDelta": 34,
+        "bitPerCoeff": 640,
+        "logSlots": 4,
+        "logQ": 620,
+        "doMul": 4,
+        "doBoot": 1,
+        "withNTT": 0,
+    }
+
+    write_csv("bootEval_analysis", cartesian_product_rows(fixed, sweep))
 

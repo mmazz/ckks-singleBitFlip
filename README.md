@@ -21,6 +21,11 @@ at well-defined pipeline stages:
     - `mul_inside`: op_step = [0, 25], op_depth = [0, doMul-1]
     - `rescale_inside`: op_step = [0, 3], op_depth = [0, doMul-1]
     - `rot_inside`: op_step = [0, 11]
+    - `boot_outside`: op_step = [0, 11]
+    - `boot_coeff`: op_step = [0, 1]
+    - `boot_eval`: op_step = [0, 15]
+    - `boot_slot`: op_step = [0, 1]
+- Server-side Neural Network
     - `hidden_layer`: library=heaanNN, op_step = [0, 11]
     - `cheby_tanh3`: library=heaanNN, op_step = [0, 9]
 

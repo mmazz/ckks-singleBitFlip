@@ -212,7 +212,12 @@ IterationResult run_iteration(
     //cipher, logq, logQ, logT, logI=4
 
     if(args.doBoot>0){
-        ctx.scheme.bootstrapAndEqual(c, logq_boot, args.logQ, 3, 4);
+        if (iterArgs && args.stage == "boot_outside")
+            ctx.scheme.bootstrapAndEqualBitFlip(c, logq_boot, args.logQ, 3, 4, op_step, iterArgs->coeff, iterArgs->bit);
+        else if (iterArgs && (args.stage == "boot_coeff" || args.stage == "boot_eval" || args.stage == "boot_slot"))
+            ctx.scheme.bootstrapAndEqualBitFlip_inside(c, logq_boot, args.logQ, 3, 4, args.stage, op_step, iterArgs->coeff, iterArgs->bit);
+        else
+            ctx.scheme.bootstrapAndEqual(c, logq_boot, args.logQ, 3, 4);
     }
 
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);

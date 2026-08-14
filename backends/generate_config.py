@@ -38,6 +38,10 @@ if __name__ == "__main__":
     gen_opServerRescaleDepth_analysis()
     gen_opServerRot_analysis()
 
+    # ops server boot
+    gen_opServerBootOutside_analysis()
+    gen_opServerBootEval_analysis()
+
     # NN
     gen_heaanNN_analysis()
     gen_heaanNN_cheby_analysis()
