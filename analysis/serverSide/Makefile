@@ -8,10 +8,17 @@ ANALYSIS_TARGETS := \
 	#mulDepth_analysis \
 
 PARAMS = --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40 --logSlots 4
+PARAMS_BOOT = --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --logSlots 4 --doBoot 1 --doMul 4
 
 .PHONY: $(ANALYSIS_TARGETS) $(ANALYSIS_TARGETS_RNS) all_analysis
 
 all_analysis: $(ANALYSIS_TARGETS)
+
+bootOut_analysis:
+	python3 insideOp_analysis.py --library $(LIBRARY) $(PARAMS_BOOT) --stage boot_outside  --op_step 7 --title bootOut
+
+bootEval_analysis:
+	python3 insideOp_analysis.py --library $(LIBRARY) $(PARAMS_BOOT) --stage boot_eval  --op_step 15 --title bootEval
 
 add_analysis:
 	python3 insideOp_analysis.py --library $(LIBRARY) $(PARAMS) --stage add_inside --doAdd 2 --op_step 5 --title add_inside

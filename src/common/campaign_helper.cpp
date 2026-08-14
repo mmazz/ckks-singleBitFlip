@@ -41,6 +41,7 @@ void CampaignArgs::print(std::ostream& os) const {
     os << "verbose: " << verbose << '\n';
 
     os << "dnum: " << dnum << '\n';
+    os << "amountBits: " << amountBits << '\n';
     os << "scaleTech: " << scaleTech << '\n';
     os << "results_dir: " << results_dir << '\n';
 
@@ -87,6 +88,7 @@ void print_usage(const char* program_name) {
               << "  --attackModeSKA <value> Type of error injection for SKA (only heaan, default: complete)\n"
               << "  --thresholdSKA <value>  Bits for threshold for SKA (only heaan, default: 5.0)\n"
               << "  --dnum <value>          Digit number (default: 3)\n"
+              << "  --amountBits <value>    Amount of burst bits (default: 1)\n"
               << "  --scaleTech <value>     Scaling technique (default: FIXEDMANUAL, others: FIXEDAUTO, FLEXIBLEAUTO or FLEXIBLEAUTOEXT)\n"
               << "  --results_dir <path>    Results directory (default: results)\n"
               << "  --verbose, -v           Verbose output\n"
@@ -114,8 +116,8 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"doScalarMul",    required_argument, 0, 'L'},
         {"doRot",          required_argument, 0, 'r'},
         {"doBoot",         required_argument, 0, 'B'},
-        {"op_step",       required_argument, 0, 'o'},
-        {"op_depth",        required_argument, 0, 'O'},
+        {"op_step",        required_argument, 0, 'o'},
+        {"op_depth",       required_argument, 0, 'O'},
         {"isComplex",      required_argument, 0, 'X'},
         {"isExhaustive",   required_argument, 0, 'T'},
         {"logMin",         required_argument, 0, 'x'},
@@ -126,6 +128,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"attackModeSKA",  required_argument, 0, 'a'},
         {"thresholdSKA",   required_argument, 0, 't'},
         {"dnum",           required_argument, 0, 'D'},
+        {"amountBits",     required_argument, 0, 'J'},
         {"scaleTech",      required_argument, 0, 'C'},
         {"results_dir",    required_argument, 0, 'R'},
         {"verbose",        no_argument,       0, 'v'},
@@ -164,6 +167,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'B': args.doBoot = std::stoul(optarg); break;
             case 'o': args.op_step = std::stoul(optarg); break;
             case 'O': args.op_depth = std::stoul(optarg); break;
+            case 'J': args.amountBits = std::stoul(optarg); break;
 
             case 'v':
                 args.verbose = true;
@@ -202,11 +206,16 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                     args.stage != "add_inside" &&
                     args.stage != "mul_inside" &&
                     args.stage != "rescale_inside" &&
-                    args.stage != "rot_inside")
+                    args.stage != "rot_inside" &&
+                    args.stage != "boot_outside" &&
+                    args.stage != "boot_coeff" &&
+                    args.stage != "boot_eval" &&
+                    args.stage != "boot_slot")
                 {
                     std::cerr << "Error: invalid stage '" << args.stage
                               << "' (expected: encode, encrypt_c0, encrypt_c1, decrypt_c0, decrypt_c1"
-                              " decode, cheby_tanh3, hidden_layer,  mul_inside or mul_outside)\n";
+                              " decode, cheby_tanh3, hidden_layer,  mul_inside or mul_outside"
+                              "boot_outisde, boot_coeff, boot_eval, boot_slots)\n";
                     std::exit(EXIT_FAILURE);
                 }
                 break;

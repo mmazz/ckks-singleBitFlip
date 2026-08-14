@@ -1,4 +1,4 @@
-JOBS := 10
+JOBS := 6
 
 all: firstAnalysis clientOps serverOps serverOps_boot NNServerOps
 
@@ -37,4 +37,7 @@ serverOps:
 
 serverOps_boot:
 	python3 run_campaign.py configs/bootEval_analysis.csv      --jobs $(JOBS) && \
+	python3 run_campaign.py configs/bootOutside_analysis.csv      --jobs $(JOBS)
+
+temp:
 	python3 run_campaign.py configs/bootOutside_analysis.csv      --jobs $(JOBS)
