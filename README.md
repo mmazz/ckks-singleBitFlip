@@ -73,13 +73,13 @@ github.com/mmazz/openfhe-PRNG-Control
 │
 ├── backends/
 │ ├── openfhe/
-│ │ └── src/ # OpenFHE-specific campaign sources
-|  └── nn_mnist/
-|    └── src/ # Openfhe-NN specific campaign sources
+│   └── src/ # OpenFHE-specific campaign sources
+| └── openfheNN/
+|   └── src/ # Openfhe-NN specific campaign sources
 │ └── heaan/
-│ └── src/ # HEAAN-specific campaign sources
-|  └── nn_mnist/
-|    └── src/ # HEAAN-NN specific campaign sources
+│   └── src/ # HEAAN-specific campaign sources
+| └── heaanNN/
+|   └── src/ # HEAAN-NN specific campaign sources
 │
 ├── setup_project.sh
 └── results/
