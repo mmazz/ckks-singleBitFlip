@@ -90,7 +90,7 @@ target_link_libraries(backend_openfhe
 )
 set(EXECUTABLES
     nn_mnist
-    nn_mnist_randomBitFlip
+    randomSingleBitFlip
 )
 
 
