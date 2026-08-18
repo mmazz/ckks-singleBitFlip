@@ -9,7 +9,7 @@ const size_t INPUT_DIM = 784;
 const size_t HIDDEN_DIM = 64;
 const size_t OUTPUT_DIM = 10;
 const double PIXEL_MAX = 255.0;
-const std::string path = "../../../heaan/src/nn_mnist/data/mnist_train.csv";
+const std::string path = "../NN_config/data/";
 size_t NUM_BITFLIPS = 50;
 
 ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
@@ -44,10 +44,11 @@ int main(int argc, char* argv[]) {
     if(verbose)
         std::cout << "Loading weights..." << std::endl;
 
-    auto W1  = loadCSVMatrix("../../../heaan/src/nn_mnist/data/weights/W1.csv", HIDDEN_DIM, INPUT_DIM);
-    auto b1  = loadCSVVector("../../../heaan/src/nn_mnist/data/weights/b1.csv", HIDDEN_DIM);
-    auto W2  = loadCSVMatrix("../../../heaan/src/nn_mnist/data/weights/W2.csv", OUTPUT_DIM, HIDDEN_DIM);
-    auto b2  = loadCSVVector("../../../heaan/src/nn_mnist/data/weights/b2.csv", OUTPUT_DIM);
+    auto W1  = loadCSVMatrix(path+"weights/W1.csv", HIDDEN_DIM, INPUT_DIM);
+    auto b1  = loadCSVVector(path+"weights/b1.csv", HIDDEN_DIM);
+
+    auto W2  = loadCSVMatrix(path+"weights/W2.csv", OUTPUT_DIM, HIDDEN_DIM);
+    auto b2  = loadCSVVector(path+"weights/b2.csv", OUTPUT_DIM);
     assert(W1[0].size() == INPUT_DIM);
     assert(W2[0].size() == HIDDEN_DIM);
 
@@ -66,7 +67,7 @@ int main(int argc, char* argv[]) {
     size_t targetValue;
 
     bool ok = loadMnistNormRowByIndex(
-        path,
+        path+"mnist_train.csv",
         targetRow,
         targetValue,
         vals
