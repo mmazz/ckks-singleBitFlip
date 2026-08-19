@@ -22,7 +22,7 @@ allRuns: $(RUNS)
 
 
 run0:
-	build/bin/randomSingleBitFlip --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50   --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 1 --mult_depth 5
+	build/bin/randomSingleBitFlip --logN 12  --logQ 60  --bitPerCoeff 64  --logDeta 50   --stage encrypt_c0 --logSlots 10 --seed 0 --withNTT 1 --mult_depth 5
 run1:
 	build/bin/randomSingleBitFlip --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50   --stage encrypt_c1 --logSlots 10 --seed 0 --withNTT 1 --mult_depth 5
 run2:
