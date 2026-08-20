@@ -33,6 +33,7 @@ def parse_args():
     parser.add_argument("--doBoot", type=int, default=0)
     parser.add_argument("--op_step", type=int, default=0)
     parser.add_argument("--op_depth", type=int, default=0)
+    parser.add_argument("--amountBits", type=int, default=1)
     parser.add_argument("--isComplex", type=int, default=0)
     parser.add_argument("--withNTT", type=int, default=0)
     parser.add_argument("--logN", type=int, default=6)
