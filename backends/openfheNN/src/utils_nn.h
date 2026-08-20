@@ -78,12 +78,12 @@ Ciphertext<DCRTPoly> encryptInput(
 
 Ciphertext<DCRTPoly> chebyTanh3(
     HEEnv& he,
-    Ciphertext<DCRTPoly> x
+    Ciphertext<DCRTPoly>& x
 );
 
 Ciphertext<DCRTPoly> reduceSum(
     HEEnv& he,
-    Ciphertext<DCRTPoly> ct
+    Ciphertext<DCRTPoly>& ct
 );
 
 
@@ -106,6 +106,6 @@ std::vector<std::vector<double>> loadCSVMatrix(const std::string& path, size_t r
 
 std::vector<double> loadCSVVector(const std::string& path, size_t size);
 
-IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs=std::nullopt);
+IterationResult run_iteration_NN(HEEnv& he, EncodedWeights& encoded, const vector<double>& vals, CampaignArgs& args, size_t targetValue, std::optional<IterationArgs> iterArgs=std::nullopt);
 
 
