@@ -121,9 +121,11 @@ int main(int argc, char* argv[]) {
 
            // std::vector<uint32_t> bits_to_flip = extraBitsBetweenDeltaAndQ(args); // 10 values
             std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 14 values
-            for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
+            for (size_t bitIndex = 0; bitIndex < 2 ; bitIndex++) {
+            //for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
                 uint32_t bit = bits_to_flip[bitIndex];
-                for (size_t i = 0; i < num_bitFlips; i++) {
+                for (size_t i = 0; i < 2; i++) {
+                //for (size_t i = 0; i < num_bitFlips; i++) {
                     // We already know what happens to all coeffs, so we can reduce the search for the first 8 coeefs
                     uint32_t coeff = random_int(0, (1<<logN)-1);
                     //uint32_t coeff = random_int(0, 8-1);

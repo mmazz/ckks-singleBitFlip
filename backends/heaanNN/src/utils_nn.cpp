@@ -171,7 +171,7 @@ void reduceSum(
 
 vector<Ciphertext> forward(
     HEEnv& he,
-    Ciphertext c,
+    Ciphertext& c,
     EncodedWeights& ew,
     long logSlots,
     long logP,
@@ -183,7 +183,9 @@ vector<Ciphertext> forward(
     size_t HIDDEN = ew.W1.size();
     size_t OUTPUT = ew.W2.size();
 
-    vector<Ciphertext> layer1(HIDDEN);
+    vector<Ciphertext> layer1;
+    layer1.reserve(HIDDEN);
+
     hidden_layer = random_int(0, HIDDEN-1);
     for(size_t j=0;j<HIDDEN;++j){
         Ciphertext s;
@@ -219,25 +221,24 @@ vector<Ciphertext> forward(
             }
         }
         s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
-
-        layer1[j] = std::move(s);
+        layer1.push_back(std::move(s));
     }
 
-    vector<Ciphertext> out(OUTPUT);
+    vector<Ciphertext> out;
+    out.reserve(OUTPUT);
     for(size_t o=0;o<OUTPUT;++o){
 
         Ciphertext acc = he.scheme.multByPoly(layer1[0], ew.W2[o][0], logP);
         he.scheme.reScaleByAndEqual(acc, logP);
 
-        for(size_t h=0;h<HIDDEN;++h){
+        for(size_t h=1;h<HIDDEN;++h){
             Ciphertext term = he.scheme.multByPoly(layer1[h], ew.W2[o][h], logP);
             he.scheme.reScaleByAndEqual(term, logP);
             he.scheme.addAndEqual(acc, term);
         }
 
         he.scheme.addConstAndEqual(acc, ew.b2[o]);
-
-        out[o] = std::move(acc);
+        out.push_back(std::move(acc));
     }
 
     return out;
@@ -245,14 +246,11 @@ vector<Ciphertext> forward(
 
 vector<Plaintext> decryptLogits(
     HEEnv& he,
-    const vector<Ciphertext>& outs
+    vector<Ciphertext>& outs
 ){
     vector<Plaintext> res;
     res.reserve(outs.size());
-
-    for(const auto& ct_const : outs){
-
-        Ciphertext ct = ct_const;  // copia porque decryptMsg no es const
+    for (auto& ct : outs) {
         res.push_back(
             he.scheme.decryptMsg(he.sk, ct)
         );
@@ -268,16 +266,14 @@ vector<double> decodeLogits(
     vector<double> res;
     res.reserve(pts.size());
 
-    for(const auto& pt_const : pts){
 
-        Plaintext pt = pt_const;  // copia porque decryptMsg no es const
-        unique_ptr<complex<double>[]> tmp(
+    for (auto& pt : pts) {
+        std::unique_ptr<std::complex<double>[]> tmp(
             he.scheme.decode(pt)
         );
 
         res.push_back(tmp[0].real());
     }
-
     return res;
 }
 
@@ -401,7 +397,7 @@ std::vector<double> loadCSVVector(const std::string& path, size_t size) {
 }
 
 
-IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded,
+IterationResult run_iteration_NN(HEEnv& he, EncodedWeights& encoded,
         const vector<double>& vals, CampaignArgs& args, size_t targetValue,
         uint32_t &hidden_layer,  uint32_t &reduceSum_layer,
         std::optional<IterationArgs> iterArgs ){

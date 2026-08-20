@@ -63,7 +63,7 @@ void reduceSum(
 
 vector<Plaintext> decryptLogits(
     HEEnv& he,
-    const vector<Ciphertext>& outs
+    vector<Ciphertext>& outs
 );
 
 vector<double> decodeLogits(
@@ -80,7 +80,7 @@ std::vector<std::vector<double>> loadCSVMatrix(const std::string& path, size_t r
 
 std::vector<double> loadCSVVector(const std::string& path, size_t size);
 
-IterationResult run_iteration_NN(HEEnv& he, EncodedWeights encoded,
+IterationResult run_iteration_NN(HEEnv& he, EncodedWeights& encoded,
         const vector<double>& vals, CampaignArgs& args, size_t targetValue,
         uint32_t &hidden_layer, uint32_t &reduceSum_layer,
         std::optional<IterationArgs> iterArgs=std::nullopt
@@ -93,14 +93,14 @@ Ciphertext chebyTanh3(
      std::optional<IterationArgs> iterArgs
 );
 
-IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights encoded,
+IterationResult run_iteration_NNOp(HEEnv& he, EncodedWeights& encoded,
         const vector<double>& vals, CampaignArgs& args, size_t targetValue,
         std::optional<IterationArgs> iterArgs=std::nullopt
         );
 
 vector<Ciphertext> forward(
     HEEnv& he,
-    Ciphertext c,
+    Ciphertext& c,
     EncodedWeights& ew,
     long logSlots,
     long logP,
