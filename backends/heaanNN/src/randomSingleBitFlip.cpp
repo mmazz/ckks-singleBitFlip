@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
 
             std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
-            CampaignLogger logger(campaign_id, args.results_dir + "/data", 10000);
+            CampaignLogger logger(campaign_id, args.results_dir + "/data", 1000);
 
             std::cout << "Campaign " << campaign_id << " registered" << std::endl;
 
