@@ -45,6 +45,25 @@ void printVector(const std::vector<cdouble>& v,
     std::cout << " ]\n";
 }
 
+void validateArgs(const CampaignArgs& args)
+{
+    if (args.logQ > args.bitPerCoeff)
+        throw std::invalid_argument(
+            "Bits per coefficient is less than logQ"
+        );
+
+    if (args.logDelta > args.logQ)
+        throw std::invalid_argument(
+            "Delta is bigger than logQ"
+        );
+
+    if (args.logSlots >= args.logN)
+        throw std::invalid_argument(
+            "Log slots is bigger than or equal to logN"
+        );
+}
+
+
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 {
     std::vector<uint32_t> res;

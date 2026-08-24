@@ -9,7 +9,7 @@ SEEDS_INP = 5
 SEEDS_PRNG_NN = 2
 SEEDS_INP_NN = 2
 EXTRA_SEEDS = 20
-stages = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
+STAGES = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 
 def cartesian_product_rows(fixed: dict, sweep: dict) -> list[dict]:
     """

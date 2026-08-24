@@ -23,7 +23,6 @@ clientOps:
 NNServerOps:
 	python3 run_campaign.py configs/heaanNN_cheby_analysis.csv  --jobs $(JOBS) && \
 	python3 run_campaign.py configs/heaanNN_analysis.csv        --jobs $(JOBS) && \
-	python3 run_campaign.py configs/heaanNN_cheby_analysis.csv  --jobs $(JOBS) && \
 	python3 run_campaign.py configs/heaanNN_hidden_analysis.csv --jobs $(JOBS) && \
 	python3 run_campaign.py configs/openfheNN_analysis.csv      --jobs $(JOBS)
 

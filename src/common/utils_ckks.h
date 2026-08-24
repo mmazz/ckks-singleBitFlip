@@ -121,6 +121,7 @@ bool AcceptCKKSResult(const CKKSAccuracyMetrics& m, double max_rel_error = 1e-4,
 std::vector<uint32_t> extraBitsBetweenDeltaAndQ(const CampaignArgs& args);
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args);
 
+void validateArgs(const CampaignArgs& args);
 double percentile(std::vector<double>& v, double p);
 
 double compute_rel_norm2(const std::vector<double>& v1, const std::vector<double>& v2);

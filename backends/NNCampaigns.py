@@ -1,4 +1,4 @@
-from utilsGen import cartesian_product_rows, write_csv, SEEDS_PRNG_NN, SEEDS_INP_NN, EXTRA_SEEDS, stages
+from utilsGen import cartesian_product_rows, write_csv, SEEDS_PRNG_NN, SEEDS_INP_NN, STAGES
 
 def gen_heaanNN_analysis():
     variants = [
@@ -18,6 +18,7 @@ def gen_heaanNN_analysis():
         fixed = {
             "binary": "randomSingleBitFlip",
             "library": "heaanNN",
+            "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
             "logN": 12,
             "logQ": 220,
             "logDelta": 30,
@@ -40,8 +41,10 @@ def gen_heaanNN_hidden_analysis():
     fixed = {
         "binary": "randomSingleBitFlip",
         "library": "heaanNN",
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
         "logN": 12,
         "logQ": 220,
+        "bitPerCoeff": 250,
         "logDelta": 30,
         "logSlots": 10,
         "mult_depth": 0,
@@ -60,8 +63,10 @@ def gen_heaanNN_cheby_analysis():
     fixed = {
         "binary": "randomSingleBitFlip",
         "library": "heaanNN",
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
         "logN": 12,
         "logQ": 220,
+        "bitPerCoeff": 250,
         "logDelta": 30,
         "logSlots": 10,
         "mult_depth": 0,
@@ -77,11 +82,12 @@ def gen_openfheNN_analysis():
         "seed": list(range(1, SEEDS_PRNG_NN+1)),
         "seed_input": list(range(1, SEEDS_INP_NN+1)),
         "withNTT": list(range(0,2)),
-        "stages": stages
+        "stages": STAGES
     }
     fixed = {
         "binary": "randomSingleBitFlip",
         "library": "openfheNN",
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
         "logN": 12,
         "logQ": 60,
         "bitPerCoeff": 64,
