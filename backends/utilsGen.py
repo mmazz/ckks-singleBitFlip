@@ -4,11 +4,11 @@ from pathlib import Path
 
 
 CONFIG_DIR = Path(__file__).resolve().parent / "configs"
-SEEDS_PRNG = 5
-SEEDS_INP = 5
+SEEDS_PRNG = 2
+SEEDS_INP = 2
 SEEDS_PRNG_NN = 2
 SEEDS_INP_NN = 2
-EXTRA_SEEDS = 20
+EXTRA_SEEDS = 2
 STAGES = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 
 def cartesian_product_rows(fixed: dict, sweep: dict) -> list[dict]:

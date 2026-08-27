@@ -6,13 +6,32 @@ ROT_STEPS = 11
 BOOTOUT_STEPS = 7
 BOOTEVAL_STEPS = 15
 
-def gen_testML_add_analysis():
+
+def gen_testML_analysis():
     variants = [
-        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
-        {"doAdd": 2,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
-        {"doAdd": 1,   "doPlainMul": 1, "doMul": 2, "doRot": 0, "doBoot": 0},
-        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 1, "doBoot": 0},
-        {"doAdd": 1,   "doPlainMul": 0, "doMul": 0, "doRot": 1, "doBoot": 0},
+        {"library": "heaan",   "bitPerCoeff": 128},
+        {"library": "openfhe", "bitPerCoeff": 64},
+    ]
+    sweep = {
+        "seed": list(range(1, 3)),
+        "seed_input": list(range(1, 3)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "exhaustiveSingleBitFlip",
+            "logN": 6,
+            "library": "heaan",
+            "logSlots": 4,
+            "logQ": 60,
+            "logDelta": 40,
+            "stage": "encode",
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("heaan_VS_openfhe_plain_analysis", rows)
 
     ]
     sweep = {

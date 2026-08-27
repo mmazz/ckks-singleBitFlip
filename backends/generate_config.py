@@ -86,6 +86,8 @@ if __name__ == "__main__":
     gen_testML_rot_analysis()
     gen_testML_rescale_analysis()
 
+    gen_testML_analysis()
+
     # ops server boot
     gen_opServerBootOutside_analysis()
     gen_opServerBootEval_analysis()
