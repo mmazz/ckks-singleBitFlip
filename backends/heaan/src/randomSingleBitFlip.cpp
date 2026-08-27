@@ -71,7 +71,13 @@ int main(int argc, char* argv[]) {
         std::mt19937 rng(args.seed);
 
         auto start_time = std::chrono::high_resolution_clock::now();
-        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 10 values
+        std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); 
+        if (args.verbose) {
+            for(int i=0; i<bits_to_flip.size(); i++)
+                std::cout << bits_to_flip[i] << ", ";
+            std::cout << std::endl;
+
+        }
         for (size_t i = 0; i < num_bitFlips; i++) {
             uint32_t coeff = random_int(0, N-1);
             for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {

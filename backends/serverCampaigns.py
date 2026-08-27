@@ -6,7 +6,134 @@ ROT_STEPS = 11
 BOOTOUT_STEPS = 7
 BOOTEVAL_STEPS = 15
 
+def gen_testML_add_analysis():
+    variants = [
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
+        {"doAdd": 2,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 1, "doMul": 2, "doRot": 0, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 1, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 0, "doRot": 1, "doBoot": 0},
 
+    ]
+    sweep = {
+        "seed": list(range(1, 2)),
+        "seed_input": list(range(1, 2)),
+        "op_step": list(range(0,ADD_STEPS+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "logN": 6,
+            "logSlots": 4,
+            "library": "heaan",
+            "logQ": 160,
+            "logDelta": 30,
+            "bitPerCoeff": 180,
+            "withNTT": 0,
+            "stage": "add_inside",
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("testML_add_analysis", rows)
+
+def gen_testML_mul_analysis():
+    variants = [
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
+        {"doAdd": 2,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 1, "doMul": 2, "doRot": 0, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 1, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 1, "doRot": 1, "doBoot": 0},
+
+    ]
+    sweep = {
+        "seed": list(range(1, 2)),
+        "seed_input": list(range(1, 2)),
+        "op_step": list(range(0,MUL_STEPS+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "logN": 6,
+            "logSlots": 4,
+            "library": "heaan",
+            "logQ": 160,
+            "logDelta": 30,
+            "bitPerCoeff": 180,
+            "withNTT": 0,
+            "stage": "mul_inside",
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("testML_mul_analysis", rows)
+
+
+def gen_testML_rot_analysis():
+    variants = [
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 2, "doBoot": 0},
+        {"doAdd": 2,   "doPlainMul": 0, "doMul": 3, "doRot": 1, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 1, "doMul": 2, "doRot": 3, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 1, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 1, "doRot": 2, "doBoot": 0},
+
+    ]
+    sweep = {
+        "seed": list(range(1, 2)),
+        "seed_input": list(range(1, 2)),
+        "op_step": list(range(0,ROT_STEPS+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "logN": 6,
+            "logSlots": 4,
+            "library": "heaan",
+            "logQ": 160,
+            "logDelta": 30,
+            "bitPerCoeff": 180,
+            "withNTT": 0,
+            "stage": "rot_inside",
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("testML_rot_analysis", rows)
+
+def gen_testML_rescale_analysis():
+    variants = [
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 2, "doBoot": 0},
+        {"doAdd": 2,   "doPlainMul": 0, "doMul": 3, "doRot": 1, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 1, "doMul": 2, "doRot": 3, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 1, "doBoot": 0},
+        {"doAdd": 1,   "doPlainMul": 0, "doMul": 1, "doRot": 2, "doBoot": 0},
+
+    ]
+    sweep = {
+        "seed": list(range(1, 2)),
+        "seed_input": list(range(1, 2)),
+        "op_step": list(range(0,RESCALE_STEPS+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "randomSingleBitFlip",
+            "logN": 6,
+            "logSlots": 4,
+            "library": "heaan",
+            "logQ": 160,
+            "logDelta": 30,
+            "bitPerCoeff": 180,
+            "withNTT": 0,
+            "stage": "rescale_inside",
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("testML_rescale_analysis", rows)
 
 def gen_opServerAdd_analysis():
     fixed = {

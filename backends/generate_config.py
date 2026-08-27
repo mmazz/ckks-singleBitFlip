@@ -10,15 +10,15 @@ Uso:
 from clientCampaigns import *
 from serverCampaigns import *
 from NNCampaigns import *
-from utilsGen import cartesian_product_rows, write_csv, stages
-
+from utilsGen import cartesian_product_rows, write_csv
+STAGES = ["encode", "encrypt_c0", "encrypt_c1", "decrypt_c0", "decrypt_c1", "decode"]
 def gen_testML_analysis():
     variants = [
+        {"doAdd": 0,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
         {"doAdd": 1,   "doPlainMul": 0, "doMul": 0, "doRot": 0, "doBoot": 0},
         {"doAdd": 1,   "doPlainMul": 1, "doMul": 0, "doRot": 0, "doBoot": 0},
         {"doAdd": 1,   "doPlainMul": 0, "doMul": 1, "doRot": 0, "doBoot": 0},
         {"doAdd": 1,   "doPlainMul": 0, "doMul": 2, "doRot": 1, "doBoot": 0},
-        {"doAdd": 0,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
         {"doAdd": 0,   "doPlainMul": 0, "doMul": 0, "doRot": 0, "doBoot": 0},
         {"doAdd": 2,   "doPlainMul": 0, "doMul": 0, "doRot": 2, "doBoot": 0},
         {"doAdd": 3,   "doPlainMul": 1, "doMul": 0, "doRot": 2, "doBoot": 0},
@@ -26,10 +26,10 @@ def gen_testML_analysis():
         {"doAdd": 1,   "doPlainMul": 0, "doMul": 3, "doRot": 1, "doBoot": 0},
         {"doAdd": 3,   "doPlainMul": 0, "doMul": 2, "doRot": 2, "doBoot": 0},
         {"doAdd": 0,   "doPlainMul": 0, "doMul": 0, "doRot": 2, "doBoot": 0},
-        {"doAdd": 0,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0},
+        {"doAdd": 0,   "doPlainMul": 0, "doMul": 3, "doRot": 0, "doBoot": 0}
     ]
     sweep = {
-        "seed": list(range(1, 1)),
+        "seed": list(range(1, 2)),
         "seed_input": list(range(1, 2)),
         "stage": STAGES,
     }
@@ -38,17 +38,19 @@ def gen_testML_analysis():
         fixed = {
             "binary": "randomSingleBitFlip",
             "logN": 6,
-            "logSlots": 5,
+            "logSlots": 4,
             "library": "heaan",
             "logQ": 160,
-            "logDelta": 40,
-            "bitPerCoeff": 64,
+            "logDelta": 30,
+            "bitPerCoeff": 180,
             "withNTT": 0,
             **v,
         }
         rows += cartesian_product_rows(fixed, sweep)
 
-    write_csv("heaan_VS_openfhe_plain_analysis", rows)
+    write_csv("testML_analysis", rows)
+
+
 
 
 if __name__ == "__main__":
@@ -79,6 +81,10 @@ if __name__ == "__main__":
 
 
     gen_testML_analysis()
+    gen_testML_add_analysis()
+    gen_testML_mul_analysis()
+    gen_testML_rot_analysis()
+    gen_testML_rescale_analysis()
 
     # ops server boot
     gen_opServerBootOutside_analysis()
