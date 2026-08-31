@@ -252,6 +252,33 @@ PIPELINE_MAPPING = {
         "stage": "encrypt_c1",
         "op_step": 0,
     },
+
+    # deco y decypt
+
+     ("decrypt_c0", 0): {
+        "doAdd": 0,
+        "doPlainMul": 0,
+        "doMul": 0,
+        "doRot": 0,
+        "stage": "decrypt_c0",
+        "op_step": 0,
+    }, 
+     ("decrypt_c1", 0): {
+        "doAdd": 0,
+        "doPlainMul": 0,
+        "doMul": 0,
+        "doRot": 0,
+        "stage": "decrypt_c0",
+        "op_step": 0,
+    },
+     ("decode", 0): {
+        "doAdd": 0,
+        "doPlainMul": 0,
+        "doMul": 0,
+        "doRot": 0,
+        "stage": "decode",
+        "op_step": 0,
+    },
 }
 
 DEFAULT_OPS = {
@@ -284,7 +311,7 @@ def main():
     input_path = Path(sys.argv[1])
 
     output_path = input_path.with_name(
-        f"{input_path.stem}_pipeline{input_path.suffix}"
+        f"{input_path.stem}_NN{input_path.suffix}"
     )
 
     df = pd.read_csv(input_path)

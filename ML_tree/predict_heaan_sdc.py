@@ -79,7 +79,7 @@ from train_heaan_large import (
 
 
 SDC_THRESHOLD = 0.1
-SUPPORTED_BUNDLE_FORMATS = {3, 4}
+SUPPORTED_BUNDLE_FORMATS = {3, 4, 5}
 
 
 def load_sdc_dataset(ml_dir: str) -> pd.DataFrame:
@@ -163,7 +163,7 @@ def load_sdc_dataset(ml_dir: str) -> pd.DataFrame:
     if rel.isna().any():
         sys.exit("synthetic rel_error contains missing/non-numeric values")
 
-    expected_rel = np.where(is_sdc.to_numpy(dtype=int) == 1, 10.0, 0.0)
+    expected_rel = np.where(is_sdc.to_numpy(dtype=int) == 1, 1.0, 0.0)
     if not np.allclose(rel.to_numpy(dtype=float), expected_rel):
         sys.exit(
             "prepared NN rel_error does not match the expected mapping: "
@@ -589,12 +589,20 @@ def main() -> int:
 
     if list(X.columns) != list(bundle["columns"]):
         sys.exit("internal error: feature columns do not match saved model")
+    raw_pred = bundle["model"].predict(X)
+    print("modelo:", type(bundle["model"]))
+    print("raw_pred (espacio transformado) min/max:", raw_pred.min(), raw_pred.max())
+    print("raw_pred valores únicos (primeros 20):", np.unique(raw_pred)[:20])
 
+    print("\nX describe:")
+    print(X.describe().T[["min","max","mean","std"]])
     # ------------------------------------------------------------------
     # Predict measured rel_error learned from BASIC pipelines.
     # ------------------------------------------------------------------
     predicted_rel_error = model_predict_rel_error(X, bundle)
-
+    print()
+    print(predicted_rel_error)
+    print()
     df["predicted_rel_error"] = predicted_rel_error
     df["predicted_is_sdc"] = prediction_to_is_sdc(
         predicted_rel_error,

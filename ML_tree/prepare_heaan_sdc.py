@@ -79,7 +79,7 @@ ROW_DTYPES = {
 }
 
 SDC_REL_ERROR_0 = 0.0
-SDC_REL_ERROR_1 = 10.0
+SDC_REL_ERROR_1 = 1.0
 
 
 def load_campaigns(
@@ -90,7 +90,7 @@ def load_campaigns(
 ) -> pd.DataFrame:
     """Read campaign-level metadata and apply optional filters."""
 
-    path = os.path.join(root, "campaigns_start.csv")
+    path = os.path.join(root, "campaigns_start_NN.csv")
     if not os.path.exists(path):
         sys.exit(f"no campaigns_start.csv under {root}")
 
