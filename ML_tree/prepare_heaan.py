@@ -76,6 +76,13 @@ META_KEEP = [
     "doMul",
     "doRot",
     "doBoot",
+    # Written by NN_modeling.py: where the injection really happened, before the
+    # pipeline mapping rewrote stage/op_step. Never used as a model input (the
+    # trainer's feature list does not mention them) — they exist so results can
+    # be reported against the real NN location instead of the mapped one.
+    "original_stage",
+    "original_op_step",
+    "original_op_depth",
 ]
 
 # Needed by the current trainer regardless of which optional features exist.
@@ -290,13 +297,22 @@ def main() -> int:
         args.quiet,
     )
 
+    # rel_error = +inf is a legitimate outcome (the error overflowed) and the
+    # 3-class trainer maps it to 'failed'. NaN and negative values are real
+    # problems, but the trainer drops and reports them, so neither is worth
+    # aborting a multi-hour prepare over. Report, do not exit.
     rel = rows.rel_error.to_numpy()
-    if not np.isfinite(rel).all():
-        bad = int((~np.isfinite(rel)).sum())
-        sys.exit(f"rel_error contains {bad:,} NaN/inf values")
-    if (rows.rel_error < 0).any():
-        bad = int((rows.rel_error < 0).sum())
-        sys.exit(f"rel_error contains {bad:,} negative values")
+    n_nan = int(np.isnan(rel).sum())
+    n_neg = int((rel < 0).sum())
+    n_inf = int(np.isposinf(rel).sum())
+
+    if n_inf:
+        print(f"note: {n_inf:,} rows have rel_error = inf -> class 'failed'")
+    if n_nan or n_neg:
+        print(
+            f"warning: rel_error has {n_nan:,} NaN and {n_neg:,} negative values; "
+            "the trainer drops those rows"
+        )
 
     # Keep metadata only for campaigns that actually contributed rows.
     present = set(rows.campaign_id.astype(int).unique())
