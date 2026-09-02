@@ -1,4 +1,4 @@
-JOBS := 4
+JOBS := 6
 
 all: firstAnalysis clientOps serverOps serverOps_boot NNServerOps
 
@@ -37,5 +37,11 @@ serverOps_boot:
 	python3 run_campaign.py configs/bootEval_analysis.csv      --jobs $(JOBS) 
 	python3 run_campaign.py configs/bootOutside_analysis.csv      --jobs $(JOBS)
 
-temp:
-	python3 run_campaign.py configs/bootOutside_analysis.csv      --jobs $(JOBS)
+NNOps:
+	python3 run_campaign.py configs/opNNAdd_analysis.csv      --jobs $(JOBS) 
+	python3 run_campaign.py configs/opNNMul_analysis.csv      --jobs $(JOBS) 
+	python3 run_campaign.py configs/opNNRescaleDepth_analysis.csv  --jobs $(JOBS) 
+	python3 run_campaign.py configs/opNNRot_analysis.csv      --jobs $(JOBS)
+
+NN_sim:
+	python3 run_campaign.py configs/NN_sim_analysis.csv      --jobs $(JOBS)

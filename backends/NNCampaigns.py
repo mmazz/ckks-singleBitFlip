@@ -99,4 +99,112 @@ def gen_openfheNN_analysis():
 
 
 
+ADD_STEPS = 5
+MUL_STEPS = 26
+RESCALE_STEPS = 3
+ROT_STEPS = 11
+BOOTOUT_STEPS = 7
+BOOTEVAL_STEPS = 15
+
+
+
+def gen_opNNAdd_analysis():
+    fixed = {
+        "binary": "randomSingleBitFlip",
+        "library": "heaanNN",
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
+        "logN": 12,
+        "logQ": 220,
+        "bitPerCoeff": 250,
+        "logDelta": 30,
+        "logSlots": 10,
+        "mult_depth": 0,
+        "withNTT": 0,
+        "op_depth": 0,
+        "stage": "add_inside",
+    }
+
+
+    sweep = {
+        "seed": list(range(1, 1+1)),
+        "seed_input": list(range(1, 1+1)),
+        "op_step": list(range(0,ADD_STEPS+1)),
+    }
+    write_csv("opNNAdd_analysis", cartesian_product_rows(fixed, sweep))
+
+
+def gen_opNNMul_analysis():
+    fixed = {
+        "binary": "randomSingleBitFlip",
+        "library": "heaanNN",
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
+        "logN": 12,
+        "logQ": 220,
+        "bitPerCoeff": 250,
+        "logDelta": 30,
+        "logSlots": 10,
+        "mult_depth": 0,
+        "withNTT": 0,
+        "op_depth": 0,
+        "stage": "mul_inside",
+    }
+
+
+    sweep = {
+        "seed": list(range(1, 1+1)),
+        "seed_input": list(range(1, 1+1)),
+        "op_step": list(range(0,MUL_STEPS+1)),
+    }
+    write_csv("opNNMul_analysis", cartesian_product_rows(fixed, sweep))
+
+
+def gen_opNNRescaleDepth_analysis():
+    fixed = {
+        "binary": "randomSingleBitFlip",
+        "library": "heaanNN",
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
+        "logN": 12,
+        "logQ": 220,
+        "bitPerCoeff": 250,
+        "logDelta": 30,
+        "logSlots": 10,
+        "mult_depth": 0,
+        "withNTT": 0,
+        "op_depth": 0,
+        "stage": "rescale_inside",
+    }
+
+
+    sweep = {
+        "seed": list(range(1, 1+1)),
+        "seed_input": list(range(1, 1+1)),
+        "op_step": list(range(0,RESCALE_STEPS+1)),
+    }
+    write_csv("opNNRescaleDepth_analysis", cartesian_product_rows(fixed, sweep))
+
+def gen_opNNRot_analysis():
+    fixed = {
+        "binary": "randomSingleBitFlip",
+        "library": "heaanNN",
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
+        "logN": 12,
+        "logQ": 220,
+        "bitPerCoeff": 250,
+        "logDelta": 30,
+        "logSlots": 10,
+        "mult_depth": 0,
+        "withNTT": 0,
+        "op_depth": 0,
+        "stage": "rot_inside",
+    }
+
+
+    sweep = {
+        "seed": list(range(1, 1+1)),
+        "seed_input": list(range(1, 1+1)),
+        "op_step": list(range(0,ROT_STEPS+1)),
+    }
+    write_csv("opNNRot_analysis", cartesian_product_rows(fixed, sweep))
+
+
 

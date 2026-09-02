@@ -40,6 +40,11 @@ if __name__ == "__main__":
     gen_opServerRescaleDepth_analysis()
     gen_opServerRot_analysis()
 
+    gen_NN_sim_analysis()
+    gen_opNNAdd_analysis()
+    gen_opNNMul_analysis()
+    gen_opNNRescaleDepth_analysis()
+    gen_opNNRot_analysis()
     # ops server boot
     gen_opServerBootOutside_analysis()
     gen_opServerBootEval_analysis()

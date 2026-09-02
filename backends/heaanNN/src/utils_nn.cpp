@@ -74,6 +74,7 @@ Ciphertext chebyTanh3(
 ){
     // x^2
 
+    uint32_t op_step = args.op_step;
     if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_step== 0) {
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
@@ -91,8 +92,20 @@ Ciphertext chebyTanh3(
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
-    Ciphertext c3 = he.scheme.mult(c2, c);
-    he.scheme.reScaleByAndEqual(c3, logP);
+    Ciphertext c3;
+    if(iterArgs && args.stage == "mul_inside"){
+        c3 = he.scheme.multBitFlip(c2, c, op_step, iterArgs->coeff, iterArgs->bit);
+    }else {
+        c3 = he.scheme.mult(c2, c);
+    }
+//Ciphertext c3 = he.scheme.mult(c2, c);
+//
+   if(iterArgs && args.stage == "rescale_inside"){
+        he.scheme.reScaleByAndEqualBitFlip(c3, logP, op_step, iterArgs->coeff, iterArgs->bit);
+    }else {
+        he.scheme.reScaleByAndEqual(c3, logP);
+    }
+  //  he.scheme.reScaleByAndEqual(c3, logP);
 
     if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_step == 4) {
@@ -121,6 +134,11 @@ Ciphertext chebyTanh3(
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
+    if(iterArgs && args.stage == "add_inside"){
+        c3 = he.scheme.addBitFlip(c3, c, op_step, iterArgs->coeff, iterArgs->bit);
+    }else {
+        he.scheme.addAndEqual(c3, c);
+    }
     he.scheme.addAndEqual(c3, c);
 
     return c3;
@@ -135,6 +153,7 @@ void reduceSum(
 ){
     reduceSum_layer = random_int(0, logSlots-1);
 
+    uint32_t op_step = args.op_step;
     for(int i=0;i<logSlots;i++){
         Ciphertext rot;
         if (i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
@@ -145,8 +164,13 @@ void reduceSum(
                 SwitchBit(c_copy.ax[iterArgs->coeff], iterArgs->bit);
             }
             rot = he.scheme.leftRotateFast(c_copy, 1<<i);
-        } else
-            rot = he.scheme.leftRotateFast(ct, 1<<i);
+        } else{
+            if(iterArgs && args.stage == "rot_inside"){
+                rot = he.scheme.leftRotateFastBitFlip(ct, 1<<i, op_step, iterArgs->coeff, iterArgs->bit);
+            }else {
+                rot = he.scheme.leftRotateFast(ct, 1<<i);
+            }
+        }
         if (i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 6) {
                 SwitchBit(rot.bx[iterArgs->coeff], iterArgs->bit);
@@ -220,6 +244,7 @@ vector<Ciphertext> forward(
                 SwitchBit(s.ax[iterArgs->coeff], iterArgs->bit);
             }
         }
+        
         s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
         layer1.push_back(std::move(s));
     }

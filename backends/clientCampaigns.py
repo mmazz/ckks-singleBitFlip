@@ -334,6 +334,41 @@ def gen_opClientMul_analysis():
 
     write_csv("opClientMul_analysis", cartesian_product_rows(fixed, sweep))
 
+def gen_NN_sim_analysis():
+    variants = [
+            {"doAdd": 2 , "doPlainMul": 3, "doMul": 2, "doRot": 1},
+            {"doAdd": 2 , "doPlainMul": 2, "doMul": 2, "doRot": 1},
+            {"doAdd": 2 , "doPlainMul": 2, "doMul": 2, "doRot": 0},
+            {"doAdd": 1 , "doPlainMul": 2, "doMul": 2, "doRot": 0},
+            {"doAdd": 1 , "doPlainMul": 2, "doMul": 1, "doRot": 0},
+            {"doAdd": 1 , "doPlainMul": 1, "doMul": 1, "doRot": 0},
+            {"doAdd": 1 , "doPlainMul": 1, "doMul": 0, "doRot": 0},
+            {"doAdd": 1 , "doPlainMul": 0, "doMul": 0, "doRot": 0},
+
+
+    ]
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "stage": ["encrypt_c0", "encrypt_c1"]
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "binary": "exhaustiveSingleBitFlip",
+            "library": "heaan",
+            "logN": 6, 
+            "logQ": 220,
+            "bitPerCoeff": 250,
+            "logDelta": 30,
+            "logSlots": 4,
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("NN_sim_analysis", rows)
+
 def gen_opClientAddRot_RNS_analysis():
 
     sweep = {
