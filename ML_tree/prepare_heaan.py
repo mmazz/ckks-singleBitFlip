@@ -252,14 +252,19 @@ def main() -> int:
         "--seeds",
         nargs="+",
         type=int,
-        default=[0, 1],
+        default=None,
         metavar="N",
-        help="keep these seed/seed_input values (default: 0 1)",
+        help=(
+            "keep only these seed/seed_input values. DEFAULT CHANGED: it used "
+            "to be '0 1', which silently threw away every campaign run with "
+            "any other seed — and did it differently on train and test dirs if "
+            "their seeds differed. Now the default keeps everything"
+        ),
     )
     ap.add_argument(
         "--all-seeds",
         action="store_true",
-        help="disable the seed filter",
+        help="deprecated, kept for compatibility: keeping every seed is now the default",
     )
     ap.add_argument(
         "--every-nth-bit",
@@ -278,17 +283,42 @@ def main() -> int:
     out_dir = os.path.abspath(args.out_dir or os.path.join(root, "ml"))
     os.makedirs(out_dir, exist_ok=True)
 
-    meta = load_campaigns(
-        root,
-        args.stages,
-        args.op_depth,
-        None if args.all_seeds else args.seeds,
-    )
+    seeds = None if args.all_seeds else args.seeds
+
+    raw_meta = pd.read_csv(os.path.join(root, "campaigns_start.csv"))
+    seed_col = next((c for c in ("seed", "seed_input") if c in raw_meta.columns), None)
+    if seed_col is not None and not args.quiet:
+        found = sorted(raw_meta[seed_col].unique().tolist())
+        if seeds is None:
+            print(f"seeds present in {seed_col}: {found} (all kept)")
+        else:
+            dropped = [s for s in found if s not in set(seeds)]
+            print(f"seeds present in {seed_col}: {found} · keeping {sorted(seeds)}")
+            if dropped:
+                print(f"  WARNING: dropping every campaign with {seed_col} in {dropped}")
+
+    meta = load_campaigns(root, args.stages, args.op_depth, seeds)
 
     if not args.quiet:
         stages = sorted(meta.stage.astype(str).unique())
         print(f"{len(meta):,} campaigns · stages {stages}")
         print(f"metadata columns kept: {', '.join(meta.columns)}")
+
+        # The scale of a run: this is what has to overlap between the dataset
+        # you train on and the one you later predict, and what --split config
+        # in the trainer holds out.
+        scale = [c for c in ("logN", "logQ", "logDelta", "logSlots", "bitPerCoeff")
+                 if c in meta.columns]
+        if scale:
+            cfg = meta.groupby(scale, dropna=False).size().rename("campaigns")
+            print(f"\nconfigurations ({len(cfg)}) — the scale of each run:")
+            print("  " + cfg.reset_index().to_string(index=False).replace("\n", "\n  "))
+            if len(cfg) == 1:
+                print(
+                    "  NOTE: a single configuration. No cross-validation can tell "
+                    "you\n  whether a model trained here transfers to a different "
+                    "logQ/logDelta;\n  only training across several configurations can."
+                )
 
     rows = read_rows(
         root,
