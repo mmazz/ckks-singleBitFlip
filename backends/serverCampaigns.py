@@ -157,3 +157,46 @@ def gen_opServerBootEval_analysis():
 
     write_csv("bootEval_analysis", cartesian_product_rows(fixed, sweep))
 
+def gen_ASPLOS_mul_analysis():
+    variants = [
+            {"logN": 6,  "logSlots": 3, "logQ": 60, "logDelta": 25, "bitPerCoeff": 64, "doAdd":1, "doMul":1 },
+    ]
+    sweep = {
+        "seed": list(range(1, 2)),
+        "seed_input": list(range(1, 2)),
+        "op_step": list(range(0,MUL_STEPS+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "library": "heaan",
+            "stage": "mul_inside",
+            "withNTT": 0,
+            "binary": "exhaustiveSingleBitFlip",
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("mul_inside_asplos_analysis", rows)
+
+def gen_ASPLOS_add_analysis():
+    variants = [
+            {"logN": 6,  "logSlots": 3, "logQ": 60, "logDelta": 25, "bitPerCoeff": 64, "doAdd":1, "doMul":1 },
+    ]
+    sweep = {
+        "seed": list(range(1, 2)),
+        "seed_input": list(range(1, 2)),
+        "op_step": list(range(0,ADD_STEPS+1)),
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "library": "heaan",
+            "stage": "add_inside",
+            "withNTT": 0,
+            "binary": "exhaustiveSingleBitFlip",
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("add_inside_asplos_analysis", rows)

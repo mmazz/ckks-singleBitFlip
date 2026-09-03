@@ -387,20 +387,18 @@ IterationResult run_iteration_NN(
             pred = i;
         }
     }
-
     IterationResult res;
     res.detected = (pred == targetValue);
-
-    if (verbose) {
+    if(verbose){
         cout << "\nPrediction: " << pred
-             << "\nTarget:     " << targetValue << endl;
+             << "\nTarget:     " << targetValue
+             << endl;
 
-        cout << (pred == targetValue ? "✔ Correct\n"
-                                    : "✘ Incorrect\n");
-    } else {
-        cout << (pred == targetValue ? 1 : 0) << endl;
+        if(pred == targetValue)
+            cout << "✔ Correct\n";
+        else
+            cout << "✘ Incorrect\n";
     }
-
     return res;
 }
 

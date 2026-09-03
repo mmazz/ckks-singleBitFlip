@@ -14,6 +14,7 @@ from utilsGen import cartesian_product_rows, write_csv
 
 
 
+
 if __name__ == "__main__":
     gen_heaan_VS_openfhe_plain_analysis()
     gen_heaan_plain_VS_c0_VS_c1_analysis()
@@ -45,6 +46,7 @@ if __name__ == "__main__":
     gen_opNNMul_analysis()
     gen_opNNRescaleDepth_analysis()
     gen_opNNRot_analysis()
+
     # ops server boot
     gen_opServerBootOutside_analysis()
     gen_opServerBootEval_analysis()
@@ -54,3 +56,9 @@ if __name__ == "__main__":
     gen_heaanNN_cheby_analysis()
     gen_heaanNN_hidden_analysis()
     gen_openfheNN_analysis()
+
+    gen_ASPLOS_mul_analysis()
+    gen_ASPLOS_add_analysis()
+    gen_opClient_RNS_analysis()
+
+    gen_opClient_RNS_NTT_analysis()

@@ -12,7 +12,7 @@ const double PIXEL_MAX = 255.0;
 const std::string path = "../NN_config/data/";
 size_t NUM_BITFLIPS = 50;
 
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::Reuse;
+ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 int main(int argc, char* argv[]) {
 
     std::cout << "\n=== Starting Campaign "<< std::endl;
@@ -119,14 +119,23 @@ int main(int argc, char* argv[]) {
             std::mt19937 rng(args.seed);
 
             std::vector<uint32_t> bits_to_flip = bitsToFlipGenerator(args); // 10 values
-            for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
-                uint32_t bit = bits_to_flip[bitIndex];
-                for (size_t i = 0; i < num_bitFlips; i++) {
-                    uint32_t coeff = random_int(0, N-1);
+            if (args.verbose) {
+                for(long unsigned int i=0; i<bits_to_flip.size(); i++)
+                    std::cout << bits_to_flip[i] << ", ";
+                std::cout << std::endl;
+
+            }
+            for (size_t i = 0; i < num_bitFlips; i++) {
+                uint32_t coeff = random_int(0, N-1);
+                for (size_t bitIndex = 0; bitIndex < bits_to_flip.size() ; bitIndex++) {
+                    uint32_t bit = bits_to_flip[bitIndex];
                     IterationArgs iterArgs(0, coeff, bit);
-                    if (logger.contains(iterArgs))
-                    {
-                        std::cout << "Skipping already computed iteration\n";
+
+                    if(args.existing_policy == ExistingCampaignPolicy::Reuse){
+                        if (logger.contains(iterArgs))
+                        {
+                            std::cout << "Skipping already computed iteration\n";
+                        }
                     }
                     else{
                         IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, iterArgs);
@@ -143,6 +152,8 @@ int main(int argc, char* argv[]) {
                 }
 
             }
+
+
             auto end_time = std::chrono::high_resolution_clock::now();
             std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
             auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);

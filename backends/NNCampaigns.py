@@ -81,8 +81,7 @@ def gen_openfheNN_analysis():
     sweep = {
         "seed": list(range(1, SEEDS_PRNG_NN+1)),
         "seed_input": list(range(1, SEEDS_INP_NN+1)),
-        "withNTT": list(range(0,2)),
-        "stages": STAGES
+        "stage": STAGES
     }
     fixed = {
         "binary": "randomSingleBitFlip",
@@ -94,6 +93,7 @@ def gen_openfheNN_analysis():
         "logDelta": 50,
         "logSlots": 10,
         "mult_depth": 5,
+        "withNTT": 1
     }
     write_csv("openfheNN_analysis", cartesian_product_rows(fixed, sweep))
 

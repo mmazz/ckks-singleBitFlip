@@ -410,4 +410,48 @@ def gen_opClientMul_RNS_analysis():
     }
     write_csv("opClientAddRot_RNS_analysis", cartesian_product_rows(fixed, sweep))
 
+def gen_opClient_RNS_analysis():
+
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "stage": ["encode", "encrypt_c0", "encrypt_c1"]
+    }
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "openfhe",
+        "logN": 6,
+        "logQ": 60,
+        "logDelta": 30,
+        "logSlots": 4,
+        "withNTT": 0,
+        "doAdd":1,
+        "doRot":1,
+        "doMul": 2,
+        "mult_depth": 3,
+    }
+    write_csv("opClient_RNS_analysis", cartesian_product_rows(fixed, sweep))
+
+def gen_opClient_RNS_NTT_analysis():
+
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG+1)),
+        "seed_input": list(range(1, SEEDS_INP+1)),
+        "stage": ["encode", "encrypt_c0", "encrypt_c1"]
+    }
+    fixed = {
+        "binary": "exhaustiveSingleBitFlip",
+        "library": "openfhe",
+        "logN": 6,
+        "logQ": 60,
+        "logDelta": 30,
+        "logSlots": 4,
+        "withNTT": 1,
+        "doAdd":1,
+        "doRot":1,
+        "doMul": 2,
+        "mult_depth": 3,
+    }
+    write_csv("opClient_RNS_NTT_analysis", cartesian_product_rows(fixed, sweep))
+
 

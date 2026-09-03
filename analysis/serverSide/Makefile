@@ -14,6 +14,17 @@ PARAMS_BOOT = --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --logSlots 4 -
 
 all_analysis: $(ANALYSIS_TARGETS)
 
+Asplos_Mul:
+	python3 register_analysis.py --library $(LIBRARY)   --logN 6 --logQ 60  --bitPerCoeff 64 --logDelta 25 --logSlots 3 --stage mul_inside --doMul 1 --doAdd 1 --mult_depth 0 --op_depth 0 --op_step 25 --title mul_inside_asplos
+
+Asplos_Add:
+	python3 register_analysis.py --library $(LIBRARY)   --logN 6 --logQ 60  --bitPerCoeff 64 --logDelta 25 --logSlots 3 --stage add_inside --doMul 1 --doAdd 1 --mult_depth 0 --op_depth 0 --op_step 25 --title add_inside_asplos
+
+
+Asplos_Boot:
+	python3 register_analysis.py --library $(LIBRARY) $(PARAMS_BOOT) --stage boot_outside  --op_step 7 --title bootOut_asplos
+	python3 register_analysis.py --library $(LIBRARY) $(PARAMS_BOOT) --stage boot_eval  --op_step 15 --title bootEval_asplos
+
 bootOut_analysis:
 	python3 insideOp_analysis.py --library $(LIBRARY) $(PARAMS_BOOT) --stage boot_outside  --op_step 7 --title bootOut
 

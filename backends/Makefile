@@ -1,4 +1,4 @@
-JOBS := 6
+JOBS := 4
 
 all: firstAnalysis clientOps serverOps serverOps_boot NNServerOps
 
