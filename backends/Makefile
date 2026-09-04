@@ -1,4 +1,4 @@
-JOBS := 4
+JOBS := 8
 
 all: firstAnalysis clientOps serverOps serverOps_boot NNServerOps
 
@@ -21,8 +21,9 @@ clientOps:
 	python3 run_campaign.py configs/boot_analysis.csv               --jobs $(JOBS)
 
 NNServerOps:
-	python3 run_campaign.py configs/heaanNN_hidden_analysis.csv --jobs $(JOBS) 
 	python3 run_campaign.py configs/heaanNN_analysis.csv        --jobs $(JOBS)
+	python3 run_campaign.py configs/heaanNN_opServerMul_analysis.csv        --jobs $(JOBS)
+	python3 run_campaign.py configs/heaanNN_hidden_analysis.csv --jobs $(JOBS) 
 	python3 run_campaign.py configs/heaanNN_cheby_analysis.csv  --jobs $(JOBS) 
 	python3 run_campaign.py configs/openfheNN_analysis.csv      --jobs $(JOBS)
 

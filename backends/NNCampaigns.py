@@ -31,6 +31,28 @@ def gen_heaanNN_analysis():
 
     write_csv("heaanNN_analysis", rows)
 
+def gen_heaanNN_opServerMul_analysis():
+    fixed = {
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
+        "binary": "randomSingleBitFlip",
+        "library": "heaanNN",  # ajustar si corresponde a $(LIBRARY)
+        "stage": "mul_inside",
+        "logN": 12,
+        "logQ": 220,
+        "bitPerCoeff": 250,
+        "logDelta": 30,
+        "logSlots": 10,
+        "mult_depth": 0,
+        "withNTT": 0,
+    }
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG_NN+1)),
+        "seed_input": list(range(1, SEEDS_INP_NN+1)),
+        "op_step": list(range(0,MUL_STEPS+1)),
+    }
+    write_csv("heaanNN_opServerMul_analysis", cartesian_product_rows(fixed, sweep))
+
+
 def gen_heaanNN_hidden_analysis():
 
     sweep = {
@@ -75,6 +97,29 @@ def gen_heaanNN_cheby_analysis():
     }
 
     write_csv("heaanNN_cheby_analysis", cartesian_product_rows(fixed, sweep))
+
+def gen_heaanNN_x2_analysis():
+    sweep = {
+        "seed": list(range(1, SEEDS_PRNG_NN+1)),
+        "seed_input": list(range(1, SEEDS_INP_NN+1)),
+        "op_step": list(range(0,9+1))
+    }
+    fixed = {
+        "binary": "randomSingleBitFlip",
+        "library": "heaanNN",
+        "results": "/home/mmazz/ckks-singleBitFlip/results_NN",
+        "logN": 12,
+        "logQ": 220,
+        "bitPerCoeff": 250,
+        "logDelta": 30,
+        "logSlots": 10,
+        "mult_depth": 0,
+        "withNTT": 0,
+        "stage": "cheby_tanh3",
+    }
+
+    write_csv("heaanNN_x2_analysis", cartesian_product_rows(fixed, sweep))
+
 
 
 def gen_openfheNN_analysis():

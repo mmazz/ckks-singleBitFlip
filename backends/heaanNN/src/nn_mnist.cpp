@@ -70,6 +70,6 @@ int main(int argc, char* argv[]) {
     IterationResult res = run_iteration_NN(he, encoded, vals, args, targetValue, dummy, dummy);
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end_time - start_time;
-    std::cout << "Time: " << duration.count() << " s"  << std::endl;
+    std::cout << "Time: " << duration.count() << " s, output: " << !res.detected << std::endl;
     return 0;
 }

@@ -72,6 +72,7 @@ Ciphertext x2(
     bool doBitFlip,
     CampaignArgs& args, std::optional<IterationArgs> iterArgs
 ){
+    uint32_t op_depth = args.op_depth;
     uint32_t op_step = args.op_step;
     if (doBitFlip && iterArgs && args.stage == "x2_inside") {
         if (args.op_step== 0) {
@@ -80,8 +81,17 @@ Ciphertext x2(
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
-    Ciphertext c2 = he.scheme.square(c);
-    he.scheme.reScaleByAndEqual(c2, logP);
+    Ciphertext c2;
+    if(doBitFlip && iterArgs && args.stage == "mul_inside"){
+        c2 = he.scheme.multBitFlip(c, c, op_step, iterArgs->coeff, iterArgs->bit);
+    }else {
+        c2 = he.scheme.mult(c, c);
+    }
+    if(doBitFlip && iterArgs && args.stage == "rescale_inside"){
+        he.scheme.reScaleByAndEqualBitFlip(c2, logP, op_step, iterArgs->coeff, iterArgs->bit);
+    }else {
+        he.scheme.reScaleByAndEqual(c2, logP);
+    }
     if (doBitFlip && iterArgs && args.stage == "x2_inside") {
         if (args.op_step == 2) {
             SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
@@ -121,14 +131,14 @@ Ciphertext chebyTanh3(
         }
     }
     Ciphertext c3;
-    if(iterArgs && args.stage == "mul_inside"){
+    if(doBitFlip && iterArgs && args.stage == "mul_inside"){
         c3 = he.scheme.multBitFlip(c2, c, op_step, iterArgs->coeff, iterArgs->bit);
     }else {
         c3 = he.scheme.mult(c2, c);
     }
 //Ciphertext c3 = he.scheme.mult(c2, c);
 //
-   if(iterArgs && args.stage == "rescale_inside"){
+   if(doBitFlip && iterArgs && args.stage == "rescale_inside"){
         he.scheme.reScaleByAndEqualBitFlip(c3, logP, op_step, iterArgs->coeff, iterArgs->bit);
     }else {
         he.scheme.reScaleByAndEqual(c3, logP);
@@ -162,7 +172,7 @@ Ciphertext chebyTanh3(
             SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
         }
     }
-    if(iterArgs && args.stage == "add_inside"){
+    if(doBitFlip && iterArgs && args.stage == "add_inside"){
         c3 = he.scheme.addBitFlip(c3, c, op_step, iterArgs->coeff, iterArgs->bit);
     }else {
         he.scheme.addAndEqual(c3, c);
@@ -273,8 +283,8 @@ vector<Ciphertext> forward(
             }
         }
         
-        //s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
-        s = x2(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
+        s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
+        //s = x2(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
         layer1.push_back(std::move(s));
     }
 
