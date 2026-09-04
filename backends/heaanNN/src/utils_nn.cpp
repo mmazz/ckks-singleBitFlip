@@ -65,6 +65,34 @@ Ciphertext encryptInput(
 
 
 
+Ciphertext x2(
+    HEEnv& he,
+    Ciphertext c,
+    long logP,
+    bool doBitFlip,
+    CampaignArgs& args, std::optional<IterationArgs> iterArgs
+){
+    uint32_t op_step = args.op_step;
+    if (doBitFlip && iterArgs && args.stage == "x2_inside") {
+        if (args.op_step== 0) {
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+        } else if (args.op_step == 1) {
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
+    }
+    Ciphertext c2 = he.scheme.square(c);
+    he.scheme.reScaleByAndEqual(c2, logP);
+    if (doBitFlip && iterArgs && args.stage == "x2_inside") {
+        if (args.op_step == 2) {
+            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+        } else if (args.op_step == 3) {
+            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+        }
+    }
+
+    return c2;
+}
+
 Ciphertext chebyTanh3(
     HEEnv& he,
     Ciphertext c,
@@ -139,7 +167,7 @@ Ciphertext chebyTanh3(
     }else {
         he.scheme.addAndEqual(c3, c);
     }
-    he.scheme.addAndEqual(c3, c);
+ //   he.scheme.addAndEqual(c3, c);
 
     return c3;
 }
@@ -245,7 +273,8 @@ vector<Ciphertext> forward(
             }
         }
         
-        s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
+        //s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
+        s = x2(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
         layer1.push_back(std::move(s));
     }
 
