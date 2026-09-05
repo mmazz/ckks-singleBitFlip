@@ -88,7 +88,7 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights& encoded,
 
 Ciphertext chebyTanh3(
     HEEnv& he,
-    Ciphertext c,
+    Ciphertext& c,
     long logP, CampaignArgs& args, uint32_t hidden,
      std::optional<IterationArgs> iterArgs
 );

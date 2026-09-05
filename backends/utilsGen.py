@@ -4,8 +4,8 @@ from pathlib import Path
 
 
 CONFIG_DIR = Path(__file__).resolve().parent / "configs"
-SEEDS_PRNG = 2
-SEEDS_INP = 2
+SEEDS_PRNG = 1
+SEEDS_INP = 1
 SEEDS_PRNG_NN = 1
 SEEDS_INP_NN = 1
 EXTRA_SEEDS = 2

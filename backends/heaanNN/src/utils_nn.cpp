@@ -1,6 +1,51 @@
 #include "utils_nn.h"
 #include "backend_interface.h"
 
+
+void flipBit(uint32_t amount, ZZX& poly, uint32_t coeff, uint32_t bit) {
+    for (uint32_t b = bit; b < bit + amount; ++b) {
+        SwitchBit(poly[coeff], b);
+    }
+}
+
+Ciphertext x2(
+    HEEnv& he,
+    Ciphertext c,
+    long logP,
+    bool doBitFlip,
+    CampaignArgs& args, std::optional<IterationArgs> iterArgs
+){
+    uint32_t op_depth = args.op_depth;
+    uint32_t op_step = args.op_step;
+    if (doBitFlip && iterArgs && args.stage == "x2_inside") {
+        if (args.op_step== 0) { 
+            flipBit(1, c.bx, iterArgs->coeff, iterArgs->bit);
+        } else if (args.op_step == 1) {
+            flipBit(1, c.ax, iterArgs->coeff, iterArgs->bit);
+        }
+    }
+    Ciphertext c2;
+    if(doBitFlip && iterArgs && args.stage == "mul_inside"){
+        c2 = he.scheme.multBitFlip(c, c, op_step, iterArgs->coeff, iterArgs->bit);
+    }else {
+        c2 = he.scheme.mult(c, c);
+    }
+    if(doBitFlip && iterArgs && args.stage == "rescale_inside"){
+        he.scheme.reScaleByAndEqualBitFlip(c2, logP, op_step, iterArgs->coeff, iterArgs->bit);
+    }else {
+        he.scheme.reScaleByAndEqual(c2, logP);
+    }
+    if (doBitFlip && iterArgs && args.stage == "x2_inside") {
+        if (args.op_step == 2) {
+            flipBit(1, c.bx, iterArgs->coeff, iterArgs->bit);
+        } else if (args.op_step == 3) {
+            flipBit(1, c.ax, iterArgs->coeff, iterArgs->bit);
+        }
+    }
+
+    return c2;
+}
+
 EncodedWeights encodeWeights(
     HEEnv& he,
     const vector<vector<double>>& W1,
@@ -65,59 +110,21 @@ Ciphertext encryptInput(
 
 
 
-Ciphertext x2(
-    HEEnv& he,
-    Ciphertext c,
-    long logP,
-    bool doBitFlip,
-    CampaignArgs& args, std::optional<IterationArgs> iterArgs
-){
-    uint32_t op_depth = args.op_depth;
-    uint32_t op_step = args.op_step;
-    if (doBitFlip && iterArgs && args.stage == "x2_inside") {
-        if (args.op_step== 0) {
-            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
-        } else if (args.op_step == 1) {
-            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
-        }
-    }
-    Ciphertext c2;
-    if(doBitFlip && iterArgs && args.stage == "mul_inside"){
-        c2 = he.scheme.multBitFlip(c, c, op_step, iterArgs->coeff, iterArgs->bit);
-    }else {
-        c2 = he.scheme.mult(c, c);
-    }
-    if(doBitFlip && iterArgs && args.stage == "rescale_inside"){
-        he.scheme.reScaleByAndEqualBitFlip(c2, logP, op_step, iterArgs->coeff, iterArgs->bit);
-    }else {
-        he.scheme.reScaleByAndEqual(c2, logP);
-    }
-    if (doBitFlip && iterArgs && args.stage == "x2_inside") {
-        if (args.op_step == 2) {
-            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
-        } else if (args.op_step == 3) {
-            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
-        }
-    }
 
-    return c2;
-}
 
 Ciphertext chebyTanh3(
     HEEnv& he,
-    Ciphertext c,
+    Ciphertext& c,
     long logP,
     bool doBitFlip,
     CampaignArgs& args, std::optional<IterationArgs> iterArgs
 ){
-    // x^2
-
     uint32_t op_step = args.op_step;
     if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_step== 0) {
-            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.bx, iterArgs->coeff, iterArgs->bit);
         } else if (args.op_step == 1) {
-            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.ax, iterArgs->coeff, iterArgs->bit);
         }
     }
     Ciphertext c2 = he.scheme.square(c);
@@ -125,9 +132,9 @@ Ciphertext chebyTanh3(
 
     if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_step == 2) {
-            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.bx, iterArgs->coeff, iterArgs->bit);
         } else if (args.op_step == 3) {
-            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.ax, iterArgs->coeff, iterArgs->bit);
         }
     }
     Ciphertext c3;
@@ -136,20 +143,18 @@ Ciphertext chebyTanh3(
     }else {
         c3 = he.scheme.mult(c2, c);
     }
-//Ciphertext c3 = he.scheme.mult(c2, c);
-//
+
    if(doBitFlip && iterArgs && args.stage == "rescale_inside"){
         he.scheme.reScaleByAndEqualBitFlip(c3, logP, op_step, iterArgs->coeff, iterArgs->bit);
     }else {
         he.scheme.reScaleByAndEqual(c3, logP);
     }
-  //  he.scheme.reScaleByAndEqual(c3, logP);
 
     if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_step == 4) {
-            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.bx, iterArgs->coeff, iterArgs->bit);
         } else if (args.op_step == 5) {
-            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.ax, iterArgs->coeff, iterArgs->bit);
         }
     }
     he.scheme.multByConstAndEqual(c3, -0.23, logP);
@@ -157,9 +162,9 @@ Ciphertext chebyTanh3(
 
     if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_step == 6) {
-            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.bx, iterArgs->coeff, iterArgs->bit);
         } else if (args.op_step == 7) {
-            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.ax, iterArgs->coeff, iterArgs->bit);
         }
     }
     he.scheme.multByConstAndEqual(c, 0.98, logP);
@@ -167,9 +172,9 @@ Ciphertext chebyTanh3(
 
     if (doBitFlip && iterArgs && args.stage == "cheby_tanh3") {
         if (args.op_step == 8) {
-            SwitchBit(c.bx[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.bx, iterArgs->coeff, iterArgs->bit);
         } else if (args.op_step == 9) {
-            SwitchBit(c.ax[iterArgs->coeff], iterArgs->bit);
+            flipBit(1, c.ax, iterArgs->coeff, iterArgs->bit);
         }
     }
     if(doBitFlip && iterArgs && args.stage == "add_inside"){
@@ -177,7 +182,6 @@ Ciphertext chebyTanh3(
     }else {
         he.scheme.addAndEqual(c3, c);
     }
- //   he.scheme.addAndEqual(c3, c);
 
     return c3;
 }
@@ -186,6 +190,7 @@ void reduceSum(
     HEEnv& he,
     Ciphertext& ct,
     long logSlots,
+    bool doBitFlip,
     CampaignArgs& args,
     uint32_t &reduceSum_layer, std::optional<IterationArgs> iterArgs
 ){
@@ -194,38 +199,38 @@ void reduceSum(
     uint32_t op_step = args.op_step;
     for(int i=0;i<logSlots;i++){
         Ciphertext rot;
-        if (i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
+        if (doBitFlip && i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
             Ciphertext c_copy = ct;
             if (args.op_step == 4) {
-                SwitchBit(c_copy.bx[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, c_copy.bx, iterArgs->coeff, iterArgs->bit);
             } else if (args.op_step == 5) {
-                SwitchBit(c_copy.ax[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, c_copy.ax, iterArgs->coeff, iterArgs->bit);
             }
             rot = he.scheme.leftRotateFast(c_copy, 1<<i);
         } else{
-            if(iterArgs && args.stage == "rot_inside"){
+            if(doBitFlip && iterArgs && args.stage == "rot_inside"){
                 rot = he.scheme.leftRotateFastBitFlip(ct, 1<<i, op_step, iterArgs->coeff, iterArgs->bit);
             }else {
                 rot = he.scheme.leftRotateFast(ct, 1<<i);
             }
         }
-        if (i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
+        if (doBitFlip && i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 6) {
-                SwitchBit(rot.bx[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, rot.bx, iterArgs->coeff, iterArgs->bit);
             } else if (args.op_step == 7) {
-                SwitchBit(rot.ax[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, rot.ax, iterArgs->coeff, iterArgs->bit);
             } else if (args.op_step == 8) {
-                SwitchBit(ct.bx[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, ct.bx, iterArgs->coeff, iterArgs->bit);
             }else if (args.op_step == 9) {
-                SwitchBit(ct.ax[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, ct.ax, iterArgs->coeff, iterArgs->bit);
             }
         }
         he.scheme.addAndEqual(ct, rot);
-        if (i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
+        if (doBitFlip && i==reduceSum_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 10) {
-                SwitchBit(ct.bx[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, ct.bx, iterArgs->coeff, iterArgs->bit);
             }else if (args.op_step == 11) {
-                SwitchBit(ct.ax[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, ct.ax, iterArgs->coeff, iterArgs->bit);
             }
         }
     }
@@ -254,9 +259,9 @@ vector<Ciphertext> forward(
         if (j==hidden_layer && iterArgs && args.stage == "hidden_layer") {
             Ciphertext c_copy = c;
             if (args.op_step == 0) {
-                SwitchBit(c_copy.bx[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, c_copy.bx, iterArgs->coeff, iterArgs->bit);
             } else if (args.op_step == 1) {
-                SwitchBit(c_copy.ax[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, c_copy.ax, iterArgs->coeff, iterArgs->bit);
             }
             s = he.scheme.multByPoly(c_copy, ew.W1[j], logP);
         } else
@@ -264,27 +269,26 @@ vector<Ciphertext> forward(
 
         if (j==hidden_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 2) {
-                SwitchBit(s.bx[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, s.bx, iterArgs->coeff, iterArgs->bit);
             }else if (args.op_step == 3) {
-                SwitchBit(s.ax[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, s.ax, iterArgs->coeff, iterArgs->bit);
             }
         }
 
         he.scheme.reScaleByAndEqual(s, logP);
 
-        reduceSum(he, s, logSlots, args, reduceSum_layer, iterArgs);
+        reduceSum(he, s, logSlots, hidden_layer==j, args, reduceSum_layer, iterArgs);
 
         he.scheme.addConstAndEqual(s, ew.b1[j]);
         if (j==hidden_layer && iterArgs && args.stage == "hidden_layer") {
             if (args.op_step == 12) {
-                SwitchBit(s.bx[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, s.bx, iterArgs->coeff, iterArgs->bit);
             }else if (args.op_step == 13) {
-                SwitchBit(s.ax[iterArgs->coeff], iterArgs->bit);
+                flipBit(1, s.ax, iterArgs->coeff, iterArgs->bit);
             }
         }
         
         s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
-        //s = x2(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
         layer1.push_back(std::move(s));
     }
 
@@ -527,13 +531,14 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights& encoded,
     size_t pred = 0;
     double best = logits[0];
 
-    for(size_t i=1;i<logits.size();++i){
+    IterationResult res;
+    for(size_t i=0;i<logits.size();++i){
+        res.values.push_back(logits[i]);
         if(logits[i] > best){
             best = logits[i];
             pred = i;
         }
     }
-    IterationResult res;
     res.detected = (pred == targetValue);
     if(verbose){
         cout << "\nPrediction: " << pred
@@ -544,6 +549,10 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights& encoded,
             cout << "✔ Correct\n";
         else
             cout << "✘ Incorrect\n";
+
+        for(int i=0; i<res.values.size(); i++){
+            std::cout << i << ": "<< res.values[i] << std::endl;
+        }
     }
     return res;
 }

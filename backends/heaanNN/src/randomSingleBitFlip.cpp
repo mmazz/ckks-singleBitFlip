@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
     size_t targetValue;
 
     bool ok = loadMnistNormRowByIndex(
-        path+"mnist_train.csv",
+        path+"mnist_test.csv",
         targetRow,
         targetValue,
         vals

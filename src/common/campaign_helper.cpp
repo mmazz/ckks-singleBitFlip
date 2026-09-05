@@ -196,6 +196,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'S':
                 args.stage = optarg;
                 if (args.stage != "encode" &&
+                    args.stage != "none" &&
                     args.stage != "encrypt_c0" &&
                     args.stage != "encrypt_c1" &&
                     args.stage != "decrypt_c0" &&
@@ -205,8 +206,10 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                     args.stage != "hidden_layer" &&
                     args.stage != "add_inside" &&
                     args.stage != "mul_inside" &&
+                    args.stage != "mul_inside_asplos" &&
                     args.stage != "rescale_inside" &&
                     args.stage != "rot_inside" &&
+                    args.stage != "rot_inside_asplos" &&
                     args.stage != "boot_outside" &&
                     args.stage != "boot_coeff" &&
                     args.stage != "boot_eval" &&

@@ -1089,7 +1089,7 @@ def train(args) -> None:
         cols_te = resolve_columns(df_te, overrides)
         print(f"\n=== Test externo: {args.test_csv} ({len(df_te)} filas) ===")
         X_te_full, sigs_te = featurize(df_te, cols_te, cfg)
-        X_te = X_te_full.reindex(columns=X.columns, fill_value=0.0)
+        X_te = align_features(X_te_full.copy(), list(X.columns), strict=True)
         y_te, _ = resolve_target(build_targets(df_te, cols_te, quiet=True),
                                  args.target)
 
@@ -1137,8 +1137,8 @@ def train(args) -> None:
             print("     siempre la clase mayoritaria.")
         if args.save:
             import joblib
-            joblib.dump({"model": model, "cols": cols, "cfg": cfg,
-                         "features": list(X.columns), "format": 1}, args.save)
+            joblib.dump(make_bundle(model, cols, cfg, X, y, df, sigs,
+                                    args.target, is_reg), args.save)
             print(f"\nModelo guardado en {args.save}")
         return
 
@@ -1274,8 +1274,8 @@ def train(args) -> None:
         sw = (compute_sample_weight("balanced", y)
               if args.class_weight == "balanced" and not is_reg else None)
         final.fit(X, y, sample_weight=sw)
-        joblib.dump({"model": final, "cols": cols, "cfg": cfg,
-                     "features": list(X.columns), "format": 1}, args.save)
+        joblib.dump(make_bundle(final, cols, cfg, X, y, df, sigs,
+                                args.target, is_reg), args.save)
         print(f"\nModelo guardado en {args.save}")
 
 
@@ -1447,6 +1447,170 @@ def selftest(args) -> None:
                                     "logq_inject_frac", "bit_frac_q"]}))
 
 
+
+# ---------------------------------------------------------------------------
+# 9. Guardar / predecir sobre un set de test aparte
+# ---------------------------------------------------------------------------
+BUNDLE_FORMAT = 2
+
+
+def make_bundle(model, cols, cfg, X, y, df, sigs, target, is_reg) -> dict:
+    """Guarda el modelo Y lo necesario para avisar cuando el test se sale del
+    dominio de entrenamiento. Un modelo sin su dominio no sirve: predice con
+    total seguridad sobre cosas que nunca vio."""
+    cfgkeys = [cols[c] for c in ["logN", "logDelta", "logQ", "logSlots"]
+               if cols.get(c)]
+    return {
+        "format": BUNDLE_FORMAT,
+        "model": model,
+        "cols": cols,
+        "cfg": cfg,
+        "features": list(X.columns),
+        "target": target,
+        "is_reg": bool(is_reg),
+        # dominio de entrenamiento
+        "feat_min": X.min().to_dict(),
+        "feat_max": X.max().to_dict(),
+        "train_configs": sorted(set(
+            df[cfgkeys].astype(str).agg("|".join, axis=1))) if cfgkeys else [],
+        "train_pipelines": sorted(set(pipeline_signature(df, cols, sigs))),
+        "classes": (sorted(set(np.asarray(y).tolist())) if not is_reg else None),
+        "n_train_rows": int(len(X)),
+    }
+
+
+def align_features(X_new: pd.DataFrame, wanted: list[str],
+                   strict: bool = True) -> pd.DataFrame:
+    """Alinea columnas SIN rellenar en silencio con 0.
+
+    Rellenar con 0 una feature que falta es la peor clase de bug: el modelo
+    devuelve numeros con total confianza a partir de datos inventados. Aca eso
+    corta, salvo que se pida --allow-missing explicitamente.
+    """
+    missing = [c for c in wanted if c not in X_new.columns]
+    if missing:
+        msg = (f"Al set de test le faltan {len(missing)} features que el modelo "
+               f"usa: {missing}\n"
+               f"Eso pasa cuando el CSV de test no tiene alguna columna que si "
+               f"tenia el de train.\n"
+               f"Arreglalo mapeando la columna con --col, o reentrena sin esas "
+               f"features usando --drop-features.")
+        if strict:
+            raise SystemExit(msg)
+        print("  !! " + msg)
+        for c in missing:
+            X_new[c] = 0.0
+    return X_new[wanted]
+
+
+def extrapolation_report(X_new: pd.DataFrame, b: dict) -> None:
+    print("\n=== Reporte de extrapolacion ===")
+    rows = []
+    for c in b["features"]:
+        lo, hi = b["feat_min"].get(c), b["feat_max"].get(c)
+        if lo is None:
+            continue
+        frac = float(((X_new[c] < lo) | (X_new[c] > hi)).mean())
+        if frac > 0.005:
+            rows.append((c, frac, lo, hi, X_new[c].min(), X_new[c].max()))
+    if not rows:
+        print("  ninguna feature se sale del rango de entrenamiento.")
+        return
+    print(f"  {'feature':<24}{'fuera':>8}  rango train      ->  rango test")
+    for c, frac, lo, hi, nlo, nhi in sorted(rows, key=lambda r: -r[1]):
+        flag = "   <-- 100% fuera; el modelo NO tiene nada que interpolar" \
+            if frac > 0.99 else ""
+        print(f"  {c:<24}{frac:>7.1%}  [{lo:>7.2f},{hi:>7.2f}] -> "
+              f"[{nlo:>7.2f},{nhi:>7.2f}]{flag}")
+    print("\n  Una feature 100% fuera de rango significa que el arbol solo puede")
+    print("  devolver su hoja mas extrema. Si son varias, el numero que salga")
+    print("  abajo no es una estimacion, es una extrapolacion ciega.")
+
+
+def predict(args) -> None:
+    import joblib
+    b = joblib.load(args.model)
+    if b.get("format") != BUNDLE_FORMAT:
+        raise SystemExit(
+            f"El .joblib es de formato {b.get('format')} y este script usa "
+            f"{BUNDLE_FORMAT}. Reentrena con --save.")
+
+    print(f"=== Modelo {args.model} ===")
+    print(f"  target: {b['target']}  "
+          f"({'regresion' if b['is_reg'] else 'clasificacion'})")
+    print(f"  entrenado con {b['n_train_rows']:,} filas, "
+          f"{len(b['features'])} features")
+    print(f"  configuraciones vistas: {len(b['train_configs'])}")
+    print(f"  pipelines vistos: {len(b['train_pipelines'])}")
+
+    df = read_any(args.csv, getattr(args, "limit", None),
+                  getattr(args, "sample_per_campaign", 20000))
+    overrides = dict(kv.split("=", 1) for kv in (args.col or []))
+    cols = resolve_columns(df, overrides)
+    missing = [c for c in REQUIRED if cols.get(c) is None]
+    if missing:
+        raise SystemExit(f"Al set de test le faltan columnas: {missing}")
+
+    print("\n=== Featurizando el test con la MISMA config del modelo ===")
+    X_new, sigs_new = featurize(df, cols, b["cfg"])
+    X_new = align_features(X_new, b["features"], strict=not args.allow_missing)
+
+    # que tan nuevo es este set
+    cfgkeys = [cols[c] for c in ["logN", "logDelta", "logQ", "logSlots"]
+               if cols.get(c)]
+    if cfgkeys and b["train_configs"]:
+        newcfg = set(df[cfgkeys].astype(str).agg("|".join, axis=1))
+        seen = newcfg & set(b["train_configs"])
+        print(f"\n  configuraciones del test ya vistas: {len(seen)}/{len(newcfg)}")
+        if not seen:
+            print("  !! TODAS las configuraciones son nuevas. Esto es")
+            print("     extrapolacion, no interpolacion -- leelo con eso en mente.")
+    newpipe = set(pipeline_signature(df, cols, sigs_new))
+    seenp = newpipe & set(b["train_pipelines"])
+    print(f"  pipelines del test ya vistos: {len(seenp)}/{len(newpipe)}")
+    if not seenp:
+        print("  !! Ningun pipeline del test se vio en entrenamiento.")
+
+    extrapolation_report(X_new, b)
+
+    pred = b["model"].predict(X_new)
+    out = pd.DataFrame(index=df.index)
+    for c in ["campaign_id", "bit", "coeff", "limb"]:
+        if cols.get(c):
+            out[c] = df[cols[c]].to_numpy()
+    out["pred"] = pred
+    if b["is_reg"] and b["target"] == "log2_rel_error":
+        out["pred_rel_error"] = np.power(2.0, np.clip(pred, -60, 60))
+        out["pred_class"] = classes_from_log2(np.asarray(pred, float))
+        print("\n  (target continuo: agrego pred_rel_error y pred_class con los "
+              "umbrales 0.01/0.1/10)")
+
+    # si el test trae etiquetas, evaluar de verdad
+    tg = build_targets(df, cols, quiet=True)
+    if not tg.empty:
+        try:
+            y_true, is_reg = resolve_target(tg, b["target"])
+        except SystemExit:
+            y_true = None
+        if y_true is not None:
+            print("\n=== El test TIENE etiquetas: evaluacion real ===")
+            rep = report_reg if b["is_reg"] else report
+            rep(y_true, pred, "MODELO sobre el test")
+            rep(y_true, rule_baseline(X_new, b["target"]),
+                "BASELINE DE REGLA sobre el test")
+            if b["is_reg"] and b["target"] == "log2_rel_error" \
+                    and "class_worst" in tg.columns:
+                report(tg["class_worst"].to_numpy(), out["pred_class"].to_numpy(),
+                       "MODELO umbralado a las 4 clases")
+            out["y_true"] = y_true
+    else:
+        print("\n  El test no trae etiquetas: solo escribo predicciones.")
+
+    out.to_csv(args.out, index=False)
+    print(f"\nPredicciones -> {args.out}  ({len(out):,} filas)")
+
+
+
 # ---------------------------------------------------------------------------
 
 def main() -> None:
@@ -1504,6 +1668,18 @@ def main() -> None:
     sp = sub.add_parser("layout", help="mostrar el esquema real de results/ (CORRE ESTO PRIMERO)")
     sp.add_argument("root", help="directorio results/ que contiene campaigns_start.csv")
     sp.set_defaults(func=layout)
+
+    sp = sub.add_parser("predict", help="aplicar un modelo guardado a un set nuevo")
+    sp.add_argument("model", help="el .joblib guardado con train --save")
+    sp.add_argument("csv", help="results_test/ o results_test/campaigns_start.csv")
+    sp.add_argument("--out", default="predicciones.csv")
+    sp.add_argument("--col", action="append", metavar="CANON=REAL")
+    sp.add_argument("--limit", type=int, default=None)
+    sp.add_argument("--sample-per-campaign", type=int, default=20000)
+    sp.add_argument("--allow-missing", action="store_true",
+                    help="rellenar con 0 las features que falten en vez de cortar "
+                         "(peligroso: el modelo predice sobre datos inventados)")
+    sp.set_defaults(func=predict)
 
     sp = sub.add_parser("selftest", help="verificar el codigo con datos sinteticos")
     sp.add_argument("--seed", type=int, default=0)

@@ -18,7 +18,7 @@ clientOps:
 	python3 run_campaign.py configs/opClientAddRot_RNS_analysis.csv --jobs $(JOBS) 
 	python3 run_campaign.py configs/opClientMul_analysis.csv        --jobs $(JOBS) 
 	python3 run_campaign.py configs/opClientRot_analysis.csv        --jobs $(JOBS) 
-	python3 run_campaign.py configs/boot_analysis.csv               --jobs $(JOBS)
+#	python3 run_campaign.py configs/boot_analysis.csv               --jobs $(JOBS)
 
 NNServerOps:
 	python3 run_campaign.py configs/heaanNN_analysis.csv        --jobs $(JOBS)
@@ -46,3 +46,8 @@ NNOps:
 
 NN_sim:
 	python3 run_campaign.py configs/NN_sim_analysis.csv      --jobs $(JOBS)
+
+temp:	
+	python3 run_campaign.py configs/opServerMulDepth_analysis.csv --jobs $(JOBS) 
+	python3 run_campaign.py configs/opServerMul_analysis.csv      --jobs $(JOBS) 
+	python3 run_campaign.py configs/opServerRot_analysis.csv      --jobs $(JOBS)

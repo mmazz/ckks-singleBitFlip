@@ -187,7 +187,9 @@ IterationResult run_iteration(
     for (uint32_t i = 0; i < args.doMul; ++i) {
         if(iterArgs && args.stage == "mul_inside" && i == op_depth){
             c = ctx.scheme.multBitFlip(c, c_clean, op_step, iterArgs->coeff, iterArgs->bit);
-        }else {
+        } else if(iterArgs && args.stage == "mul_inside_asplos" && i == op_depth){
+            c = ctx.scheme.multBitFlipAsplos(c, c_clean, op_step, iterArgs->coeff, iterArgs->bit);
+        } else {
                 c = ctx.scheme.mult(c, c_clean);
         }
         if(iterArgs && args.stage == "rescale_inside" && i == op_depth){
@@ -201,7 +203,9 @@ IterationResult run_iteration(
         int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
         if(iterArgs && args.stage == "rot_inside"){
             c = ctx.scheme.leftRotateFastBitFlip(c, rotIndex, op_step, iterArgs->coeff, iterArgs->bit);
-        }else {
+        } else if(iterArgs && args.stage == "rot_inside_asplos"){
+            c = ctx.scheme.leftRotateFastBitFlipAsplos(c, rotIndex, op_step, iterArgs->coeff, iterArgs->bit);
+        }         else {
             c = ctx.scheme.leftRotateFast(c, rotIndex);
         }
     }
