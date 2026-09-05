@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 
     CKKSAccuracyMetrics baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
 
-    if(AcceptCKKSResult(baseline_metrics))
+    if(AcceptCKKSResult(baseline_metrics, 1e-3, 1e-3))
     {
         std::cout << "\n=== Registring Campaign "<< std::endl;
         CampaignRegistry registry(args);

@@ -157,6 +157,43 @@ def gen_opServerBootEval_analysis():
 
     write_csv("bootEval_analysis", cartesian_product_rows(fixed, sweep))
 
+def gen_opServerBootOps_analysis():
+    variants = [
+            {"doAdd":1, "doMul":3 , "doRot": 1},
+            {"doAdd":1, "doMul":3 , "doRot": 1, "op_depth": 1},
+            {"doAdd":1, "doMul":3 , "doRot": 2, "op_depth": 1},
+            {"doAdd":1, "doMul":3 , "doRot": 1, "op_depth": 2},
+            {"doAdd":1, "doMul":1 },
+            {"doAdd":1, "doMul":2 },
+            {"doAdd":1, "doMul":2 , "doRot": 1},
+    ]
+    sweep = {
+        "seed": list(range(1, 2)),
+        "seed_input": list(range(1, 2)),
+        "stage" : ["encrypt_c0", "encrypt_c1"]
+    }
+    rows = []
+    for v in variants:
+        fixed = {
+            "results": "/home/mmazz/ckks-singleBitFlip/results_boot",
+            "binary": "randomSingleBitFlip",
+            "library": "heaan",
+            "logN": 6,
+            "logSlots": 4,
+            "logDelta": 34,
+            "logQ": 660,
+            "bitPerCoeff": 680,
+            "doBoot": 1,
+            "withNTT": 0,
+            **v,
+        }
+        rows += cartesian_product_rows(fixed, sweep)
+
+    write_csv("bootOps_analysis", rows)
+
+
+
+
 def gen_ASPLOS_mul_analysis():
     variants = [
             {"logN": 6,  "logSlots": 3, "logQ": 60, "logDelta": 25, "bitPerCoeff": 64, "doAdd":1, "doMul":1 },
