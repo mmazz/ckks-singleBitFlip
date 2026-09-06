@@ -288,7 +288,7 @@ vector<Ciphertext> forward(
             }
         }
         
-        s = chebyTanh3(he, std::move(s), logP, hidden_layer==j, args, iterArgs);
+        s = chebyTanh3(he, s, logP, hidden_layer==j, args, iterArgs);
         layer1.push_back(std::move(s));
     }
 
@@ -554,5 +554,6 @@ IterationResult run_iteration_NN(HEEnv& he, EncodedWeights& encoded,
             std::cout << i << ": "<< res.values[i] << std::endl;
         }
     }
+    res.values[0] = pred;
     return res;
 }
