@@ -9,8 +9,11 @@
 #include <algorithm>
 
 const size_t MAX_H = 64;
-
-long logq_boot = 40;
+/*
+ const long nu   = (7*logT + 3) / 3;      // 8 para logT=3, 10 para logT=4
+ const long logq = logDelta + nu;         // 38 con logDelta=30, logT=3
+ *
+ */
 struct HEAANContext : BackendContext {
     Context cc;
     SecretKey sk;
@@ -63,6 +66,7 @@ std::vector<double> get_reference_output_complex(const BackendContext* bctx)
 
 BackendContext* setup_campaign(const CampaignArgs& args)
 {
+    long logq_boot = (long)args.logDelta+10;
     long h;
     uint64_t N = 1 << args.logN;
     if (args.logN > 10)
@@ -100,6 +104,7 @@ IterationResult run_iteration(
     std::optional<IterationArgs> iterArgs
     )
 {
+    long logq_boot = (long)args.logDelta + 10;
     uint32_t op_depth = args.op_depth;
     uint32_t op_step = args.op_step;
 
@@ -224,11 +229,11 @@ IterationResult run_iteration(
 
     if(args.doBoot>0){
         if (iterArgs && args.stage == "boot_outside")
-            ctx.scheme.bootstrapAndEqualBitFlip(c, logq_boot, args.logQ, 3, 4, op_step, iterArgs->coeff, iterArgs->bit);
+            ctx.scheme.bootstrapAndEqualBitFlip(c, logq_boot, args.logQ, 4, 4, op_step, iterArgs->coeff, iterArgs->bit);
         else if (iterArgs && (args.stage == "boot_coeff" || args.stage == "boot_eval" || args.stage == "boot_slot"))
-            ctx.scheme.bootstrapAndEqualBitFlip_inside(c, logq_boot, args.logQ, 3, 4, args.stage, op_step, iterArgs->coeff, iterArgs->bit);
+            ctx.scheme.bootstrapAndEqualBitFlip_inside(c, logq_boot, args.logQ, 4, 4, args.stage, op_step, iterArgs->coeff, iterArgs->bit);
         else
-            ctx.scheme.bootstrapAndEqual(c, logq_boot, args.logQ, 3, 4);
+            ctx.scheme.bootstrapAndEqual(c, logq_boot, args.logQ, 4, 4);
     }
 
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
@@ -275,6 +280,8 @@ IterationResult run_NN(
     const CampaignArgs& args,
     std::optional<IterationArgs> iterArgs)
 {
+
+
     // Backend cerrado: cast seguro por contrato
     auto& ctx = static_cast<HEAANContext&>(*bctx);
     uint32_t amountBits = args.amountBits;
