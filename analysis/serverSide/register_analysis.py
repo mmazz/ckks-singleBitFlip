@@ -128,13 +128,15 @@ def main():
     args = copy.deepcopy(base_args)
     filters = build_filters(args)
     print(filters)
-
+    results = config.CAMPAIGNS_CSV
+    if(args.results):
+        results=args.results+"/campaigns_start.csv"
     op_type, op_step = filters["op_step"]
     ########################## LOOP POR op_step ################################
     while op_step >= 0:
         filters["op_step"] = (op_type, op_step)
         print(f"\n--- Processing op_step={op_step} ---")
-        selected = load_and_filter_campaigns("../" + config.CAMPAIGNS_CSV, filters)
+        selected = load_and_filter_campaigns("../" + results, filters)
         print(selected)
         if selected.empty:
             print(f"WARNING: no campaigns for op_step={op_step}, skipped")

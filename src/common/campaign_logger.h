@@ -9,7 +9,10 @@
 #include <iomanip>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
+#include <stdexcept>
 #include "utils_ckks.h"
+ 
 
 struct BitflipResult {
     uint32_t limb;
@@ -55,4 +58,61 @@ private:
     uint64_t total_ = 0;
     uint64_t sdc_ = 0;
 };
+class VectorLogger {
+public:
+    // Valor que se escribe en limb/coeff/bit para la fila del vector de entrada.
+    static constexpr long long kInputRowTag = -1;
+ 
+    VectorLogger(uint32_t campaign_id,
+                 const std::string& vectors_dir,
+                 uint32_t logSlot,
+                 size_t flush_threshold = 16);
+    ~VectorLogger();
+ 
+    // Escribe la fila de referencia con el vector de entrada.
+    // Es idempotente: la segunda llamada (y las siguientes) no hace nada.
+    void set_input(const std::vector<double>& input);
+ 
+    // Una fila por bit flip con el vector de salida.
+    void log(uint32_t limb, uint32_t coeff, uint32_t bit,
+             const std::vector<double>& output);
+ 
+    void log(const IterationArgs& args,
+             const std::vector<double>& output);
+ 
+    // Comodo para el call site: pasa siempre los dos vectores y el logger se
+    // encarga de escribir el de entrada una unica vez.
+    void log(uint32_t limb, uint32_t coeff, uint32_t bit,
+             const std::vector<double>& input,
+             const std::vector<double>& output);
+ 
+    void flush();
+    void close();
+    void compress_and_cleanup();
+ 
+    bool contains(const IterationArgs& args) const;
+ 
+    size_t   slots()    const { return n_slots_; }      // 1 << logSlot
+    uint32_t log_slot() const { return log_slot_; }
+    uint64_t total()    const { return total_; }        // bit flips logueados
+    const std::string& path() const { return csv_path_; }
+ 
+private:
+    std::string header() const;
+    // Requiere mtx_ tomado.
+    void write_row_locked(long long limb, long long coeff, long long bit,
+                          const std::vector<double>& v);
+ 
+    std::ofstream      file_;
+    std::string        csv_path_;
+    mutable std::mutex mtx_;
+    uint32_t log_slot_;
+    size_t   n_slots_;
+    size_t   flush_threshold_;
+    size_t   since_flush_   = 0;
+    uint64_t total_         = 0;
+    bool     input_written_ = false;
+    bool     closed_        = false;
+};
+ 
 

@@ -50,6 +50,7 @@ if __name__ == "__main__":
     # ops server boot
     gen_opServerBootOutside_analysis()
     gen_opServerBootOps_analysis()
+    gen_opServerBootOpsSlots_analysis()
     gen_opServerBootEval_analysis()
 
     # NN

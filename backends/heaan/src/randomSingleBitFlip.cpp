@@ -37,7 +37,13 @@ int main(int argc, char* argv[]) {
 
     CKKSAccuracyMetrics baseline_metrics = EvaluateCKKSAccuracy(goldenOutput, goldenCKKS_output.values);
 
-    if(AcceptCKKSResult(baseline_metrics, 1e-3, 1e-3))
+    double max_rel_error = 1e-4;
+    double max_abs_error = 1e-4;
+    if(args.doBoot){
+        max_rel_error = 1e-3;
+        max_abs_error = 1e-3;
+    } 
+    if(AcceptCKKSResult(baseline_metrics, max_rel_error, max_abs_error))
     {
         std::cout << "\n=== Registring Campaign "<< std::endl;
         CampaignRegistry registry(args);
@@ -49,9 +55,8 @@ int main(int argc, char* argv[]) {
             args.results_dir + "/data",
             10000);
 
+        VectorLogger  vlogger(campaign_id, args.results_dir+ "/vectors", args.logSlots);
         std::cout << "Campaign " << campaign_id << " registered" << std::endl;
-
-
 
 
         // ========== 10. LOOP DE BIT FLIPS ==========
@@ -104,7 +109,7 @@ int main(int argc, char* argv[]) {
                             res.detected,
                             slot_stats
                         );
-
+                    vlogger.log(iterArgs.limb, iterArgs.coeff, iterArgs.bit, goldenCKKS_output.values, res.values);
                     norms.push_back(exp_metrics.l2_rel_error);
                 }
             }

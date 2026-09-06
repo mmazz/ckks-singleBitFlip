@@ -9,6 +9,7 @@ ANALYSIS_TARGETS := \
 
 PARAMS = --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40 --logSlots 4
 PARAMS_BOOT = --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --logSlots 4 --doBoot 1 --doMul 4
+PARAMS_BOOT2 = --logN 4 --logSlots 2  --logQ 720 --bitPerCoeff 720 --logDelta 34 --logSlots 4 --doBoot 1 --doMul 3 --doAdd 2 --doRot 2 --doPlainMul 1 --results ../results_boot_test
 
 .PHONY: $(ANALYSIS_TARGETS) $(ANALYSIS_TARGETS_RNS) all_analysis
 
@@ -24,6 +25,10 @@ Asplos_Add:
 Asplos_Boot:
 	python3 register_analysis.py --library $(LIBRARY) $(PARAMS_BOOT) --stage boot_outside  --op_step 7 --title bootOut_asplos
 	python3 register_analysis.py --library $(LIBRARY) $(PARAMS_BOOT) --stage boot_eval  --op_step 15 --title bootEval_asplos
+
+test_Boot:
+	python3 register_analysis.py --library $(LIBRARY) $(PARAMS_BOOT2) --stage encrypt_c0   --title boot_test
+
 
 bootOut_analysis:
 	python3 insideOp_analysis.py --library $(LIBRARY) $(PARAMS_BOOT) --stage boot_outside  --op_step 7 --title bootOut
