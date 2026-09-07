@@ -42,7 +42,7 @@ cmap = mcolors.LinearSegmentedColormap.from_list("red_to_black", [red, "black"])
 # para mrep (0.1 / 10 / 100). Si l2_norm vive en otra escala, avisame y
 # ajusto los umbrales de metric_color.
 METRIC_COL = "l2_norm"
-show=False
+show=True
 
 def metric_color(val, metric_max):
     if val < 0.1:
@@ -105,7 +105,7 @@ def plot_coeff_bit_metric(df, ax, metric_max, title=None):
     point_colors = [metric_color(v, metric_max) for v in df[METRIC_COL]]
     x = [coeff_idx[c] for c in df['coeff']]
     y = df['bit'].tolist()
-
+    print(y)
     ax.scatter(x, y, c=point_colors, s=scatterSize, linewidths=0.8, zorder=3)
     ax.set_xticks([0, len(coeff_order) - 1])
     ax.set_xticklabels([coeff_order[0], coeff_order[-1]], rotation=0, ha='right', fontsize=fontSize)
@@ -128,22 +128,27 @@ def main():
     args = copy.deepcopy(base_args)
     filters = build_filters(args)
     print(filters)
-    results = config.CAMPAIGNS_CSV
-    if(args.results):
-        results=args.results+"/campaigns_start.csv"
+
+    if args.results:
+        results_root = Path(args.results)                      # ../results_boot
+        results_csv  = results_root / "campaigns_start.csv"
+        data_dir     = results_root / Path(config.DATA_DIR).name
+    else:
+        results_csv = Path(config.CAMPAIGNS_CSV)
+        data_dir    = Path(config.DATA_DIR)
+
     op_type, op_step = filters["op_step"]
     ########################## LOOP POR op_step ################################
     while op_step >= 0:
         filters["op_step"] = (op_type, op_step)
         print(f"\n--- Processing op_step={op_step} ---")
-        selected = load_and_filter_campaigns("../" + results, filters)
+        selected = load_and_filter_campaigns(results_csv, filters)
         print(selected)
         if selected.empty:
             print(f"WARNING: no campaigns for op_step={op_step}, skipped")
             op_step -= 1
             continue
-
-        data = load_campaign_data(selected, Path("../") / config.DATA_DIR)
+        data = load_campaign_data(selected, data_dir)
         # Sin split_by_gap: todo en un solo dataset, a nivel (bit, coeff)
         df = data.groupby(['bit', 'coeff'], as_index=False)[METRIC_COL].mean()
         metric_max = data[METRIC_COL].max()

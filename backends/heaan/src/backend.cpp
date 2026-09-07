@@ -199,7 +199,8 @@ IterationResult run_iteration(
         }
         if(iterArgs && args.stage == "rescale_inside" && i == op_depth){
             ctx.scheme.reScaleByAndEqualBitFlip(c, args.logDelta, op_step, iterArgs->coeff, iterArgs->bit);
-        }else {
+        }
+        else {
                 ctx.scheme.reScaleByAndEqual(c, args.logDelta);
         }
     }
