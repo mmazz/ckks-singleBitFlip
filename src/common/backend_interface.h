@@ -66,8 +66,7 @@ inline void compute_plain_io(const CampaignArgs& args,
     }
 
     if (args.doRot > 0) {
-        size_t rot = 1ULL << (args.doRot - 1);
-        rotate_left(golden, rot);
+        rotate_left(golden, args.doRot);
     }
 
     if(args.verbose)
@@ -138,8 +137,7 @@ inline void compute_plain_io(const CampaignArgs& args,
     }
 
     if (args.doRot > 0) {
-        size_t rot = 1ULL << (args.doRot - 1);
-        rotate_left(golden, rot);
+        rotate_left(golden, args.doRot);
     }
 
     if (args.verbose)

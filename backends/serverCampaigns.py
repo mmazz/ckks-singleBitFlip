@@ -6,6 +6,10 @@ ROT_STEPS = 11
 BOOTOUT_STEPS = 7
 BOOTEVAL_STEPS = 15
 
+seed_init = 3
+seed_list = list(range(seed_init, seed_init+SEEDS_PRNG+1))
+
+
 
 
 def gen_opServerAdd_analysis():
@@ -44,29 +48,30 @@ def gen_opServerMul_analysis():
         "logSlots": 4,
     }
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed": seed_list,
+        "seed_input": seed_list,
         "op_step": list(range(0,MUL_STEPS+1)),
     }
     write_csv("opServerMul_analysis", cartesian_product_rows(fixed, sweep))
 
 def gen_opServerMulDepth_analysis():
     fixed = {
+        "results": "/home/mmazz/ckks-singleBitFlip/results",
         "binary": "exhaustiveSingleBitFlip",
         "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
         "logN": 6,
-        "logQ": 120,
-        "bitPerCoeff": 144,
+        "logQ": 160,
+        "bitPerCoeff": 174,
         "logDelta": 40,
         "stage": "mul_inside_asplos",
-        "doMul": 2,
-        "op_depth": 1,
+        "doMul": 3,
         "mult_depth": 0,
         "logSlots": 4,
     }
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed": seed_list,
+        "seed_input": seed_list,
+        "op_depth": [0,1,2],
         "op_step": list(range(0,MUL_STEPS+1)),
     }
     write_csv("opServerMulDepth_analysis", cartesian_product_rows(fixed, sweep))

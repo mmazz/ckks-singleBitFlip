@@ -42,6 +42,7 @@ cmap = mcolors.LinearSegmentedColormap.from_list("red_to_black", [red, "black"])
 # para mrep (0.1 / 10 / 100). Si l2_norm vive en otra escala, avisame y
 # ajusto los umbrales de metric_color.
 METRIC_COL = "l2_norm"
+show=False
 show=True
 
 def metric_color(val, metric_max):
@@ -105,7 +106,7 @@ def plot_coeff_bit_metric(df, ax, metric_max, title=None):
     point_colors = [metric_color(v, metric_max) for v in df[METRIC_COL]]
     x = [coeff_idx[c] for c in df['coeff']]
     y = df['bit'].tolist()
-    print(y)
+
     ax.scatter(x, y, c=point_colors, s=scatterSize, linewidths=0.8, zorder=3)
     ax.set_xticks([0, len(coeff_order) - 1])
     ax.set_xticklabels([coeff_order[0], coeff_order[-1]], rotation=0, ha='right', fontsize=fontSize)
@@ -134,8 +135,8 @@ def main():
         results_csv  = results_root / "campaigns_start.csv"
         data_dir     = results_root / Path(config.DATA_DIR).name
     else:
-        results_csv = Path(config.CAMPAIGNS_CSV)
-        data_dir    = Path(config.DATA_DIR)
+        results_csv = Path(f"../{config.CAMPAIGNS_CSV}" )
+        data_dir    = Path(f"../{config.DATA_DIR}" )
 
     op_type, op_step = filters["op_step"]
     ########################## LOOP POR op_step ################################

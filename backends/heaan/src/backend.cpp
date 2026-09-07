@@ -81,8 +81,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
         ctx->scheme.addBootKey(ctx->sk, args.logSlots, logq_boot + 4);
 
     if(args.doRot){
-        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
-        ctx->scheme.addLeftRotKey(ctx->sk, rotIndex);
+        ctx->scheme.addLeftRotKey(ctx->sk, args.doRot);
     }
     if(args.isComplex>0){
         compute_plain_io(args, ctx->baseInputComplex, ctx->goldenOutputComplex);
@@ -206,7 +205,7 @@ IterationResult run_iteration(
     }
 
     if(args.doRot>0){
-        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
+        int32_t rotIndex = args.doRot;
         if(iterArgs && args.stage == "rot_inside"){
             c = ctx.scheme.leftRotateFastBitFlip(c, rotIndex, op_step, iterArgs->coeff, iterArgs->bit);
         } else if(iterArgs && args.stage == "rot_inside_asplos"){

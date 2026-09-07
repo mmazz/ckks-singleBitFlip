@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import time
 import sys
 import tempfile
 from dataclasses import dataclass, field
@@ -157,23 +158,55 @@ def print_resolution(resolved: dict[str, str | None], df: pd.DataFrame) -> None:
 # (bit, coeff, limb). Eso no mide generalizacion, mide memoria. El agrupamiento
 # minimo valido es por campaign_id; el que te interesa es por firma de pipeline.
 
-def shrink(df: pd.DataFrame) -> pd.DataFrame:
-    """Baja el uso de memoria sin perder informacion.
+def _read_one(task):
+    """Lee un csv.gz, lo muestrea y lo achica. Corre en un proceso aparte:
+    descomprimir gzip es CPU-bound y con miles de archivos es EL cuello de
+    botella (6379 archivos en serie son decenas de minutos)."""
+    path, per, seed, meta_cols, meta_vals = task
+    try:
+        sub = pd.read_csv(path, compression="gzip")
+    except Exception as e:
+        return None, 0, 0, f"{path}: {type(e).__name__}"
+    total = len(sub)
+    sampled = 0
+    if per and total > per:
+        sub = sub.sample(n=per, random_state=seed)
+        sampled = 1
+    for c, v in zip(meta_cols, meta_vals):
+        if c not in sub.columns:
+            sub[c] = v
+    return shrink_numeric(sub), total, sampled, None
 
-    Los parametros de campana se replican identicos en cada fila de inyeccion.
-    Un `scaleTech` = "FLEXIBLEAUTO" guardado como string de Python cuesta ~60
-    bytes por fila; como categoria cuesta 1. Con millones de filas eso es la
-    diferencia entre entrar en RAM y no entrar.
+
+def shrink_numeric(df: pd.DataFrame) -> pd.DataFrame:
+    """Downcast de columnas numericas. SEGURO para devolver desde un worker.
+
+    Nada de dtype `category` aca: un Categorical no se puede despicklear entre
+    procesos en pandas + Python 3.14 (NotImplementedError en
+    NDArrayBacked.__setstate__), y eso rompe el pool entero. Las categorias se
+    arman en el proceso padre, despues del concat.
     """
     for c in df.columns:
         col = df[c]
-        if col.dtype == object:
-            if col.nunique(dropna=False) <= max(64, len(col) // 100):
-                df[c] = col.astype("category")
-        elif pd.api.types.is_integer_dtype(col):
+        if pd.api.types.is_integer_dtype(col):
             df[c] = pd.to_numeric(col, downcast="integer")
         elif pd.api.types.is_float_dtype(col):
             df[c] = pd.to_numeric(col, downcast="float")
+    return df
+
+
+def shrink(df: pd.DataFrame) -> pd.DataFrame:
+    """shrink_numeric + categorias. Solo en el proceso padre.
+
+    Los parametros de campana se replican identicos en cada fila de inyeccion.
+    Un `scaleTech` = "FLEXIBLEAUTO" como string de Python cuesta ~60 bytes por
+    fila; como categoria, 1.
+    """
+    df = shrink_numeric(df)
+    for c in df.columns:
+        col = df[c]
+        if col.dtype == object and col.nunique(dropna=False) <= max(64, len(col) // 100):
+            df[c] = col.astype("category")
     return df
 
 
@@ -189,9 +222,16 @@ def find_campaign_file(data_dir: Path, cid: int) -> Path | None:
 
 def load_campaigns(root: str, limit: int | None = None,
                    cache: bool = True, quiet: bool = False,
-                   sample_per_campaign: int | None = 20000,
+                   sample_per_campaign: int | None = None,
+                   max_rows: int | None = 2_000_000,
+                   n_jobs: int | None = None,
                    seed: int = 0) -> pd.DataFrame:
     """Junta campaigns_start.csv con los csv.gz por campana en una tabla plana.
+
+    El presupuesto es GLOBAL: `max_rows` se reparte entre las campanas y el
+    muestreo se aplica MIENTRAS se lee, no despues. Un tope solo por campana no
+    alcanza: con 6379 campanas, 20.000 por campana son 127 millones de filas y
+    17 GB antes de que empiece a featurizar.
 
     sample_per_campaign acota cuantas inyecciones se toman de cada campana.
     No es solo por memoria (un barrido exhaustivo con logN=16 son 2^15 x 64 =
@@ -215,7 +255,8 @@ def load_campaigns(root: str, limit: int | None = None,
     if not data_dir.exists():
         raise SystemExit(f"No encuentro el directorio {data_dir}")
 
-    tag = "all" if not sample_per_campaign else str(sample_per_campaign)
+    tag = (f"spc{sample_per_campaign}" if sample_per_campaign
+           else (f"mr{max_rows}" if max_rows else "all"))
     cache_path = start.parent / f".heaan_flat_{tag}.parquet"
     # Un cache corrupto (run anterior interrumpido o sin memoria) no puede
     # bloquear todo: se borra y se regenera.
@@ -251,30 +292,71 @@ def load_campaigns(root: str, limit: int | None = None,
                          f"Columnas: {list(camp.columns)}")
 
     frames, missing = [], []
-    total_rows, n_sampled = 0, 0
+    total_rows, n_sampled, kept = 0, 0, 0
     ids = camp[cid_col].tolist()[: (limit or len(camp))]
-    for i, cid in enumerate(ids):
+
+    per = sample_per_campaign
+    if per is None:
+        per = max(1, int(max_rows // max(len(ids), 1))) if max_rows else None
+        if not quiet and per is not None:
+            print(f"  presupuesto global {max_rows:,} filas / {len(ids):,} "
+                  f"campanas = {per:,} inyecciones por campana")
+            if per < 200:
+                print(f"  (son pocas por campana, pero al ser muestreo uniforme")
+                print(f"   las proporciones de clase de cada una se conservan;")
+                print(f"   subi --max-rows si necesitas mas resolucion)")
+    tasks = []
+    for cid in ids:
         path = find_campaign_file(data_dir, int(cid))
         if path is None:
             missing.append(int(cid))
             continue
-        sub = pd.read_csv(path, compression="gzip")
-        total_rows += len(sub)
-        if sample_per_campaign and len(sub) > sample_per_campaign:
-            sub = sub.sample(n=sample_per_campaign, random_state=seed)
-            n_sampled += 1
         meta = camp[camp[cid_col] == cid].iloc[0]
-        for col in camp.columns:
-            if col not in sub.columns:
-                sub[col] = meta[col]
-        frames.append(shrink(sub))
-        if not quiet and (i + 1) % 200 == 0:
-            sofar = sum(f.memory_usage(deep=True).sum() for f in frames) / 1e9
-            print(f"    {i+1}/{len(ids)} campanas leidas, {sofar:.2f} GB...")
-            if sofar > 8:
-                print(f"    !! ya vas por {sofar:.1f} GB y falta el "
-                      f"{100*(1-(i+1)/len(ids)):.0f}% de las campanas.")
-                print(f"       Cortá y bajá --sample-per-campaign.")
+        tasks.append((str(path), per, seed, list(camp.columns),
+                      [meta[c] for c in camp.columns]))
+
+    jobs = max(1, int(n_jobs)) if n_jobs else max(1, (os.cpu_count() or 2) - 1)
+    t0 = time.time()
+    parallel_ok = True
+    if jobs > 1 and len(tasks) > 8:
+        if not quiet:
+            print(f"  leyendo {len(tasks):,} archivos con {jobs} procesos...")
+        from concurrent.futures import ProcessPoolExecutor, BrokenExecutor
+        try:
+            with ProcessPoolExecutor(max_workers=jobs) as ex:
+                for i, (sub, total, sm, errmsg) in enumerate(
+                        ex.map(_read_one, tasks, chunksize=8)):
+                    if errmsg:
+                        missing.append(errmsg)
+                        continue
+                    total_rows += total; n_sampled += sm; kept += len(sub)
+                    frames.append(sub)
+                    if not quiet and (i + 1) % 500 == 0:
+                        el = time.time() - t0
+                        eta = el / (i + 1) * (len(tasks) - i - 1)
+                        print(f"    {i+1:,}/{len(tasks):,} campanas, {kept:,} filas, "
+                              f"{el:.0f}s (faltan ~{eta:.0f}s)")
+        except (BrokenExecutor, OSError, NotImplementedError) as e:
+            print(f"  !! el pool de procesos se rompio ({type(e).__name__}). "
+                  f"Sigo en serie, que es mas lento pero funciona.")
+            print(f"     Podes forzarlo desde el principio con --jobs 1.")
+            frames.clear(); total_rows = n_sampled = kept = 0
+            parallel_ok = False
+    if not parallel_ok or not (jobs > 1 and len(tasks) > 8):
+        for i, task in enumerate(tasks):
+            sub, total, sm, errmsg = _read_one(task)
+            if errmsg:
+                missing.append(errmsg)
+                continue
+            total_rows += total; n_sampled += sm; kept += len(sub)
+            frames.append(sub)
+            if max_rows and kept > max_rows * 1.5:
+                print(f"  !! corte en {kept:,} filas ({i+1}/{len(tasks)} campanas)")
+                break
+            if not quiet and (i + 1) % 500 == 0:
+                print(f"    {i+1:,}/{len(tasks):,} campanas, {kept:,} filas...")
+    if not quiet:
+        print(f"  lectura: {time.time()-t0:.0f}s")
 
     if missing:
         print(f"  aviso: {len(missing)} campanas sin archivo en data/ "
@@ -282,17 +364,23 @@ def load_campaigns(root: str, limit: int | None = None,
     if not frames:
         raise SystemExit("No se pudo leer ninguna campana.")
 
+    frames = [f for f in frames if len(f)]        # evita la FutureWarning de concat
     n_frames = len(frames)
     df = pd.concat(frames, ignore_index=True)
     del frames
+    # Recien aca las columnas de texto pasan a `category`: en el padre, donde no
+    # hay que picklear nada entre procesos.
+    df = shrink(df)
     if not quiet:
         mem = df.memory_usage(deep=True).sum() / 1e9
         print(f"  total: {len(df):,} filas de inyeccion, {len(df.columns)} "
               f"columnas, {mem:.2f} GB en memoria")
         if n_sampled:
-            print(f"  {n_sampled}/{n_frames} campanas muestreadas a "
-                  f"{sample_per_campaign:,} filas (de {total_rows:,} disponibles)")
-            print(f"  subilo con --sample-per-campaign si una clase queda muy rara")
+            print(f"  {n_sampled}/{n_frames} campanas muestreadas a {per:,} filas "
+                  f"(de {total_rows:,} disponibles en total)")
+    if cache and df.memory_usage(deep=True).sum() > 4e9:
+        print("  (mas de 4 GB: no lo cacheo, el pickle seria inmanejable)")
+        cache = False
     if cache:
         # Escritura ATOMICA: primero a un temporal en el mismo directorio, y
         # recien cuando termino bien, un rename. Si el proceso muere a mitad,
@@ -326,7 +414,9 @@ def load_campaigns(root: str, limit: int | None = None,
 
 
 def read_any(path: str, limit: int | None = None,
-             sample_per_campaign: int | None = 20000) -> pd.DataFrame:
+             sample_per_campaign: int | None = None,
+             max_rows: int | None = 2_000_000,
+             n_jobs: int | None = None) -> pd.DataFrame:
     """Acepta un CSV plano o un directorio results/ con el layout de dos niveles."""
     pth = Path(path)
     # Apuntar al directorio results/ o directamente al campaigns_start.csv:
@@ -337,11 +427,13 @@ def read_any(path: str, limit: int | None = None,
         print(f"=== {pth.name} con {pth.parent/'data'} al lado: "
               f"layout de dos niveles ===")
         return load_campaigns(str(pth.parent), limit=limit,
-                              sample_per_campaign=sample_per_campaign or None)
+                              sample_per_campaign=sample_per_campaign or None,
+                              max_rows=max_rows or None, n_jobs=n_jobs)
     if pth.is_dir():
         print(f"=== Cargando layout de campanas desde {pth} ===")
         return load_campaigns(str(pth), limit=limit,
-                              sample_per_campaign=sample_per_campaign or None)
+                              sample_per_campaign=sample_per_campaign or None,
+                              max_rows=max_rows or None, n_jobs=n_jobs)
     if pth.is_file() and _norm(pth.stem).startswith("campaigns"):
         print(f"  aviso: {pth.name} tiene los parametros por campana pero NO las")
         print(f"         inyecciones (bit, coeff). Esas estan en data/*.csv.gz y")
@@ -625,6 +717,13 @@ class FeatConfig:
     polymul_set: str = "wide"   # 'wide' incluye rot | 'narrow' solo mul/pmul
     boot_restores_to: float | None = None  # None -> restaura a logQ inicial
     include_raw_scale: bool = False        # incluir logQ/logDelta crudos (rompe transfer)
+    # Etapas que trabajan sobre el PLAINTEXT y no sobre el ciphertext. Ahi el
+    # modulo de trabajo no es q: en HEAAN el encode vive en un modulo mas grande,
+    # asi que `bit - logQ` mide contra la referencia equivocada y todo el eje bit
+    # queda corrido. `--encode-ref` elige contra que medir.
+    plaintext_stages: tuple = ("encode", "decode", "encodesingle")
+    encode_ref: str = "q"                  # 'q' | '2q' | 'bpc'
+    stage_vocab: tuple = ()                # se fija en train, se reusa en predict
     feature_names: list[str] = field(default_factory=list)
 
 
@@ -659,12 +758,25 @@ def featurize(df: pd.DataFrame, cols: dict[str, str | None],
     bit, coeff = g("bit"), g("coeff")
 
     n = len(df)
+    est_gb = n * 45 * 4 / 1e9
+    if est_gb > 1.0:
+        print(f"  atencion: {n:,} filas x ~45 features en float32 ~= "
+              f"{est_gb:.1f} GB solo para la matriz,")
+        print(f"            y el entrenamiento necesita mas encima. Si la maquina")
+        print(f"            tiene menos de {est_gb*3:.0f} GB libres, baja "
+              f"--sample-per-campaign\n            o usa --max-rows.")
     feats: dict[str, np.ndarray] = {}
 
     # --- reconstruir el pipeline y la posicion de la inyeccion ----------------
-    # Memoizado por combinacion unica: hay una combinacion por campana, no por
-    # fila. Con millones de inyecciones esto es la diferencia entre segundos y
-    # media hora.
+    # VECTORIZADO. La version anterior iteraba fila por fila y construia listas
+    # de Python de largo n: 1.2 GB de pico para 750k filas y 8.3 GB para 5M,
+    # que es lo que cuelga una maquina.
+    #
+    # La observacion que lo arregla: todo lo que depende del circuito depende
+    # SOLO de (flags do*, op_step, logQ, logDelta) -- o sea, de la campana, no
+    # de la inyeccion. En datos reales eso son unas pocas decenas de
+    # combinaciones para millones de filas. Asi que se calcula una vez por
+    # combinacion unica y se reparte con indexado numpy.
     pipe_col = cols.get("pipeline")
     step_col = cols.get("op_step")
 
@@ -673,97 +785,93 @@ def featurize(df: pd.DataFrame, cols: dict[str, str | None],
                   ("doRot", "rot"), ("doAdd", "add"), ("doBoot", "boot")]}
     flag_cols = {op: c for op, c in flag_cols.items() if c is not None}
 
-    key_parts = []
+    key_df = pd.DataFrame(index=df.index)
     if pipe_col is not None:
-        key_parts.append(df[pipe_col].astype(str))
+        key_df["_pipe"] = pd.factorize(df[pipe_col].astype(str))[0]
     for op, c in flag_cols.items():
-        key_parts.append(df[c].astype(str))
-    if step_col is not None:
-        key_parts.append(df[step_col].astype(str))
-    if not key_parts:
+        key_df[f"_f_{op}"] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype("int32")
+    key_df["_step"] = (pd.to_numeric(df[step_col], errors="coerce").fillna(0).astype("int32")
+                       if step_col is not None else np.int32(0))
+    key_df["_q"] = logQ.to_numpy()
+    key_df["_d"] = logDelta.to_numpy()
+    if key_df.shape[1] == 0:
         raise SystemExit("No hay ni columna de pipeline ni flags do*; no puedo "
                          "reconstruir el circuito.")
-    keys = pd.Series(["|".join(t) for t in zip(*[k.tolist() for k in key_parts])],
-                     index=df.index)
 
-    uniq_keys = keys.drop_duplicates()
-    cache: dict[str, tuple] = {}
-    n_ordered = 0
-    for idx in uniq_keys.index:
-        row = df.loc[idx]
-        ops = parse_pipeline(row[pipe_col]) if pipe_col is not None else None
-        if ops is not None:
-            n_ordered += 1
-        else:
-            ops = []
-            for op, c in flag_cols.items():
-                try:
-                    k_ = int(float(row[c]))
-                except (TypeError, ValueError):
-                    k_ = 0
-                ops.extend([op] * max(0, k_))
-        try:
-            step = int(float(row[step_col])) if step_col is not None else 0
-        except (TypeError, ValueError):
-            step = 0
-        step = int(np.clip(step, 0, max(0, len(ops))))
-        before, after = ops[:step], ops[step:]
-        cache[keys.loc[idx]] = (
-            sum(1 for o in before if o == "mul"),
-            sum(1 for o in before if o in poly),
-            sum(1 for o in after if o == "mul"),
-            sum(1 for o in after if o == "pmul"),
-            sum(1 for o in after if o == "rot"),
-            sum(1 for o in after if o == "add"),
-            sum(1 for o in after if o == "boot"),
-            sum(1 for o in after if o in poly),
-            len(after), len(ops),
-            "+".join(ops) if ops else "empty",
-            before,
-        )
+    kcols = list(key_df.columns)
+    uniq = key_df.drop_duplicates().reset_index(drop=True)
+    uniq["_code"] = np.arange(len(uniq), dtype=np.int32)
+    codes = key_df.merge(uniq, on=kcols, how="left")["_code"].to_numpy()
+    del key_df
 
-    print(f"  {len(uniq_keys)} combinaciones unicas de (pipeline, punto de "
-          f"inyeccion) en {len(df)} filas")
+    print(f"  {len(uniq)} combinaciones unicas de (pipeline, punto de "
+          f"inyeccion, escala) para {len(df):,} filas")
     if pipe_col is None:
         print("  aviso: no hay columna con la SECUENCIA ORDENADA de ops. Se "
               "reconstruye\n         desde los flags do* con un orden canonico. "
               "Guardar el orden real\n         es la mejora mas grande posible "
               "al dataset.")
 
-    arr = np.array([cache[k][:10] for k in keys], dtype=float)
-    mul_before, poly_before = arr[:, 0], arr[:, 1]
-    mul_after, pmul_after = arr[:, 2], arr[:, 3]
-    rot_after, add_after = arr[:, 4], arr[:, 5]
-    boot_after, poly_after = arr[:, 6], arr[:, 7]
-    ops_after, pipe_len = arr[:, 8], arr[:, 9]
-    sigs_list = [cache[k][10] for k in keys]
+    # --- una vuelta por combinacion unica (decenas, no millones) -------------
+    U = len(uniq)
+    u_mul_b = np.zeros(U); u_poly_b = np.zeros(U)
+    u_mul_a = np.zeros(U); u_pmul_a = np.zeros(U); u_rot_a = np.zeros(U)
+    u_add_a = np.zeros(U); u_boot_a = np.zeros(U); u_poly_a = np.zeros(U)
+    u_opsa = np.zeros(U); u_len = np.zeros(U); u_lvl = np.zeros(U)
+    u_sig = np.empty(U, dtype=object)
+    pipe_vals = (pd.factorize(df[pipe_col].astype(str))[1]
+                 if pipe_col is not None else None)
 
-    # nivel del modulo en el punto de inyeccion, op por op
-    restore_default = cfg.boot_restores_to
-    logq_inject = np.empty(n, dtype=float)
-    lvl_cache: dict[tuple, float] = {}
-    logQ_np, logDelta_np = logQ.to_numpy(), logDelta.to_numpy()
-    for i_ in range(n):
-        ck = (keys.iloc[i_], logQ_np[i_], logDelta_np[i_])
-        if ck in lvl_cache:
-            logq_inject[i_] = lvl_cache[ck]
-            continue
-        q = float(logQ_np[i_])
-        restore = restore_default if restore_default is not None else q
+    for u in range(U):
+        row = uniq.iloc[u]
+        ops = None
+        if pipe_vals is not None:
+            ops = parse_pipeline(pipe_vals[int(row["_pipe"])])
+        if ops is None:
+            ops = []
+            for op in flag_cols:
+                ops.extend([op] * max(0, int(row[f"_f_{op}"])))
+        step = int(np.clip(int(row["_step"]), 0, max(0, len(ops))))
+        before, after = ops[:step], ops[step:]
+
+        u_mul_b[u] = sum(1 for o in before if o == "mul")
+        u_poly_b[u] = sum(1 for o in before if o in poly)
+        u_mul_a[u] = sum(1 for o in after if o == "mul")
+        u_pmul_a[u] = sum(1 for o in after if o == "pmul")
+        u_rot_a[u] = sum(1 for o in after if o == "rot")
+        u_add_a[u] = sum(1 for o in after if o == "add")
+        u_boot_a[u] = sum(1 for o in after if o == "boot")
+        u_poly_a[u] = sum(1 for o in after if o in poly)
+        u_opsa[u] = len(after); u_len[u] = len(ops)
+        u_sig[u] = "+".join(ops) if ops else "empty"
+
+        q = float(row["_q"]); d = float(row["_d"])
+        restore = cfg.boot_restores_to if cfg.boot_restores_to is not None else q
         lvl = q
-        for op in cache[keys.iloc[i_]][11]:
+        for op in before:
             if op in LEVEL_CONSUMING:
-                lvl -= float(logDelta_np[i_])
+                lvl -= d
             elif op == "boot":
                 lvl = restore
-        lvl_cache[ck] = lvl
-        logq_inject[i_] = lvl
+        u_lvl[u] = lvl
+
+    # --- repartir por indexado: sin listas de Python, sin copias grandes -----
+    mul_before, poly_before = u_mul_b[codes], u_poly_b[codes]
+    mul_after, pmul_after = u_mul_a[codes], u_pmul_a[codes]
+    rot_after, add_after = u_rot_a[codes], u_add_a[codes]
+    boot_after, poly_after = u_boot_a[codes], u_poly_a[codes]
+    ops_after, pipe_len = u_opsa[codes], u_len[codes]
+    logq_inject = u_lvl[codes]
+    # Categorical: guarda codigos int8 + un diccionario chico, en vez de n
+    # strings de Python (que para 5M filas son varios GB por si solos).
+    # Dos combinaciones distintas (p.ej. mismo pipeline con otro logQ) pueden
+    # compartir firma, asi que las categorias hay que deduplicarlas.
+    sig_cats, sig_of_u = np.unique(u_sig.astype(str), return_inverse=True)
+    sigs_cat = pd.Categorical.from_codes(sig_of_u[codes], categories=list(sig_cats))
+
+    logQ_np, logDelta_np = logQ.to_numpy(), logDelta.to_numpy()
 
     # --- ruta preferida: op_depth / mult_depth del esquema real -------------
-    # op_depth  = cuantas mult ya se consumieron cuando se inyecta el error
-    # mult_depth= profundidad multiplicativa total del pipeline
-    # => n_mul_after = mult_depth - op_depth, y el nivel del modulo sale exacto.
-    # Es MUCHO mas confiable que reconstruir un orden a partir de los flags.
     if cols.get("op_depth") is not None and cols.get("mult_depth") is not None:
         od = g("op_depth").to_numpy()
         md = g("mult_depth").to_numpy()
@@ -777,6 +885,33 @@ def featurize(df: pd.DataFrame, cols: dict[str, str | None],
                   f"Sin el orden de\n         las ops no se sabe DONDE resetea el "
                   f"nivel: logQ_at_inject queda\n         aproximado en esas filas.")
         print("  usando op_depth/mult_depth para el nivel y las mult restantes.")
+
+    # --- referencia de modulo segun la etapa ---------------------------------
+    # Las etapas de plaintext (encode) trabajan con un modulo mayor que el de los
+    # ciphertext, asi que el mismo `bit` significa algo distinto ahi. Sin esto,
+    # `bit_minus_q_inject` mezcla dos escalas y deja de ser invariante -- que es
+    # el mismo error que medir `bit` crudo en vez de `bit - logDelta`.
+    stage_col = cols.get("stage")
+    is_pt = np.zeros(n, dtype=bool)
+    if stage_col is not None:
+        sv = df[stage_col].astype(str).str.lower().str.replace("_", "", regex=False)
+        is_pt = sv.isin(cfg.plaintext_stages).to_numpy()
+    if is_pt.any():
+        if cfg.encode_ref == "2q":
+            ref = 2.0 * logQ_np
+        elif cfg.encode_ref == "bpc":
+            ref = (g("bitPerCoeff", 64.0).to_numpy() if cols.get("bitPerCoeff")
+                   else 2.0 * logQ_np)
+        else:
+            ref = logQ_np
+        logq_inject = np.where(is_pt, ref, logq_inject)
+        if cfg.encode_ref != "q":
+            print(f"  {is_pt.mean():.1%} de las filas son etapas de plaintext "
+                  f"({', '.join(sorted(set(sv[is_pt])))}); su modulo de")
+            print(f"  referencia pasa a '{cfg.encode_ref}'. Ojo: sobre 179k "
+                  f"inyecciones de encode el")
+            print(f"  umbral medido cae en logQ, no en 2logQ. Verificalo con "
+                  f"diagnose antes de fiarte.")
 
     cl = lambda a: np.clip(a, -C, C)
     cc = lambda a: np.clip(a, 0, KC)
@@ -861,6 +996,25 @@ def featurize(df: pd.DataFrame, cols: dict[str, str | None],
                 v = pd.Series(pd.factorize(df[cols[canon]])[0], index=df.index)
             feats[fname] = v.fillna(0).to_numpy().astype(float)
 
+    # `stage` como one-hot. Un stage nuevo queda en todo-ceros, que es honesto:
+    # el modelo dice "no vi esto" en vez de inventar un orden entre etapas.
+    if stage_col is not None:
+        vocab = (list(cfg.stage_vocab) if cfg.stage_vocab
+                 else sorted(set(df[stage_col].astype(str)))[:12])
+        cfg.stage_vocab = tuple(vocab)
+        sv_raw = df[stage_col].astype(str).to_numpy()
+        for st in vocab:
+            feats[f"stage_{st}"] = (sv_raw == st).astype(float)
+        feats["is_plaintext_stage"] = is_pt.astype(float)
+        # La resiliencia por alineacion a slot NO vale igual en todas las etapas:
+        # medido, P(err | NO alineado) va de 0.000 en encode a 0.638 en
+        # encrypt_c1. O sea que `is_slot_aligned` solo discrimina donde la
+        # estructura de slots sigue intacta. Sin esta interaccion el arbol tiene
+        # que redescubrirla rama por rama.
+        for st in vocab:
+            feats[f"aligned_x_{st}"] = (feats["is_slot_aligned"] *
+                                        feats[f"stage_{st}"])
+
     if cols.get("mult_depth") is not None:
         feats["mult_depth"] = np.clip(g("mult_depth").to_numpy(), 0, 8)
     if cols.get("op_depth") is not None:
@@ -869,6 +1023,17 @@ def featurize(df: pd.DataFrame, cols: dict[str, str | None],
         bpc = g("bitPerCoeff", 64.0).to_numpy()
         feats["bit_frac_word"] = np.clip(bit.to_numpy() / np.maximum(bpc, 1), 0, 2)
         feats["logq_frac_word"] = np.clip(logQ.to_numpy() / np.maximum(bpc, 1), 0, 2)
+        # referencias alternativas: si la etapa corre el origen del eje bit, una
+        # de estas es la invariante correcta. Que decida el dato, no yo.
+        feats["bit_minus_bpc"] = cl(bit.to_numpy() - bpc)
+        # Cuando logQ es la cadena RNS completa, el modulo relevante para un bit
+        # flip es el del limb (~bitPerCoeff), no la cadena. Se toma el menor de
+        # los dos: si el coeficiente es mas angosto que logQ, manda el
+        # coeficiente.
+        eff = np.minimum(logq_inject, bpc)
+        feats["bit_minus_eff_mod"] = cl(bit.to_numpy() - eff)
+        feats["is_above_eff_mod"] = (bit.to_numpy() >= eff).astype(float)
+    feats["bit_minus_2logq"] = cl(bit.to_numpy() - 2.0 * logQ_np)
 
     if cfg.include_raw_scale:
         feats["logQ_raw"] = logQ.to_numpy()
@@ -877,13 +1042,19 @@ def featurize(df: pd.DataFrame, cols: dict[str, str | None],
         feats["logSlots_raw"] = logSlots.to_numpy()
         feats["bit_raw"] = bit.to_numpy()
 
-    X = pd.DataFrame(feats, index=df.index)
+    # float32 en vez de float64: HistGradientBoosting bina a uint8 igual, asi
+    # que la mitad de la memoria no aportaba nada. Se convierte in-place para
+    # que el array de float64 se libere feature por feature y no se acumulen.
+    for _k in list(feats):
+        feats[_k] = np.asarray(feats[_k], dtype=np.float32)
+    X = pd.DataFrame(feats, index=df.index, copy=False)
+    del feats
     cfg.feature_names = list(X.columns)
     # guardadas para el baseline de regla
     X.attrs["logq_inject"] = logq_inject
     X.attrs["bit"] = bit.to_numpy()
     X.attrs["logDelta"] = logDelta.to_numpy()
-    return X, pd.Series(sigs_list, index=df.index, name="pipeline_sig")
+    return X, pd.Series(sigs_cat, index=df.index, name="pipeline_sig")
 
 
 # ---------------------------------------------------------------------------
@@ -1003,6 +1174,20 @@ def build_groups(df: pd.DataFrame, cols: dict, sigs: pd.Series,
         if cols.get("campaign_id"):
             return df[cols["campaign_id"]].astype(str)
         raise SystemExit("--split campaign necesita la columna campaign_id.")
+    if split == "stage":
+        # Leave-one-stage-out. Es la pregunta honesta cuando el regimen fisico
+        # lo define la etapa y no el pipeline: mide cuanto de lo aprendido en
+        # unas etapas sirve en una que nunca se vio.
+        if cols.get("stage"):
+            return df[cols["stage"]].astype(str)
+        raise SystemExit("--split stage necesita la columna stage.")
+    if split == "stage_x_config":
+        keys = [cols[c] for c in ["logN", "logDelta", "logQ", "logSlots"]
+                if cols.get(c)]
+        if not cols.get("stage"):
+            raise SystemExit("--split stage_x_config necesita la columna stage.")
+        return (df[cols["stage"]].astype(str) + "//" +
+                df[keys].astype(str).agg("|".join, axis=1))
     if split == "config":
         keys = [cols[c] for c in ["logN", "logDelta", "logQ", "logSlots"] if cols.get(c)]
         return df[keys].astype(str).agg("|".join, axis=1)
@@ -1020,7 +1205,9 @@ def train(args) -> None:
     from sklearn.utils.class_weight import compute_sample_weight
 
     df = read_any(args.csv, getattr(args, "limit", None),
-                  getattr(args, "sample_per_campaign", 20000))
+                  getattr(args, "sample_per_campaign", None),
+                  getattr(args, "max_rows", 2_000_000),
+                  getattr(args, "jobs", None))
     overrides = dict(kv.split("=", 1) for kv in (args.col or []))
     cols = resolve_columns(df, overrides)
     print_resolution(cols, df)
@@ -1033,7 +1220,30 @@ def train(args) -> None:
     cfg = FeatConfig(clip=args.clip, count_clip=args.count_clip,
                      gap_formula=args.gap_formula, polymul_set=args.polymul_set,
                      boot_restores_to=args.boot_restores_to,
-                     include_raw_scale=args.include_raw_scale)
+                     include_raw_scale=args.include_raw_scale,
+                     encode_ref=getattr(args, "encode_ref", "q"))
+
+    sc0 = cols.get("stage")
+    only = getattr(args, "only_stage", None)
+    excl = getattr(args, "exclude_stage", None)
+    if sc0 is not None and (only or excl):
+        sv0 = df[sc0].astype(str)
+        n0 = len(df)
+        if only:
+            df = df[sv0.isin(only)]
+        if excl:
+            df = df[~df[sc0].astype(str).isin(excl)]
+        df = df.reset_index(drop=True)
+        print(f"  filtro de etapas: {n0:,} -> {len(df):,} filas "
+              f"({sorted(set(df[sc0].astype(str)))})")
+        if df.empty:
+            raise SystemExit("El filtro de etapas no dejo ninguna fila.")
+
+    mr = getattr(args, "max_rows", None)
+    if mr and len(df) > mr:
+        print(f"  --max-rows: muestreo {mr:,} de {len(df):,} filas antes de "
+              f"featurizar")
+        df = df.sample(n=mr, random_state=args.seed).reset_index(drop=True)
 
     print("\n=== Featurizando ===")
     X, sigs = featurize(df, cols, cfg)
@@ -1085,7 +1295,9 @@ def train(args) -> None:
     # ---- modo test-csv: entrenar en todo esto, testear en otro archivo -------
     if getattr(args, "test_csv", None):
         df_te = read_any(args.test_csv, None,
-                         getattr(args, "sample_per_campaign", 20000))
+                         getattr(args, "sample_per_campaign", None),
+                         getattr(args, "max_rows", 2_000_000),
+                  getattr(args, "jobs", None))
         cols_te = resolve_columns(df_te, overrides)
         print(f"\n=== Test externo: {args.test_csv} ({len(df_te)} filas) ===")
         X_te_full, sigs_te = featurize(df_te, cols_te, cfg)
@@ -1230,6 +1442,30 @@ def train(args) -> None:
             report(yb[oof_mask], mb, "MODELO, binario")
 
     # ---- veredicto -----------------------------------------------------------
+    # Con una etapa acaparando el 80% de las filas, la metrica global es esa
+    # etapa y nada mas. Las chicas quedan invisibles.
+    sc_ = cols.get("stage")
+    if sc_ is not None and df[sc_].nunique() > 1 and oof_mask.sum():
+        from sklearn.metrics import f1_score
+        print("\n=== Desempeno por etapa (donde funciona y donde no) ===")
+        print(f"  {'stage':<22}{'filas':>10}{'%total':>8}"
+              f"{'macro F1' if not is_reg else 'MAE':>10}")
+        sv_ = df[sc_].astype(str).to_numpy()
+        for st in sorted(set(sv_)):
+            m_ = oof_mask & (sv_ == st)
+            if m_.sum() < 50:
+                continue
+            if is_reg:
+                v = float(np.mean(np.abs(np.asarray(y[m_], float) -
+                                         np.asarray(oof_pred[m_], float))))
+            else:
+                v = f1_score(np.asarray(y[m_]).astype(str),
+                             np.asarray(oof_pred[m_]).astype(str),
+                             average="macro", zero_division=0)
+            print(f"  {st:<22}{m_.sum():>10,}{m_.sum()/len(df):>7.1%}{v:>10.3f}")
+        print("  Si una etapa se lleva casi todas las filas, el numero global es")
+        print("  el de esa etapa. Mira esta tabla antes de sacar conclusiones.")
+
     print("\n=== Veredicto ===")
     metric = "R2" if is_reg else "macro F1"
     d = model_m["macro_f1"] - rule_m["macro_f1"]
@@ -1255,8 +1491,15 @@ def train(args) -> None:
         sw = (compute_sample_weight("balanced", y[tr_i])
               if args.class_weight == "balanced" and not is_reg else None)
         m.fit(X.iloc[tr_i], y[tr_i], sample_weight=sw)
+        # permutation_importance copia X por cada feature y repeticion. Sobre
+        # cientos de miles de filas eso solo es memoria quemada: con 20k filas
+        # el ranking ya es estable.
+        cap = min(len(te_i), 20000)
+        rng = np.random.default_rng(args.seed)
+        sub = rng.choice(te_i, size=cap, replace=False) if len(te_i) > cap else te_i
+        print(f"  (importancia sobre {cap:,} filas del ultimo fold)")
         r = permutation_importance(
-            m, X.iloc[te_i], y[te_i], n_repeats=8, random_state=args.seed,
+            m, X.iloc[sub], y[sub], n_repeats=4, random_state=args.seed,
             scoring="r2" if is_reg else "f1_macro")
         order = np.argsort(r.importances_mean)[::-1]
         print(f"\n=== Importancia por permutacion (caida de "
@@ -1285,7 +1528,9 @@ def train(args) -> None:
 
 def inspect(args) -> None:
     df = read_any(args.csv, getattr(args, "limit", None),
-                  getattr(args, "sample_per_campaign", 20000))
+                  getattr(args, "sample_per_campaign", None),
+                  getattr(args, "max_rows", 2_000_000),
+                  getattr(args, "jobs", None))
     overrides = dict(kv.split("=", 1) for kv in (args.col or []))
     cols = resolve_columns(df, overrides)
     print_resolution(cols, df)
@@ -1296,7 +1541,8 @@ def inspect(args) -> None:
 
     for formula in (["pow2", "ratio"] if args.gap_formula == "both"
                     else [args.gap_formula]):
-        cfg = FeatConfig(gap_formula=formula, polymul_set=args.polymul_set)
+        cfg = FeatConfig(gap_formula=formula, polymul_set=args.polymul_set,
+                         encode_ref=getattr(args, "encode_ref", "q"))
         X, sigs = featurize(df, cols, cfg)
         print(f"\n=== gap_formula = {formula} ===")
         print(f"  is_slot_aligned: {X['is_slot_aligned'].mean():.3f} de las filas")
@@ -1544,7 +1790,9 @@ def predict(args) -> None:
     print(f"  pipelines vistos: {len(b['train_pipelines'])}")
 
     df = read_any(args.csv, getattr(args, "limit", None),
-                  getattr(args, "sample_per_campaign", 20000))
+                  getattr(args, "sample_per_campaign", None),
+                  getattr(args, "max_rows", 2_000_000),
+                  getattr(args, "jobs", None))
     overrides = dict(kv.split("=", 1) for kv in (args.col or []))
     cols = resolve_columns(df, overrides)
     missing = [c for c in REQUIRED if cols.get(c) is None]
@@ -1611,6 +1859,193 @@ def predict(args) -> None:
 
 
 
+
+# ---------------------------------------------------------------------------
+# 10. diagnose: por que se rompe la regla
+# ---------------------------------------------------------------------------
+# La regla de fisica se midio sobre stage=encode. Cuando el dataset trae otras
+# etapas y pipelines con multiplicaciones, sus tres condiciones pueden dejar de
+# valer -- por separado. Este comando dice CUAL se rompe y DONDE, en vez de
+# dejarte con un macro F1 malo y ninguna pista.
+
+def diagnose(args) -> None:
+    df = read_any(args.csv, getattr(args, "limit", None),
+                  getattr(args, "sample_per_campaign", None),
+                  getattr(args, "max_rows", 2_000_000),
+                  getattr(args, "jobs", None))
+    overrides = dict(kv.split("=", 1) for kv in (args.col or []))
+    cols = resolve_columns(df, overrides)
+    missing = [c for c in REQUIRED if cols.get(c) is None]
+    if missing:
+        raise SystemExit(f"Faltan columnas: {missing}")
+
+    cfg = FeatConfig(gap_formula=args.gap_formula, polymul_set=args.polymul_set,
+                     encode_ref=getattr(args, "encode_ref", "q"))
+    X, sigs = featurize(df, cols, cfg)
+    tg = build_targets(df, cols, quiet=True)
+    if "is_any_error" not in tg.columns:
+        raise SystemExit("No hay etiquetas para diagnosticar.")
+    err = tg["is_any_error"].to_numpy().astype(bool)
+
+    aligned = X["is_slot_aligned"].to_numpy() > 0.5
+    nyq = X["is_nyquist_coeff"].to_numpy() > 0.5
+    above_q = X["bit_minus_q_inject"].to_numpy() >= 0
+    above_d = X["bit_minus_delta"].to_numpy() >= LOG2_THRESHOLDS[0]
+
+    print("\n" + "=" * 70)
+    print("DIAGNOSTICO: cada condicion de la regla, por separado")
+    print("=" * 70)
+    print(f"  filas: {len(df):,}   con error real: {err.sum():,} ({err.mean():.1%})")
+    print()
+    print(f"  {'condicion':<34}{'recall':>9}{'precision':>11}{'cubre':>9}")
+    print(f"  {'(recall = de los errores reales,':<34}")
+    print(f"  {' cuantos cumplen la condicion)':<34}")
+    print("  " + "-" * 61)
+    for name, cond in [
+            ("coeff alineado al gap de slots", aligned),
+            ("coeff != N/2", ~nyq),
+            ("bit >= logQ_at_inject", above_q),
+            ("bit - logDelta >= log2(0.01)", above_d),
+            ("REGLA COMPLETA (las 3 primeras)", aligned & ~nyq & above_q),
+            ("variante: alineado + bit-logDelta", aligned & ~nyq & above_d),
+            ("variante: sin exigir alineado", ~nyq & above_d)]:
+        rec = float(err[cond].size and (cond & err).sum() / max(err.sum(), 1))
+        pre = float((cond & err).sum() / max(cond.sum(), 1))
+        print(f"  {name:<34}{rec:>9.3f}{pre:>11.3f}{cond.mean():>9.1%}")
+
+    print("\n  Como leerlo: si una condicion tiene recall < 1.000, esta")
+    print("  DESCARTANDO errores reales, o sea que como filtro es INVALIDA.")
+    print("  La regla original vale solo si las tres tienen recall 1.000.")
+
+    # de los errores que la regla se pierde, quien tiene la culpa
+    rule = aligned & ~nyq & above_q
+    fn = err & ~rule
+    if fn.sum():
+        print(f"\n  De los {fn.sum():,} errores que la regla NO detecta, falla por:")
+        for name, cond in [("no alineado al gap", ~aligned),
+                           ("es el coeff N/2", nyq),
+                           ("bit < logQ_at_inject", ~above_q)]:
+            print(f"    {name:<26} {float((fn & cond).sum())/fn.sum():>6.1%}")
+
+    # estratificado: donde vale y donde no
+    for key, label in [("stage", "stage"), ("mult_depth", "mult_depth")]:
+        c = cols.get(key)
+        if c is None or df[c].nunique() < 2:
+            continue
+        print(f"\n  --- Regla del gap de slots, por {label} ---")
+        print(f"  {label:<18}{'filas':>10}{'P(err|alin)':>13}{'P(err|NO alin)':>16}")
+        for v, sub in df.groupby(c, observed=True).groups.items():
+            i = df.index.get_indexer(sub)
+            if len(i) < 50:
+                continue
+            pa = err[i][aligned[i]].mean() if aligned[i].any() else float("nan")
+            pn = err[i][~aligned[i]].mean() if (~aligned[i]).any() else float("nan")
+            flag = "  <-- la regla NO vale aca" if pn > 0.01 else ""
+            print(f"  {str(v):<18}{len(i):>10,}{pa:>13.4f}{pn:>16.4f}{flag}")
+        print("  P(err|NO alineado) deberia ser ~0. Si no lo es, en ese grupo el")
+        print("  error SI se esparce a coeficientes que no caen en un slot --")
+        print("  que es exactamente lo que hace una multiplicacion polinomial.")
+
+    # --- sanidad de rangos: puede `bit` alcanzar siquiera a logQ? -----------
+    # Si el barrido de bits llega solo hasta bitPerCoeff y bitPerCoeff < logQ,
+    # entonces `bit >= logQ` es INALCANZABLE por construccion y su recall bajo
+    # no dice nada de la fisica: dice que la feature esta mal definida.
+    print("\n  --- Sanidad: rango de `bit` vs los modulos ---")
+    bitv = pd.to_numeric(df[cols["bit"]], errors="coerce").to_numpy()
+    qv = pd.to_numeric(df[cols["logQ"]], errors="coerce").to_numpy()
+    bpcv = (pd.to_numeric(df[cols["bitPerCoeff"]], errors="coerce").to_numpy()
+            if cols.get("bitPerCoeff") else np.full(len(df), np.nan))
+    unreachable = bitv.max() < qv
+    print(f"  {'':<4}bit va de {int(np.nanmin(bitv))} a {int(np.nanmax(bitv))}")
+    print(f"  filas donde el bit MAXIMO barrido no llega a logQ: "
+          f"{unreachable.mean():.1%}")
+    per_bpc = bitv > bpcv
+    if not np.isnan(bpcv).all():
+        print(f"  filas con bit > bitPerCoeff: {np.nanmean(per_bpc):.1%}  "
+              f"(deberia ser 0% si el barrido respeta el ancho del coeficiente)")
+        gt = bpcv < qv
+        print(f"  filas con bitPerCoeff < logQ: {np.nanmean(gt):.1%}")
+        if np.nanmean(gt) > 0.5:
+            print("  !! En la mayoria de las filas el coeficiente es MAS ANGOSTO")
+            print("     que logQ. Eso pasa cuando logQ es la cadena de modulos")
+            print("     COMPLETA (RNS) y cada limb mide bitPerCoeff. Ahi el modulo")
+            print("     que le importa a un bit flip es el del LIMB, no la cadena:")
+            print("     `bit >= logQ` es inalcanzable por construccion y hay que")
+            print("     medir contra bitPerCoeff.")
+
+    # --- confusion entre stage y pipeline -----------------------------------
+    # Si cada stage aparece con su propio pipeline, entonces --split pipeline
+    # deja stages ENTEROS afuera del train. Eso no es "dificil de aprender":
+    # es imposible. El modelo tiene que responder sobre un regimen que nunca vio.
+    sc, pc = cols.get("stage"), None
+    psig = pipeline_signature(df, cols, sigs)
+    if sc is not None and df[sc].nunique() > 1:
+        print("\n  --- stage x pipeline: estan confundidos? ---")
+        ct = pd.crosstab(df[sc], psig)
+        print(ct.to_string())
+        per_stage = (ct > 0).sum(axis=1)
+        per_pipe = (ct > 0).sum(axis=0)
+        solo = int((per_pipe == 1).sum())
+        print(f"\n  pipelines que aparecen en UNA sola etapa: {solo}/{len(per_pipe)}")
+        if solo == len(per_pipe):
+            print("  !! stage y pipeline estan COMPLETAMENTE confundidos.")
+            print("     Con --split pipeline, dejar un pipeline afuera deja tambien")
+            print("     su etapa afuera. El numero que salga no mide generalizacion")
+            print("     a un pipeline nuevo: mide extrapolacion a un regimen nuevo.")
+            print("     Hace falta el mismo pipeline en varias etapas, o aceptar")
+            print("     que la pregunta es otra y usar --split campaign.")
+        elif solo:
+            print(f"  Ojo: {solo} pipelines viven en una sola etapa; los folds que")
+            print("  los dejen afuera van a estar extrapolando de regimen.")
+
+    # --- que referencia hace constante el umbral, por etapa ------------------
+    if sc is not None:
+        bitv = pd.to_numeric(df[cols["bit"]], errors="coerce").to_numpy()
+        qv = pd.to_numeric(df[cols["logQ"]], errors="coerce").to_numpy()
+        dv = pd.to_numeric(df[cols["logDelta"]], errors="coerce").to_numpy()
+        bv = (pd.to_numeric(df[cols["bitPerCoeff"]], errors="coerce").to_numpy()
+              if cols.get("bitPerCoeff") else np.full(len(df), np.nan))
+        print("\n  --- Umbral de bit por ETAPA, contra cada referencia ---")
+        print(f"  {'stage':<16}{'n':>9}{'bit_min':>9}{'-logQ':>8}{'-2logQ':>9}"
+              f"{'-logDelta':>11}{'-bitPerCoeff':>14}")
+        for v, sub in df.groupby(sc, observed=True).groups.items():
+            i = df.index.get_indexer(sub)
+            if not err[i].any():
+                continue
+            m = bitv[i][err[i]].min()
+            print(f"  {str(v):<16}{len(i):>9,}{m:>9.0f}"
+                  f"{m-np.median(qv[i]):>8.0f}{m-2*np.median(qv[i]):>9.0f}"
+                  f"{m-np.median(dv[i]):>11.0f}"
+                  f"{(m-np.median(bv[i])) if not np.isnan(bv[i]).all() else float('nan'):>14.0f}")
+        print("\n  La columna que quede mas CONSTANTE entre etapas es la")
+        print("  referencia correcta para el eje bit. Si `-logQ` varia mucho pero")
+        print("  `-2logQ` no, el encode efectivamente trabaja con el doble de")
+        print("  modulo y hay que correr con --encode-ref 2q (que ya es el default).")
+
+    # umbral de bit por configuracion
+    print("\n  --- Umbral de bit por configuracion ---")
+    ck = [cols[k] for k in ["logN", "logQ", "logDelta", "logSlots"] if cols.get(k)]
+    if ck:
+        bit = pd.to_numeric(df[cols["bit"]], errors="coerce").to_numpy()
+        rows = []
+        for v, sub in df.groupby(ck, observed=True).groups.items():
+            i = df.index.get_indexer(sub)
+            if not err[i].any():
+                continue
+            b = bit[i][err[i]]
+            d = dict(zip(ck, v if isinstance(v, tuple) else (v,)))
+            rows.append({**d, "n": len(i), "bit_min": int(b.min()),
+                         "menos_logDelta": int(b.min()) - d.get(cols.get("logDelta"), 0),
+                         "menos_logQ": int(b.min()) - d.get(cols.get("logQ"), 0)})
+        if rows:
+            t = pd.DataFrame(rows).sort_values("bit_min")
+            print(t.head(20).to_string(index=False))
+            print("\n  Si `menos_logDelta` es mas constante que `menos_logQ`, el")
+            print("  umbral lo fija el factor de escala y no el modulo, y la regla")
+            print("  tiene que usar bit-logDelta.")
+
+
+
 # ---------------------------------------------------------------------------
 
 def main() -> None:
@@ -1626,12 +2061,28 @@ def main() -> None:
                         choices=["pow2", "ratio", "both"])
         sp.add_argument("--polymul-set", default="wide", choices=["wide", "narrow"],
                         help="wide incluye rot como mult polinomial (key switching)")
+        sp.add_argument("--encode-ref", default="q", choices=["q", "2q", "bpc"],
+                        help="modulo de referencia en las etapas de plaintext. "
+                             "Default q: MEDIDO sobre 179k inyecciones de encode, "
+                             "el umbral cae en logQ (-2 y -10 bits), no en 2logQ "
+                             "(-42 y -70). Usa 2q solo si diagnose lo respalda "
+                             "en TU dataset.")
         sp.add_argument("--limit", type=int, default=None,
                         help="leer solo las primeras N campanas (para probar rapido)")
-        sp.add_argument("--sample-per-campaign", type=int, default=20000,
-                        help="tope de inyecciones por campana (0 = todas). "
-                             "Acota memoria y evita que las configs grandes "
-                             "dominen por tamano.")
+        sp.add_argument("--max-rows", type=int, default=2_000_000,
+                        help="presupuesto GLOBAL de filas, repartido entre las "
+                             "campanas y aplicado mientras carga. 0 = sin tope "
+                             "(cuidado: 97M inyecciones no entran en RAM).")
+        sp.add_argument("--sample-per-campaign", type=int, default=0,
+                        help="tope por campana, si preferis fijarlo a mano. "
+                             "0 = derivarlo de --max-rows.")
+        sp.add_argument("--jobs", type=int, default=None,
+                        help="procesos para leer los csv.gz (default: nucleos-1)")
+        sp.add_argument("--only-stage", nargs="*", default=None,
+                        help="quedarse solo con estas etapas. Con una etapa "
+                             "acaparando el 80% de las filas, entrenar una por "
+                             "etapa suele decir mas que un modelo unico.")
+        sp.add_argument("--exclude-stage", nargs="*", default=None)
 
     sp = sub.add_parser("inspect", help="ver el mapeo y el poder de las features")
     common(sp)
@@ -1640,7 +2091,8 @@ def main() -> None:
     sp = sub.add_parser("train", help="entrenar y evaluar")
     common(sp)
     sp.add_argument("--split", default="pipeline",
-                    choices=["pipeline", "config", "both", "depth", "campaign"])
+                    choices=["pipeline", "config", "both", "depth", "campaign",
+                             "stage", "stage_x_config"])
     sp.add_argument("--folds", type=int, default=5)
     sp.add_argument("--clip", type=float, default=32.0)
     sp.add_argument("--count-clip", type=int, default=3)
@@ -1669,13 +2121,19 @@ def main() -> None:
     sp.add_argument("root", help="directorio results/ que contiene campaigns_start.csv")
     sp.set_defaults(func=layout)
 
+    sp = sub.add_parser("diagnose", help="por que se rompe la regla de fisica")
+    common(sp)
+    sp.set_defaults(func=diagnose)
+
     sp = sub.add_parser("predict", help="aplicar un modelo guardado a un set nuevo")
     sp.add_argument("model", help="el .joblib guardado con train --save")
     sp.add_argument("csv", help="results_test/ o results_test/campaigns_start.csv")
     sp.add_argument("--out", default="predicciones.csv")
     sp.add_argument("--col", action="append", metavar="CANON=REAL")
     sp.add_argument("--limit", type=int, default=None)
-    sp.add_argument("--sample-per-campaign", type=int, default=20000)
+    sp.add_argument("--sample-per-campaign", type=int, default=0)
+    sp.add_argument("--max-rows", type=int, default=2_000_000)
+    sp.add_argument("--jobs", type=int, default=None)
     sp.add_argument("--allow-missing", action="store_true",
                     help="rellenar con 0 las features que falten en vez de cortar "
                          "(peligroso: el modelo predice sobre datos inventados)")

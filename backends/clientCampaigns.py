@@ -1,5 +1,7 @@
 from utilsGen import cartesian_product_rows, write_csv, SEEDS_PRNG, SEEDS_INP, EXTRA_SEEDS, STAGES
 
+seed_init = 3
+seed_list = list(range(seed_init, seed_init+SEEDS_PRNG+1))
 
 def gen_heaan_VS_openfhe_plain_analysis():
     variants = [
@@ -237,8 +239,8 @@ def gen_opClientAdd_analysis():
         {"stage": "encrypt_c1" , "bitPerCoeff": 64},
     ]
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed": seed_list,
+        "seed_input":seed_list,
         "doAdd": [1, 2, 3]
     }
     rows = []
@@ -264,8 +266,8 @@ def gen_opClientRot_analysis():
         {"stage": "encrypt_c1" , "bitPerCoeff": 64},
     ]
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed":seed_list,
+        "seed_input":seed_list,
         "doRot": [1, 2, 3]
     }
     rows = []
@@ -291,8 +293,8 @@ def gen_opClientAddRot_analysis():
         {"stage": "encrypt_c1" , "bitPerCoeff": 64},
     ]
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed":seed_list,
+        "seed_input":seed_list,
     }
     rows = []
     for v in variants:
@@ -316,8 +318,8 @@ def gen_opClientAddRot_analysis():
 
 def gen_opClientMul_analysis():
     sweep = {
-        "seed": list(range(1, SEEDS_PRNG+1)),
-        "seed_input": list(range(1, SEEDS_INP+1)),
+        "seed":seed_list,
+        "seed_input":seed_list,
         "doMul": [1, 2, 3],
         "stage": ["encode", "encrypt_c0", "encrypt_c1"]
     }
