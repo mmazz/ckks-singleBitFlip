@@ -73,9 +73,8 @@ BackendContext* setup_campaign(const CampaignArgs& args)
         h = MAX_H;
     else
         h = std::max<long>(4,N/64);
-
+    NTL::SetSeed(NTL::ZZ(args.seed));
     auto* ctx = new HEAANContext(args.logN, args.logQ, h, args.seed);
-    NTL::SetSeed(ctx->seed);
     std::srand(args.seed);
     if(args.doBoot)
         ctx->scheme.addBootKey(ctx->sk, args.logSlots, logq_boot + 4);

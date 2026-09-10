@@ -1,11 +1,11 @@
 #include "openfhe.h"
 #include "campaign_helper.h"
-#include "campaign_logger.h"
-#include "campaign_registry.h"
 #include "backend_interface.h"
-#include "utils_ckks.h"
+#include "logger.h"
+#include "registry.h"
+#include "metrics.h"
+#include "args.h"
 
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 
 
 
@@ -13,7 +13,6 @@ int main(int argc, char* argv[]) {
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "openfhe";
     args.isExhaustive= true;
-    args.existing_policy = existing_policy;
     std::cout << "Verbose: " <<  args.verbose << std::endl;
     if (args.verbose) {
         args.print();
@@ -61,14 +60,7 @@ int main(int argc, char* argv[]) {
                         std::cout << "Iter args\n";
                         IterationArgs iterArgs(limb, coeff, bit);
                         std::cout << "Iter args end\n";
-                        if(args.existing_policy == ExistingCampaignPolicy::Reuse){
-                            if (logger.contains(iterArgs))
-                            {
-                                std::cout << "Skipping already computed iteration\n";
-                            }
-                        }
 
-                        else{
 
                             std::cout << "Starting iteration\n";
                             IterationResult res = run_iteration(ctx, args, iterArgs);
@@ -78,14 +70,15 @@ int main(int argc, char* argv[]) {
                             logger.log(iterArgs.limb,
                                     iterArgs.coeff,
                                     iterArgs.bit,
+                                    exp_metrics.l2_abs_error,     // ||error||_2 / ||golden||_2
                                     exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
                                     exp_metrics.linf_abs_error,
+                                    exp_metrics.linf_rel_error,
                                     res.detected,
                                     slot_stats
                                 );
 
                             norms.push_back(exp_metrics.l2_rel_error);
-                        }
                     }
                 }
             }

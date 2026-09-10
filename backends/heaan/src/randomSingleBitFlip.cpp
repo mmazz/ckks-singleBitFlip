@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
         std::cout << "\n=== Registring Campaign "<< std::endl;
         CampaignRegistry registry(args);
         uint32_t campaign_id = registry.campaign_id;
-        seed_rng(args.seed, campaign_id);
+        seed_rng(args.seed, args.seed_input);
         std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
         CampaignLogger logger(

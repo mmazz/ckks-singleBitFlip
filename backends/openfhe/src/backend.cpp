@@ -1,7 +1,8 @@
 #include "backend_openfhe.h"
 #include "attack_mode.h"
 #include "constants-defs.h"
-#include "utils_ckks.h"
+#include "metrics.h"
+#include "args.h"
 
 std::vector<double> get_reference_output(const BackendContext* bctx)
 {
@@ -119,7 +120,9 @@ BackendContext* setup_campaign(const CampaignArgs& args)
 
     return ctx;
 }
-
+void destroy_campaign(BackendContext* ctx) {
+    delete ctx;
+}
 
 IterationResult run_iteration(BackendContext* bctx,
               const CampaignArgs& args,

@@ -1,22 +1,5 @@
 cmake_minimum_required(VERSION 3.16.3)
 get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
-
-### To use gcc/g++ on a Macintosh, you must set the Compilers
-### here, not inside the project
-##if(APPLE)
-##       set(CMAKE_C_COMPILER "/usr/local/bin/gcc-7")
-##       set(CMAKE_CXX_COMPILER "/usr/local/bin/g++-7")
-##endif()
-### TODO: for now, we use CLang for Mac
-###
-### In order to create OpenFHE's static libraries you should enable
-### the BUILD_STATIC option. For that, you run "cmake .. -DBUILD_STATIC=ON".
-### After having your link completed you will find static libs
-### with the suffix "_static" in ./build/libs/.
-### Examples: OPENFHEpke_static.a, OPENFHEcore_static.a, etc.
-### After you run "make install" in your build directory, you can build your custom application.
-### If you need your application to be linked statically, then run "cmake .. -DBUILD_STATIC=ON"
-
 project(demo CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -66,10 +49,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 
 add_library(mainlib_common
-    ${PROJECT_ROOT}/src/common/utils_ckks.cpp
-    ${PROJECT_ROOT}/src/common/campaign_helper.cpp
-    ${PROJECT_ROOT}/src/common/campaign_logger.cpp
-    ${PROJECT_ROOT}/src/common/campaign_registry.cpp
+    ${PROJECT_ROOT}/core/args.cpp
+    ${PROJECT_ROOT}/core/metrics.cpp
+    ${PROJECT_ROOT}/core/campaign_helper.cpp
+    ${PROJECT_ROOT}/core/logger.cpp
+    ${PROJECT_ROOT}/core/registry.cpp
 )
 
 
@@ -78,8 +62,9 @@ add_library(backend_openfhe
 )
 
 target_include_directories(backend_openfhe PUBLIC
-    ${PROJECT_ROOT}/src/common
+    ${PROJECT_ROOT}/core
     ${PROJECT_ROOT}/backends/openfhe/src
+    ${PROJECT_ROOT}/third_party
     ${OPENFHE_INCLUDE_DIR}  # donde tengas OpenFHE
 )
 target_link_libraries(backend_openfhe
@@ -89,11 +74,8 @@ target_link_libraries(backend_openfhe
 )
 
 set(EXECUTABLES
-    testPRNG
     randomSingleBitFlip
     exhaustiveSingleBitFlip
-    test_ckks_qi
-    integrityChequer
 )
 foreach(exec_name ${EXECUTABLES})
     add_executable(${exec_name} src/${exec_name}.cpp)

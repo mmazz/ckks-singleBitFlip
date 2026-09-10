@@ -1,10 +1,11 @@
 build/
 img/
 data/
-src/openfhe-PRNG-Control
-src/HEAAN-PRNG-Control
+third_party/openfhe-PRNG-Control
+third_party/HEAAN-PRNG-Control
 __pycache__
 results/
 .cache/
-*.txt
 compile_commands.json
+*.txt
+!CMakeLists.txt
