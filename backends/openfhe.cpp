@@ -49,6 +49,13 @@ void backend_prepare_args(CampaignArgs& args){
     args.library = "openfhe";
 }
 
+<<<<<<< HEAD:backends/openfhe.cpp
+=======
+// TODO: Esto depende de la tecnica, o uso la api de openfhe o aprendo a hacerlo sabendo la tecnica de rescaling
+uint32_t num_limbs(const BackendContext* ctx, const CampaignArgs& args){
+    return args.mult_depth+1;
+}
+>>>>>>> 8e4d1d0a2fccdd4b5f6eec023835a18844c6bf94:backends/openfhe/src/backend.cpp
 
 SecretKeyAttackMode to_openfhe_attack_mode(AttackModeSKA mode)
 {

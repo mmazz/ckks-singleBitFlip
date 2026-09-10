@@ -9,6 +9,9 @@ results/
 compile_commands.json
 *.txt
 !CMakeLists.txt
+<<<<<<< HEAD
 
 .ipynb_checkpoints/
 *.csv
+=======
+>>>>>>> 8e4d1d0a2fccdd4b5f6eec023835a18844c6bf94

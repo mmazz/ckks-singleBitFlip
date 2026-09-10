@@ -67,3 +67,4 @@ static void inject(ZZX& poly, long N, Injector& inj) {
     // changed: i en [0, N) donde NTL::coeff(before, i) != NTL::coeff(poly, i)
     inj.record(flipped, changed);
 }
+

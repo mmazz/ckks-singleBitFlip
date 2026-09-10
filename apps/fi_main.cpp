@@ -131,6 +131,7 @@ int main(int argc, char** argv) {
             p99 = percentile(s.norms, 0.99);
         }
 
+
         registry.register_end({registry.campaign_id, logger.total(), logger.sdc(), mins, p95, p99, timestamp_now()});
         destroy_campaign(ctx);
         return 0;
