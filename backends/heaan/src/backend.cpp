@@ -24,6 +24,7 @@ struct HEAANContext : BackendContext {
     std::vector<std::complex<double>> baseInputComplex;
     std::vector<std::complex<double>> goldenOutputComplex;
     NTL::ZZ seed;
+    bool isComplex = false;
 
     HEAANContext(
         uint32_t logN,
@@ -44,24 +45,27 @@ struct HEAANContext : BackendContext {
 std::vector<double> get_reference_output(const BackendContext* bctx)
 {
     auto& ctx = static_cast<const HEAANContext&>(*bctx);
+    if(ctx.isComplex){
+        const auto& g = ctx.goldenOutputComplex;
+        const size_t n = g.size();
+
+        std::vector<double> out(2 * n);
+
+        for (size_t i = 0; i < n; ++i) {
+            out[i]     = g[i].real();
+            out[i + n] = g[i].imag();
+        }
+    }
+
     return ctx.goldenOutput;
 }
 
-std::vector<double> get_reference_output_complex(const BackendContext* bctx)
-{
-    auto& ctx = static_cast<const HEAANContext&>(*bctx);
-
-    const auto& g = ctx.goldenOutputComplex;
-    const size_t n = g.size();
-
-    std::vector<double> out(2 * n);
-
-    for (size_t i = 0; i < n; ++i) {
-        out[i]     = g[i].real();
-        out[i + n] = g[i].imag();
-    }
-
-    return out;
+void backend_prepare_args(CampaignArgs& args){
+    args.library = "heaan";
+    args.mult_depth = 0;
+}
+uint32_t num_limbs(const BackendContext* ctx, const CampaignArgs& args){
+    return 1;
 }
 
 BackendContext* setup_campaign(const CampaignArgs& args)
@@ -84,6 +88,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     }
     if(args.isComplex>0){
         compute_plain_io(args, ctx->baseInputComplex, ctx->goldenOutputComplex);
+        ctx->isComplex = true;
     } else{
         compute_plain_io(args, ctx->baseInput, ctx->goldenOutput);
     }
@@ -96,6 +101,7 @@ void flipBit(uint32_t amount, ZZX& poly, uint32_t coeff, uint32_t bit) {
         SwitchBit(poly[coeff], b);
     }
 }
+
 IterationResult run_iteration(
     BackendContext* bctx,
     const CampaignArgs& args,
@@ -272,102 +278,5 @@ IterationResult run_iteration(
 
 void destroy_campaign(BackendContext* ctx) {
     delete ctx;
-}
-
-IterationResult run_NN(
-    BackendContext* bctx,
-    const CampaignArgs& args,
-    std::optional<IterationArgs> iterArgs)
-{
-
-
-    // Backend cerrado: cast seguro por contrato
-    auto& ctx = static_cast<HEAANContext&>(*bctx);
-    uint32_t amountBits = args.amountBits;
-
-    Plaintext plain = ctx.scheme.encode(
-        ctx.baseInput.data(),
-        ctx.baseInput.size(),
-        args.logDelta,
-        args.logQ
-    );
-    Plaintext plain_clean;
-    if (iterArgs && args.stage == "encode") {
-        flipBit(amountBits, plain.mx, iterArgs->coeff, iterArgs->bit);
-    }
-
-    Ciphertext c = ctx.scheme.encryptMsg(plain, ctx.seed);
-    Ciphertext c_clean;
-    if(args.doAdd || args.doMul){
-        plain_clean =  ctx.scheme.encode(ctx.baseInput.data(),
-                            ctx.baseInput.size(),
-                            args.logDelta,
-                            args.logQ
-                        );
-        c_clean = ctx.scheme.encryptMsg(plain_clean, ctx.seed);
-    }
-
-    if(args.doPlainMul){
-        plain_clean =  ctx.cc.encode(ctx.baseInput.data(),
-                            ctx.baseInput.size(),
-                            args.logDelta
-                        );
-    }
-
-    if (iterArgs) {
-        if (args.stage == "encrypt_c0") {
-            flipBit(amountBits, c.bx, iterArgs->coeff, iterArgs->bit);
-        } else if (args.stage == "encrypt_c1") {
-            flipBit(amountBits, c.ax, iterArgs->coeff, iterArgs->bit);
-        }
-    }
-
-    if(args.doAdd)
-        c = ctx.scheme.add(c, c_clean);
-
-    for (uint32_t i = 0; i < args.doPlainMul; ++i) {
-        c = ctx.scheme.multByPoly(c, plain_clean.mx, args.logDelta);
-    }
-
-    for (uint32_t i = 0; i < args.doMul; ++i) {
-        c = ctx.scheme.mult(c, c_clean);
-        ctx.scheme.reScaleByAndEqual(c, args.logDelta);
-    }
-
-    if(args.doRot){
-        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
-        c = ctx.scheme.leftRotateFast(c, rotIndex);
-    }
-
-    if (iterArgs) {
-        if ((args.stage == "decrypt_c0") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
-            flipBit(amountBits, c.bx, iterArgs->coeff, iterArgs->bit);
-        } else if ((args.stage == "decrypt_c1") && (args.doAdd >0 || args.doPlainMul>0 || args.doMul>0 || args.doRot>0)){
-            flipBit(amountBits, c.ax, iterArgs->coeff, iterArgs->bit);
-        }
-    }
-
-    Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
-
-    if (iterArgs && args.stage == "decode") {
-        SwitchBit(decrypt_plain.mx[iterArgs->coeff], iterArgs->bit);
-            flipBit(amountBits, decrypt_plain.mx, iterArgs->coeff, iterArgs->bit);
-    }
-
-    complex<double>* decoded = ctx.scheme.decode(decrypt_plain);
-
-    IterationResult res;
-    const size_t slots = 1u << args.logSlots;
-    res.values.resize(slots);
-
-    for (size_t i = 0; i < slots; i++) {
-        res.values[i] = decoded[i].real();
-    }
-
-    delete[] decoded;
-
-    res.detected = false;
-
-    return res;
 }
 

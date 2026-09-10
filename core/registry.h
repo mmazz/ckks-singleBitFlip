@@ -13,7 +13,7 @@ struct CampaignStartRecord {
 
 struct CampaignEndRecord {
     uint32_t campaign_id;
-    uint64_t total_bitflips;
+    uint64_t total_bitFlips;
     uint64_t sdc_count;
     uint64_t duration_seconds;
     double l2_P95;

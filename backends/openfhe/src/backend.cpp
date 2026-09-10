@@ -36,6 +36,14 @@ static void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bi
         ptxt->GetElement<DCRTPoly>().SwitchFormat();
 }
 
+void backend_prepare_args(CampaignArgs& args){
+    args.library = "openfhe";
+}
+
+// TODO: Esto para que?
+uint32_t num_limbs(const BackendContext* ctx, const CampaignArgs& args){
+    return args.mult_depth;
+}
 SecretKeyAttackMode to_openfhe_attack_mode(AttackModeSKA mode)
 {
     using OF = SecretKeyAttackMode;

@@ -84,12 +84,12 @@ std::string CampaignRegistry::csvEscape(const std::string& field)
 std::string CampaignRegistry::makeCampaignKey(const CampaignArgs& args)
 {
     return joinCsvFields(
-        args.library, args.stage, args.logN, args.logQ, args.bitPerCoeff,
+        args.library, args.stage, args.logN, args.logQ, args.bitsPerCoeff,
         args.logDelta, args.logSlots, args.withNTT, args.mult_depth,
         args.doAdd, args.doPlainMul, args.doMul, args.doScalarMul,
         args.doRot, args.doBoot, args.op_step, args.op_depth, args.amountBits, args.seed,
         args.seed_input, args.isComplex, args.logMin, args.logMax,
-        args.isExhaustive, args.dnum, args.scaleTech);
+        args.isExhaustive,args.numSamples, args.dnum, args.scaleTech);
 }
 
 void CampaignRegistry::ensureCsvFilesExist()
@@ -99,7 +99,7 @@ void CampaignRegistry::ensureCsvFilesExist()
         if (!f)
             throw std::runtime_error("CampaignRegistry: no se pudo crear " + start_csv_);
 
-        f << "campaign_id,library,stage,logN,logQ,bitPerCoeff,logDelta,logSlots,"
+        f << "campaign_id,library,stage,logN,logQ,bitsPerCoeff,logDelta,logSlots,"
              "withNTT,mult_depth,doAdd,doPlainMul,doMul,doScalarMul,doRot,doBoot,op_step,"
              "op_depth,amountBits,seed,seed_input,"
              "isComplex,logMin,logMax,isExhaustive,dnum,scaleTech\n";
@@ -110,7 +110,7 @@ void CampaignRegistry::ensureCsvFilesExist()
         if (!f)
             throw std::runtime_error("CampaignRegistry: no se pudo crear " + end_csv_);
 
-        f << "campaign_id,total_bitflips,sdc_count,"
+        f << "campaign_id,total_bitFlips,sdc_count,"
              "duration_seconds,l2_P95,l2_P99,duration\n";
     }
 }
@@ -219,7 +219,7 @@ void CampaignRegistry::register_end(const CampaignEndRecord& r)
     std::ofstream f(end_csv_, std::ios::app);
     if (!f)
         throw std::runtime_error("CampaignRegistry: no se pudo abrir " + end_csv_ + " para escritura");
-    f << joinCsvFields(r.campaign_id, r.total_bitflips, r.sdc_count,
+    f << joinCsvFields(r.campaign_id, r.total_bitFlips, r.sdc_count,
                         r.duration_seconds, r.l2_P95, r.l2_P99, r.duration)
       << "\n";
     if (!f)

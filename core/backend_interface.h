@@ -47,7 +47,7 @@ inline void compute_plain_io(const CampaignArgs& args,
                 std::plus<double>()
                 );
     }
-    std::cout << "doPlainMul "  << args.doPlainMul << std::endl;
+
     for (uint32_t i = 0; i < args.doPlainMul+args.doMul; ++i) {
         std::transform(
             golden.begin(), golden.end(),
@@ -157,8 +157,6 @@ struct BackendContext {
 std::vector<double>
 get_reference_output(const BackendContext* ctx);
 
-std::vector<double>
-get_reference_output_complex(const BackendContext* ctx);
 
 BackendContext* setup_campaign(const CampaignArgs& args);
 
@@ -167,10 +165,9 @@ IterationResult run_iteration(
     const CampaignArgs& args,
     std::optional<IterationArgs> iterArgs = std::nullopt
 );
-IterationResult run_iteration_boot(
-    BackendContext* ctx,
-    const CampaignArgs& args,
-    std::optional<IterationArgs> iterArgs = std::nullopt
-);
 
 void destroy_campaign(BackendContext* ctx);
+
+void backend_prepare_args(CampaignArgs& args);
+
+uint32_t num_limbs(const BackendContext* ctx, const CampaignArgs& args);

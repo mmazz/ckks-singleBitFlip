@@ -40,7 +40,7 @@ OPTIONAL_DEFAULTS = {
     "dnum": 3,
 }
 
-OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive", "scaleTech"}
+OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive", "numSamples", "scaleTech"}
 
 
 def load_and_filter_campaigns(csv_path, filters, extra_optionals=None):
