@@ -65,9 +65,6 @@ void backend_prepare_args(CampaignArgs& args){
     args.library = "heaan";
     args.mult_depth = 0;
 }
-uint32_t num_limbs(const BackendContext* ctx, const CampaignArgs& args){
-    return 1;
-}
 
 BackendContext* setup_campaign(const CampaignArgs& args)
 {

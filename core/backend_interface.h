@@ -4,6 +4,7 @@
 #include "campaign_helper.h"
 #include "args.h"
 #include "metrics.h"
+#include "injector.h"
 #include <algorithm>
 #include <functional>
 #include <cstddef>
@@ -163,11 +164,10 @@ BackendContext* setup_campaign(const CampaignArgs& args);
 IterationResult run_iteration(
     BackendContext* ctx,
     const CampaignArgs& args,
-    std::optional<IterationArgs> iterArgs = std::nullopt
+    Injector& inj
 );
 
 void destroy_campaign(BackendContext* ctx);
 
 void backend_prepare_args(CampaignArgs& args);
 
-uint32_t num_limbs(const BackendContext* ctx, const CampaignArgs& args);

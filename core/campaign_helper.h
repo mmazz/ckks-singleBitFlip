@@ -17,14 +17,6 @@ inline std::string timestamp_now() {
     return ss.str();
 }
 
-struct IterationArgs{
-    uint32_t limb;
-    uint32_t coeff;
-    uint32_t bit;
-    IterationArgs(uint64_t l, uint64_t c, uint64_t b)
-        : limb(l), coeff(c), bit(b) {}
-};
-
 struct CampaignArgs {
     std::string library = "none";
     std::string stage = "none";
