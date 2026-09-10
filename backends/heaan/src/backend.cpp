@@ -55,6 +55,7 @@ std::vector<double> get_reference_output(const BackendContext* bctx)
             out[i]     = g[i].real();
             out[i + n] = g[i].imag();
         }
+        return out;
     }
 
     return ctx.goldenOutput;

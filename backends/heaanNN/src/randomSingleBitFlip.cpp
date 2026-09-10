@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
 
             std::cout << "Total bit flips: " << num_bitFlips*14 << std::endl;
 
-            size_t bits_per_coeff = args.bitPerCoeff;
+            size_t bits_per_coeff = args.bitsPerCoeff;
 
             std::mt19937 rng(args.seed);
 

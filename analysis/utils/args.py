@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument("--title", type=str, default=None)
 
     # -------- opcionales con default --------
-    parser.add_argument("--bitPerCoeff", type=int, default=64)
+    parser.add_argument("--bitsPerCoeff", type=int, default=64)
     parser.add_argument("--mult_depth", type=int, default=0)
     parser.add_argument("--num_limbs", type=int, default=1)
     parser.add_argument("--logMin", type=int, default=0)

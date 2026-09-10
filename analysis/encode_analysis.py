@@ -30,7 +30,7 @@ def main():
 
     filters_openfhe = filters_heaan.copy()
     filters_openfhe["library"] = ("str", "openfhe")
-    filters_openfhe["bitPerCoeff"] = ("int", 64)
+    filters_openfhe["bitsPerCoeff"] = ("int", 64)
 
     ########################## DATA ################################
     selected_heaan   = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters_heaan)

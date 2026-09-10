@@ -56,7 +56,7 @@ def main():
         filters["logSlots"]   =  ("int", BASELINE_LOGSLOTS)
         filters["logQ"]       =  ("int", BASELINE_LOGQ)
         filters["logDelta"]   =  ("int", BASELINE_LOGDELTA)
-        filters["bitPerCoeff"]= ("int", BIT_PER_COEFF)
+        filters["bitsPerCoeff"]= ("int", BIT_PER_COEFF)
         filters["logMin"]= ("int", logMin)
         filters["logMax"]= ("int", LOGMAX_VALUES[logMin])
 

@@ -102,7 +102,7 @@ void CampaignRegistry::ensureCsvFilesExist()
         f << "campaign_id,library,stage,logN,logQ,bitsPerCoeff,logDelta,logSlots,"
              "withNTT,mult_depth,doAdd,doPlainMul,doMul,doScalarMul,doRot,doBoot,op_step,"
              "op_depth,amountBits,seed,seed_input,"
-             "isComplex,logMin,logMax,isExhaustive,dnum,scaleTech\n";
+             "isComplex,logMin,logMax,isExhaustive,numSamples,dnum,scaleTech\n";
     }
 
     if (!fs::exists(end_csv_)) {

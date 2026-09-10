@@ -42,9 +42,9 @@ def main():
 
     ########################## STATS ###############################
     c0 = data_c0.copy()
-    c0["bit"] = c0["coeff"] * args.bitPerCoeff + c0["bit"]
+    c0["bit"] = c0["coeff"] * args.bitsPerCoeff + c0["bit"]
     c1 = data_c1.copy()
-    c1["bit"] = c1["coeff"] * args.bitPerCoeff + c1["bit"]
+    c1["bit"] = c1["coeff"] * args.bitsPerCoeff + c1["bit"]
 
 
     ########################## PLOT ################################

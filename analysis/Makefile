@@ -20,7 +20,7 @@ ANALYSIS_TARGETS_RNS := \
 	add_rot_analysis_RNS \
 	rot_analysis_RNS
 
-TEST_PARAMS = --logN 6 --logQ 60 --bitPerCoeff 64 --logDelta 40 --stage encrypt_c0 --doAdd 1 --logSlots 4
+TEST_PARAMS = --logN 6 --logQ 60 --bitsPerCoeff 64 --logDelta 40 --stage encrypt_c0 --doAdd 1 --logSlots 4
 .PHONY: $(ANALYSIS_TARGETS) $(ANALYSIS_TARGETS_RNS) all_analysis
 
 all_analysis: $(ANALYSIS_TARGETS)
@@ -32,105 +32,105 @@ test_scaleTech:
 	python3 simple_test.py --library openfhe $(TEST_PARAMS) --scaleTech FLEXIBLEAUTO --mult_depth 2
 
 ASPLOS:
-	python asplos_NN_Plotter.py --library heaanNN --stage cheby_tanh3  --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title cheby1
-	python asplos_NN_Plotter.py --library heaanNN --stage cheby_tanh3  --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title cheby2
-	python asplos_NN_Plotter.py --library heaanNN --stage hidden_layer --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title hidden1
-	python asplos_NN_Plotter.py --library heaanNN --stage hidden_layer --logN 12 --logQ 220 --logDelta 30 --bitPerCoeff 250 --logSlots 10 --title hidden2
+	python asplos_NN_Plotter.py --library heaanNN --stage cheby_tanh3  --logN 12 --logQ 220 --logDelta 30 --bitsPerCoeff 250 --logSlots 10 --title cheby1
+	python asplos_NN_Plotter.py --library heaanNN --stage cheby_tanh3  --logN 12 --logQ 220 --logDelta 30 --bitsPerCoeff 250 --logSlots 10 --title cheby2
+	python asplos_NN_Plotter.py --library heaanNN --stage hidden_layer --logN 12 --logQ 220 --logDelta 30 --bitsPerCoeff 250 --logSlots 10 --title hidden1
+	python asplos_NN_Plotter.py --library heaanNN --stage hidden_layer --logN 12 --logQ 220 --logDelta 30 --bitsPerCoeff 250 --logSlots 10 --title hidden2
 
 ASPLOS_MUL:
-	python asplos_Plotter.py --library heaan --stage mul_inside   --logN 6 --logQ 120 --logDelta 40 --bitPerCoeff 144 --logSlots 4 --doMul 1 --op_step 1 --title mul1_1
-	python asplos_Plotter.py --library heaan --stage mul_inside   --logN 6 --logQ 120 --logDelta 40 --bitPerCoeff 144 --logSlots 4 --doMul 1 --op_step 1 --title mul2_1
-	python asplos_Plotter.py --library heaan --stage mul_inside   --logN 6 --logQ 120 --logDelta 40 --bitPerCoeff 144 --logSlots 4 --doMul 2 --op_step 1 --title mul1_2
-	python asplos_Plotter.py --library heaan --stage mul_inside   --logN 6 --logQ 120 --logDelta 40 --bitPerCoeff 144 --logSlots 4 --doMul 2 --op_step 1 --title mul2_2
+	python asplos_Plotter.py --library heaan --stage mul_inside   --logN 6 --logQ 120 --logDelta 40 --bitsPerCoeff 144 --logSlots 4 --doMul 1 --op_step 1 --title mul1_1
+	python asplos_Plotter.py --library heaan --stage mul_inside   --logN 6 --logQ 120 --logDelta 40 --bitsPerCoeff 144 --logSlots 4 --doMul 1 --op_step 1 --title mul2_1
+	python asplos_Plotter.py --library heaan --stage mul_inside   --logN 6 --logQ 120 --logDelta 40 --bitsPerCoeff 144 --logSlots 4 --doMul 2 --op_step 1 --title mul1_2
+	python asplos_Plotter.py --library heaan --stage mul_inside   --logN 6 --logQ 120 --logDelta 40 --bitsPerCoeff 144 --logSlots 4 --doMul 2 --op_step 1 --title mul2_2
 
 seeds_analysis:
-	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0
+	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitsPerCoeff 64  --stage encrypt_c0
 
 seeds_analysis_mul:
-	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0 --doMul 2
+	python3 seeds_analysis.py    --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitsPerCoeff 64  --stage encrypt_c0 --doMul 2
 
 encode_analysis:
-	python3 encode_analysis.py   --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 128 --stage encode   --withNTT 0
-	#python3 encode_analysis.py   --library $(LIBRARY) --logN 3  --logSlots 2  --logQ 60  --logDelta 40 --bitPerCoeff 130 --stage encode   --withNTT 0
+	python3 encode_analysis.py   --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitsPerCoeff 128 --stage encode   --withNTT 0
+	#python3 encode_analysis.py   --library $(LIBRARY) --logN 3  --logSlots 2  --logQ 60  --logDelta 40 --bitsPerCoeff 130 --stage encode   --withNTT 0
 
 encrypt_analysis:
-	python3 encrypt_analysis.py  --library $(LIBRARY) --logN 2  --logSlots 1  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0  --withNTT 0
+	python3 encrypt_analysis.py  --library $(LIBRARY) --logN 2  --logSlots 1  --logQ 60  --logDelta 40 --bitsPerCoeff 64  --stage encrypt_c0  --withNTT 0
 
 logN_analysis:
-	python3 logN_analysis.py     --library $(LIBRARY) --logN 16 --logSlots 15 --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0
+	python3 logN_analysis.py     --library $(LIBRARY) --logN 16 --logSlots 15 --logQ 60  --logDelta 40 --bitsPerCoeff 64  --stage encrypt_c0
 
 logQ_analysis:
-	python3 logQ_analysis.py     --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 50 --bitPerCoeff 64  --stage encrypt_c0
+	python3 logQ_analysis.py     --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 50 --bitsPerCoeff 64  --stage encrypt_c0
 
 logDelta_analysis:
-	python3 logDelta_analysis.py --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 50 --bitPerCoeff 64  --stage encrypt_c0
+	python3 logDelta_analysis.py --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 50 --bitsPerCoeff 64  --stage encrypt_c0
 
 gap_analysis:
-	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c0 --title gap_c0
-	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage encrypt_c1 --title gap_c1
-	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitPerCoeff 64  --stage decode --title gap_dec
+	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitsPerCoeff 64  --stage encrypt_c0 --title gap_c0
+	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitsPerCoeff 64  --stage encrypt_c1 --title gap_c1
+	python3 gap_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 5  --logQ 60  --logDelta 40 --bitsPerCoeff 64  --stage decode --title gap_dec
 
 mul_analysis:
-	python3 mul_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 120 --logDelta 30 --bitPerCoeff 150 --stage encrypt_c0 --doMul 3 --mult_depth 0 --title mul_c0 --isComplex $(ISCOMPLEX)
-	python3 mul_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 120 --logDelta 30 --bitPerCoeff 150 --stage encrypt_c1 --doMul 3 --mult_depth 0 --title mul_c1 --isComplex $(ISCOMPLEX)
+	python3 mul_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 120 --logDelta 30 --bitsPerCoeff 150 --stage encrypt_c0 --doMul 3 --mult_depth 0 --title mul_c0 --isComplex $(ISCOMPLEX)
+	python3 mul_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 120 --logDelta 30 --bitsPerCoeff 150 --stage encrypt_c1 --doMul 3 --mult_depth 0 --title mul_c1 --isComplex $(ISCOMPLEX)
 
 mul_analysis_RNS:
-	python3 mul_analysis.py      --library openfhe --logN 6  --logSlots 4  --logQ 60 --logDelta 50 --bitPerCoeff 64 --stage encrypt_c0 --doMul 3 --mult_depth 3 --title mul_RNS_c0
+	python3 mul_analysis.py      --library openfhe --logN 6  --logSlots 4  --logQ 60 --logDelta 50 --bitsPerCoeff 64 --stage encrypt_c0 --doMul 3 --mult_depth 3 --title mul_RNS_c0
 
 add_rot_analysis:
-	python3 add_rot_analysis.py  --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 2 --doAdd 3 --title add_rot_c0
-	python3 add_rot_analysis.py  --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c1 --doRot 2 --doAdd 3 --title add_rot_c1
+	python3 add_rot_analysis.py  --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitsPerCoeff 64  --stage encrypt_c0 --doRot 2 --doAdd 3 --title add_rot_c0
+	python3 add_rot_analysis.py  --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitsPerCoeff 64  --stage encrypt_c1 --doRot 2 --doAdd 3 --title add_rot_c1
 
 add_rot_analysis_RNS:
-	python3 add_rot_analysis.py  --library openfhe --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 2 --doAdd 3 --mult_depth 3 --title add_rot_RNS_c0
-	python3 add_rot_analysis.py  --library openfhe --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c1 --doRot 2 --doAdd 3 --mult_depth 3 --title add_rot_RNS_c1
+	python3 add_rot_analysis.py  --library openfhe --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitsPerCoeff 64  --stage encrypt_c0 --doRot 2 --doAdd 3 --mult_depth 3 --title add_rot_RNS_c0
+	python3 add_rot_analysis.py  --library openfhe --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitsPerCoeff 64  --stage encrypt_c1 --doRot 2 --doAdd 3 --mult_depth 3 --title add_rot_RNS_c1
 
 add_analysis:
-	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doAdd 1 --title add
+	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitsPerCoeff 64  --stage encrypt_c0 --doAdd 1 --title add
 
 add_analysis_RNS:
-	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doAdd 1 --mult_depth 3 --title add_RNS
+	python3 add_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitsPerCoeff 64  --stage encrypt_c0 --doAdd 1 --mult_depth 3 --title add_RNS
 
 rot_analysis:
-	python3 rot_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 0
+	python3 rot_analysis.py      --library $(LIBRARY) --logN 6  --logSlots 4  --logQ 60  --logDelta 30 --bitsPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 0
 
 rot_analysis_RNS:
-	python3 rot_analysis.py      --library openfhe --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 3 --title rot_RNS
+	python3 rot_analysis.py      --library openfhe --logN 6  --logSlots 3  --logQ 60  --logDelta 30 --bitsPerCoeff 64  --stage encrypt_c0 --doRot 3 --mult_depth 3 --title rot_RNS
 
 multibit:
-	python3 multibit.py --library heaan --logN 10  --logQ 60 --bitPerCoeff 64 --logDelta 30 --stage encrypt_c0 --logSlots 9  --withNTT 0
+	python3 multibit.py --library heaan --logN 10  --logQ 60 --bitsPerCoeff 64 --logDelta 30 --stage encrypt_c0 --logSlots 9  --withNTT 0
 
 heaanNN:
-	python3 NN.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0
+	python3 NN.py --library heaanNN --logN 12  --logQ 220  --bitsPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0
 
 NN:
-	python3 NN_byBits.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0
+	python3 NN_byBits.py --library heaanNN --logN 12  --logQ 220  --bitsPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0
 
 heaanNNop:
-	python3 heaanNN.py --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0 --doMul 1
+	python3 heaanNN.py --library heaanNN --logN 12  --logQ 220  --bitsPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10  --withNTT 0 --doMul 1
 
 openfheNN_enco:
-	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encode     --logSlots 10  --withNTT 0 --mult_depth 5
-	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encode     --logSlots 10  --withNTT 1 --mult_depth 5
+	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitsPerCoeff 64  --logDelta 50 --stage encode     --logSlots 10  --withNTT 0 --mult_depth 5
+	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitsPerCoeff 64  --logDelta 50 --stage encode     --logSlots 10  --withNTT 1 --mult_depth 5
 
 openfheNN_encrC0:
-	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encrypt_c0 --logSlots 10  --withNTT 0 --mult_depth 5
-	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encrypt_c0 --logSlots 10  --withNTT 1 --mult_depth 5
+	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitsPerCoeff 64  --logDelta 50 --stage encrypt_c0 --logSlots 10  --withNTT 0 --mult_depth 5
+	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitsPerCoeff 64  --logDelta 50 --stage encrypt_c0 --logSlots 10  --withNTT 1 --mult_depth 5
 
 openfheNN_encrC1:
-	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encrypt_c1 --logSlots 10  --withNTT 0 --mult_depth 5
-	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage encrypt_c1 --logSlots 10  --withNTT 1 --mult_depth 5
+	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitsPerCoeff 64  --logDelta 50 --stage encrypt_c1 --logSlots 10  --withNTT 0 --mult_depth 5
+	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitsPerCoeff 64  --logDelta 50 --stage encrypt_c1 --logSlots 10  --withNTT 1 --mult_depth 5
 
 openfheNN_deco:
-	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage decode     --logSlots 10  --withNTT 0 --mult_depth 5
-	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitPerCoeff 64  --logDelta 50 --stage decode     --logSlots 10  --withNTT 1 --mult_depth 5
+	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitsPerCoeff 64  --logDelta 50 --stage decode     --logSlots 10  --withNTT 0 --mult_depth 5
+	python3 NN_gap.py --library openfheNN --logN 12  --logQ 60  --bitsPerCoeff 64  --logDelta 50 --stage decode     --logSlots 10  --withNTT 1 --mult_depth 5
 
-HEAAN_NN_PARAMS = --library heaanNN --logN 12  --logQ 220  --bitPerCoeff 250  --logDelta 30 --logSlots 10  --withNTT 0 --mult_depth 0
+HEAAN_NN_PARAMS = --library heaanNN --logN 12  --logQ 220  --bitsPerCoeff 250  --logDelta 30 --logSlots 10  --withNTT 0 --mult_depth 0
 
 heaanNN_TACO: heaanNN_enco heaanNN_encrC0 heaanNN_encrC1 heaanNN_decC0 heaanNN_decC1 heaanNN_deco
 
 heaanNN_enco:
-	python3 NN_gap.py $(HEAAN_NN_PARAMS) --bitPerCoeff 500 --stage encode     --title encode-NN-heaan
+	python3 NN_gap.py $(HEAAN_NN_PARAMS) --bitsPerCoeff 500 --stage encode     --title encode-NN-heaan
 
 heaanNN_encrC0:
 	python3 NN_gap.py $(HEAAN_NN_PARAMS) --stage encrypt_c0 --title encryptC0-NN-heaan

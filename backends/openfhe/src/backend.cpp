@@ -40,10 +40,11 @@ void backend_prepare_args(CampaignArgs& args){
     args.library = "openfhe";
 }
 
-// TODO: Esto para que?
+// TODO: Esto depende de la tecnica, o uso la api de openfhe o aprendo a hacerlo sabendo la tecnica de rescaling
 uint32_t num_limbs(const BackendContext* ctx, const CampaignArgs& args){
-    return args.mult_depth;
+    return args.mult_depth+1;
 }
+
 SecretKeyAttackMode to_openfhe_attack_mode(AttackModeSKA mode)
 {
     using OF = SecretKeyAttackMode;

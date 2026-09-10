@@ -36,7 +36,7 @@ OPTIONAL_DEFAULTS = {
     "op_depth": 0,
     "doBoot": 0,
     "isComplex": 0,
-    "bitPerCoeff": 64,
+    "bitsPerCoeff": 64,
     "dnum": 3,
 }
 

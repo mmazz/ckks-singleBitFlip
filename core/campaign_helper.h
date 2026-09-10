@@ -56,7 +56,7 @@ struct CampaignArgs {
     uint32_t dnum = 3;
     uint32_t amountBits = 1;
     std::string scaleTech = "FIXEDMANUAL";
-    std::string results_dir = "../../results";
+    std::string results_dir = "results";
 
     uint32_t numSamples = 50;
     bool saveVectors = false;

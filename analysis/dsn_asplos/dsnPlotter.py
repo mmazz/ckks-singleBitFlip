@@ -171,9 +171,9 @@ def main():
     for i, (stage, ax) in enumerate(zip(stages, axes)):  # FIX: era (df, ax) pero zip era sobre stages
         filters = build_filters(args)
         filters["stage"] = ("str", stage)
-        print(filters["bitPerCoeff"])
+        print(filters["bitsPerCoeff"])
         if(stage=="encode"):
-            filters["bitPerCoeff"] = ("int", 2*filters["bitPerCoeff"][1])
+            filters["bitsPerCoeff"] = ("int", 2*filters["bitsPerCoeff"][1])
         selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
         data = load_campaign_data(selected, config.DATA_DIR)
         data['mrep'] = data['rel_error']*100
