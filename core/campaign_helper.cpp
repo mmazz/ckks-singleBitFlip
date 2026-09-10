@@ -1,5 +1,5 @@
 #include "campaign_helper.h"
-#include "campaign_registry.h"
+#include "registry.h"
 
 #include <getopt.h>
 #include <cstdlib>

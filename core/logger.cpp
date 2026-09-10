@@ -1,17 +1,17 @@
-#include "campaign_logger.h"
+#include "logger.h"
 
 
 namespace fs = std::filesystem;
 
 std::string BitflipResult::header() {
-    return "limb,coeff,bit,l2_norm,rel_error,is_sdc,correct,degraded,corrupted,failed,hidden_layer,reduceSum_layer";
+    return "limb,coeff,bit,l2_abs,l2_rel,linf_abs,linf_rel,detected,correct,degraded,corrupted,failed,hidden_layer,reduceSum_layer";
 }
 
 std::string BitflipResult::row() const {
     std::ostringstream ss;
     ss << limb << "," << coeff << "," << bit << ","
-       << norm2 << ","
-       << rel_error << "," << (is_sdc ? 1 : 0) << ","
+       << l2_abs << ","<< l2_rel << ","
+       << linf_abs << "," << linf_rel << "," << (detected? 1 : 0) << ","
        << stats.correct << "," << stats.degraded << ","
        << stats.corrupted << "," << stats.failed<< ","
        << hidden_layer << "," << reduceSum_layer;
@@ -31,14 +31,12 @@ CampaignLogger::CampaignLogger(uint32_t id,
          << std::setfill('0') << id << ".csv";
     csv_path_ = path.str();
 
-    const bool write_header =
-        !fs::exists(csv_path_) || fs::file_size(csv_path_) == 0;
+    file_.open(csv_path_, std::ios::out | std::ios::trunc);
+    if (!file_.is_open())
+        throw std::runtime_error("CampaignLogger: no se pudo abrir " + csv_path_);
 
-    file_.open(csv_path_, std::ios::out | std::ios::app);
+    file_ << BitflipResult::header() << "\n";
 
-    if (write_header) {
-        file_ << BitflipResult::header() << "\n";
-    }
 }
 
 
@@ -52,23 +50,22 @@ void CampaignLogger::log(const BitflipResult& r) {
     std::lock_guard<std::mutex> g(mtx_);
     buffer_.push_back(r.row());
     total_++;
-    if (r.is_sdc) sdc_++;
+    if (r.detected) sdc_++;
 
     if (buffer_.size() >= flush_threshold_)
         flush();
 }
 
 void CampaignLogger::log(uint32_t limb, uint32_t coeff, uint32_t bit,
-          double norm2, double rel_error, bool is_sdc, SlotErrorStats stats,
+          double l2_abs, double l2_rel, double linf_abs, double linf_rel, bool detected, SlotErrorStats stats,
           uint32_t hidden_layer, uint32_t reduceSum_layer)
     {
         BitflipResult r{
             limb,
             coeff,
             bit,
-            norm2,
-            rel_error,
-            is_sdc,
+            l2_abs, l2_rel,
+            linf_abs, linf_rel, detected,
             stats,
             hidden_layer,
             reduceSum_layer
@@ -84,6 +81,8 @@ void CampaignLogger::flush() {
 }
 
 void CampaignLogger::close() {
+    if (closed_) return;
+    closed_ = true;
     flush();
     file_.close();
     compress_and_cleanup();
@@ -104,44 +103,6 @@ void CampaignLogger::compress_and_cleanup() {
     std::cout << "[INFO] Compressed campaign data → " << gz_path << std::endl;
 }
 
-bool CampaignLogger::contains(const IterationArgs& args) const
-{
-    std::ifstream file(csv_path_);
-
-    if (!file.is_open())
-        return false;
-
-    std::string line;
-
-    // header
-    std::getline(file, line);
-
-    while (std::getline(file, line))
-    {
-        std::stringstream ss(line);
-        std::string field;
-
-        std::getline(ss, field, ',');
-        uint32_t limb = std::stoul(field);
-
-        std::getline(ss, field, ',');
-        uint32_t coeff = std::stoul(field);
-
-        std::getline(ss, field, ',');
-        uint32_t bit = std::stoul(field);
-
-        if (limb == args.limb &&
-            coeff == args.coeff &&
-            bit == args.bit)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
 VectorLogger::VectorLogger(uint32_t id,
                            const std::string& dir,
                            uint32_t logSlot,
@@ -156,24 +117,16 @@ VectorLogger::VectorLogger(uint32_t id,
     path << dir << "/campaign_" << std::setw(6)
          << std::setfill('0') << id << ".csv";
     csv_path_ = path.str();
- 
-    const bool fresh =
-        !fs::exists(csv_path_) || fs::file_size(csv_path_) == 0;
- 
-    file_.open(csv_path_, std::ios::out | std::ios::app);
+
+    file_.open(csv_path_, std::ios::out | std::ios::trunc);
     if (!file_.is_open())
         throw std::runtime_error("VectorLogger: no se pudo abrir " + csv_path_);
  
     // 17 digitos significativos => el double se recupera exacto al leerlo.
     file_ << std::defaultfloat
           << std::setprecision(std::numeric_limits<double>::max_digits10);
- 
-    if (fresh) {
-        file_ << header() << "\n";
-    } else {
-        // Estamos reanudando una campania: la fila de entrada ya esta escrita.
-        input_written_ = true;
-    }
+    file_ << header() << "\n";
+
 }
  
 VectorLogger::~VectorLogger() {
@@ -276,37 +229,5 @@ void VectorLogger::compress_and_cleanup() {
     }
  
     std::cout << "[INFO] Compressed campaign vectors -> " << gz_path << std::endl;
-}
- 
-bool VectorLogger::contains(const IterationArgs& args) const
-{
-    std::lock_guard<std::mutex> g(mtx_);
- 
-    std::ifstream f(csv_path_);
-    if (!f.is_open())
-        return false;
- 
-    constexpr auto kMax = std::numeric_limits<std::streamsize>::max();
- 
-    f.ignore(kMax, '\n');   // header
- 
-    long long limb, coeff, bit;
-    char sep;
-    // Solo se parsean las 3 primeras columnas; el resto de la fila se saltea
-    // sin materializarla (son cientos de KB por fila).
-    while (f >> limb >> sep >> coeff >> sep >> bit) {
-        f.ignore(kMax, '\n');
- 
-        if (limb < 0) continue;   // fila del vector de entrada
- 
-        if (static_cast<uint32_t>(limb)  == args.limb &&
-            static_cast<uint32_t>(coeff) == args.coeff &&
-            static_cast<uint32_t>(bit)   == args.bit)
-        {
-            return true;
-        }
-    }
- 
-    return false;
 }
 

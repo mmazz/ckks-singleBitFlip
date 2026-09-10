@@ -4,12 +4,8 @@
 
 set -e
 
-PROJECT_ROOT=$(pwd)
 
 echo "=== Setting up project structure ==="
-
-
-cd src
 
 # Clonar HEAAN_PRNG si no existe
 if [ ! -d "HEAAN-PRNG-Control" ]; then
@@ -50,17 +46,5 @@ else
     echo "OpenFHE library already built (libOPENFHEpke.so.1 found)"
 fi
 
-cd "$PROJECT_ROOT"
-
-if [ ! -f "campaigns/openfhe/build/bin/singleBitFlip" ]; then
-    echo "Building OpenFHE campaigns..."
-    cd backends/openfhe
-    ./build.sh
-    cd -
-else
-    echo "OpenFHE campaigns already built (singleBitFlip found)"
-fi
-
 echo ""
 echo "=== Setup completed successfully ==="
-echo "Project structure created in: $PROJECT_ROOT/src"

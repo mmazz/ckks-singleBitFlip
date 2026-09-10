@@ -1,17 +1,15 @@
 #include "campaign_helper.h"
-#include "campaign_logger.h"
-#include "campaign_registry.h"
+#include "logger.h"
+#include "registry.h"
 #include "backend_interface.h"
-#include "utils_ckks.h"
+#include "args.h"
+#include "metrics.h"
 
-
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 size_t NUM_BITFLIPS = 50;
 
 int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
-    args.existing_policy = existing_policy;
     args.library = "heaan";
     args.isExhaustive= false;
     args.mult_depth = 0;
@@ -19,7 +17,6 @@ int main(int argc, char* argv[]) {
     if (args.verbose) {
         args.print();
     }
-
 
     BackendContext* ctx = setup_campaign(args);
 
@@ -48,6 +45,7 @@ int main(int argc, char* argv[]) {
         std::cout << "\n=== Registring Campaign "<< std::endl;
         CampaignRegistry registry(args);
         uint32_t campaign_id = registry.campaign_id;
+        seed_rng(args.seed, campaign_id);
         std::cout << "\n=== Starting Campaign " << campaign_id << " ===" << std::endl;
 
         CampaignLogger logger(
@@ -89,13 +87,6 @@ int main(int argc, char* argv[]) {
                 uint32_t bit = bits_to_flip[bitIndex];
                 IterationArgs iterArgs(0, coeff, bit);
 
-                if(args.existing_policy == ExistingCampaignPolicy::Reuse){
-                    if (logger.contains(iterArgs))
-                    {
-                        std::cout << "Skipping already computed iteration\n";
-                    }
-                }
-                else{
                     IterationResult res = run_iteration(ctx, args, iterArgs);
 
                     CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
@@ -104,14 +95,16 @@ int main(int argc, char* argv[]) {
                     logger.log(iterArgs.limb,
                             iterArgs.coeff,
                             iterArgs.bit,
+                            exp_metrics.l2_abs_error,     // ||error||_2 / ||golden||_2
                             exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
+                            exp_metrics.linf_abs_error,
                             exp_metrics.linf_rel_error,
                             res.detected,
                             slot_stats
                         );
+  
                     vlogger.log(iterArgs.limb, iterArgs.coeff, iterArgs.bit, goldenCKKS_output.values, res.values);
                     norms.push_back(exp_metrics.l2_rel_error);
-                }
             }
 
         }
@@ -122,7 +115,7 @@ int main(int argc, char* argv[]) {
         std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
         auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
         uint64_t mins = minutes.count();
-
+        logger.close();
         registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
     } else {
         printBaselineComparison(

@@ -1,6 +1,6 @@
 PROJECT_ROOT := $(shell cd ../.. && pwd)
-HEAAN_SRC    := $(PROJECT_ROOT)/src/HEAAN-PRNG-Control
-COMMON_SRC   := $(PROJECT_ROOT)/src/common
+HEAAN_SRC    := $(PROJECT_ROOT)/third_party/HEAAN-PRNG-Control
+COMMON_SRC   := $(PROJECT_ROOT)/core
 
 SRC_DIR   := src
 BUILD_DIR := build
@@ -17,7 +17,7 @@ LIBS    := -lHEAAN -lntl -lgmp -lm
 
 # ---------- Programs ----------
 
-PROGRAMS := exhaustiveSingleBitFlip randomSingleBitFlip bootInjection
+PROGRAMS := exhaustiveSingleBitFlip randomSingleBitFlip 
 
 COMMON_SOURCES := $(wildcard $(COMMON_SRC)/*.cpp)
 COMMON_OBJECTS := $(patsubst $(COMMON_SRC)/%.cpp,$(OBJ_DIR)/common_%.o,$(COMMON_SOURCES))

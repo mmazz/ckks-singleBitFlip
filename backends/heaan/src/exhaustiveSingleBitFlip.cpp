@@ -1,17 +1,16 @@
 #include "campaign_helper.h"
-#include "campaign_logger.h"
-#include "campaign_registry.h"
+#include "logger.h"
+#include "registry.h"
 #include "backend_interface.h"
-#include "utils_ckks.h"
+#include "args.h"
+#include "metrics.h"
 
-ExistingCampaignPolicy existing_policy = ExistingCampaignPolicy::ReuseStrict;
 
 int main(int argc, char* argv[]) {
     std::cout << "\n=== Starting Campaign "<< std::endl;
     CampaignArgs args = parse_arguments(argc, argv);
     args.library = "heaan";
     args.isExhaustive = true;
-    args.existing_policy = existing_policy;
     args.mult_depth = 0;
     if (args.verbose) {
         args.print();
@@ -67,13 +66,6 @@ int main(int argc, char* argv[]) {
                 for(size_t bit=0; bit<bits_per_coeff; bit++)
                 {
                     IterationArgs iterArgs(0, coeff, bit);
-                    if(args.existing_policy == ExistingCampaignPolicy::Reuse){
-                        if (logger.contains(iterArgs))
-                        {
-                            std::cout << "Skipping already computed iteration\n";
-                        }
-                    }
-                    else{
                         IterationResult res = run_iteration(ctx, args, iterArgs);
 
                         CKKSAccuracyMetrics  exp_metrics = EvaluateCKKSAccuracy(goldenCKKS_output.values, res.values);
@@ -82,14 +74,15 @@ int main(int argc, char* argv[]) {
                         logger.log(iterArgs.limb,
                                 iterArgs.coeff,
                                 iterArgs.bit,
+                                exp_metrics.l2_abs_error,     // ||error||_2 / ||golden||_2
                                 exp_metrics.l2_rel_error,     // ||error||_2 / ||golden||_2
+                                exp_metrics.linf_abs_error,
                                 exp_metrics.linf_rel_error,
                                 res.detected,
                                 slot_stats
                             );
 
                         norms.push_back(exp_metrics.l2_rel_error);
-                    }
                 }
             }
             std::sort(norms.begin(), norms.end());
@@ -99,7 +92,7 @@ int main(int argc, char* argv[]) {
             std::chrono::seconds duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
             auto minutes = std::chrono::duration_cast<std::chrono::minutes>(duration);
             uint64_t mins = minutes.count();
-
+            logger.close();
             registry.register_end({campaign_id, logger.total(), logger.sdc(), mins, l2_P95, l2_P99, timestamp_now()});
         }
         catch (const std::runtime_error& e) {

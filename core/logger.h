@@ -11,16 +11,19 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
-#include "utils_ckks.h"
+#include "args.h"
+#include "metrics.h"
  
 
 struct BitflipResult {
     uint32_t limb;
     uint32_t coeff;
     uint32_t bit;
-    double norm2;
-    double rel_error;
-    bool is_sdc;
+    double l2_abs;
+    double l2_rel;
+    double linf_abs;
+    double linf_rel;
+    bool detected;
     SlotErrorStats stats;
     uint32_t hidden_layer;
     uint32_t reduceSum_layer;
@@ -37,7 +40,7 @@ public:
 
     void log(const BitflipResult& r);
     void log(uint32_t limb, uint32_t coeff, uint32_t bit,
-            double norm2, double rel_error, bool is_sdc, SlotErrorStats stats,
+            double l2_abs, double l2_rel, double linf_abs, double linf_rel, bool is_sdc, SlotErrorStats stats,
             uint32_t hidden_layer = 0,
             uint32_t reduceSum_layer = 0);
     void compress_and_cleanup();
@@ -47,7 +50,6 @@ public:
     uint64_t total() const { return total_; }
     uint64_t sdc() const { return sdc_; }
     ~CampaignLogger();
-    bool contains(const IterationArgs& args) const;
 
 private:
     std::ofstream file_;
@@ -57,6 +59,7 @@ private:
     size_t flush_threshold_;
     uint64_t total_ = 0;
     uint64_t sdc_ = 0;
+    bool closed_ = false;
 };
 class VectorLogger {
 public:
@@ -90,7 +93,6 @@ public:
     void close();
     void compress_and_cleanup();
  
-    bool contains(const IterationArgs& args) const;
  
     size_t   slots()    const { return n_slots_; }      // 1 << logSlot
     uint32_t log_slot() const { return log_slot_; }

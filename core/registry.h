@@ -24,13 +24,12 @@ struct CampaignEndRecord {
 class CampaignRegistry {
 public:
     explicit CampaignRegistry(const CampaignArgs& args);
-    uint32_t findCampaignId(const std::string& csvFile, const std::string& key);
 
     std::string makeCampaignKey(const CampaignArgs& args);
     void register_end(const CampaignEndRecord& rec);
 
     uint32_t campaign_id;
-
+    bool already_done = false; 
     static std::string csvEscape(const std::string& field);
 private:
     static constexpr uint32_t kInvalidId = std::numeric_limits<uint32_t>::max();
@@ -55,7 +54,7 @@ private:
     };
 
     static ScanResult scanCsv(const std::string& csvFile, const std::string& key);
-
+    static bool idInCsv(const std::string& csvFile, uint32_t id);
 
     void ensureCsvFilesExist();
 };

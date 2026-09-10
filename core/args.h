@@ -1,5 +1,6 @@
 #pragma once
 #include "campaign_helper.h"
+#include "metrics.h"
 #include <random>
 
 #include <iostream>
@@ -17,46 +18,21 @@
 #include <cctype>
 
 using cdouble = std::complex<double>;
-struct RelativeErrorThresholds {
-    double zero_eps   = 1e-15; // qué consideramos "golden = 0"
-    double degraded   = 1e-2;  // 1%
-    double corrupted  = 1e-1;  // 10%
-    double failed     = 10.0;  // ×10
-};
-struct SlotErrorStats {
-    uint64_t failed     = 0;
-    uint64_t corrupted  = 0;
-    uint64_t degraded   = 0;
-    uint64_t correct    = 0;
-
-    uint64_t total() const {
-        return failed + corrupted + degraded + correct;
-    }
-};
-struct CKKSAccuracyMetrics {
-    double l2_rel_error;     // ||y - g||₂ / ||g||₂
-    double linf_rel_error;   // max_i |y_i - g_i| / |g_i|   (g_i != 0)
-    double linf_abs_error;   // max_i |y_i - g_i|
-    double bits_precision;   // -log2(l2_rel_error)
-};
-
-struct ErrorThresholds {
-    double abs_zero;        // qué se considera "cero" en golden
-
-    double baseline_abs;    // baseline.linf_abs_error
-    double baseline_rel;    // baseline.linf_rel_error
-
-    double good;            // multiplicador (≈ 1–2)
-    double bad;             // multiplicador (≈ 5)
-    double fail;            // multiplicador (≈ 50)
-};
-
-inline uint32_t random_int(int a, int b) {
-    static thread_local std::mt19937 rng{std::random_device{}()};
-    std::uniform_int_distribution<int> dist(a, b);
-    return (uint32_t)dist(rng);
+inline std::mt19937_64& rng() {
+    static thread_local std::mt19937_64 gen{0};
+    return gen;
 }
 
+inline void seed_rng(uint64_t seed, uint64_t run_id = 0) {
+    std::seed_seq seq{ (uint32_t)seed, (uint32_t)(seed >> 32),
+                       (uint32_t)run_id, (uint32_t)(run_id >> 32) };
+    rng().seed(seq);
+}
+
+inline uint32_t random_int(int a, int b) {
+    std::uniform_int_distribution<int> dist(a, b);
+    return (uint32_t)dist(rng());
+}
 void printVector(const std::vector<double>& v,
                  const std::string& name = "",
                  size_t max_elems = SIZE_MAX);
@@ -99,33 +75,11 @@ void printBaselineComparison(
 // -----------------------------
 // API
 // -----------------------------
-CKKSAccuracyMetrics EvaluateCKKSAccuracy(
-    const std::vector<double>& golden,
-    const std::vector<double>& ckks,
-    double zero_eps = 1e-15
-);
-
-
-SlotErrorStats categorize_slots_relative(
-    const std::vector<double>& golden,
-    const std::vector<double>& output,
-    size_t size,
-    const RelativeErrorThresholds& thr = {}
-);
-
-
-bool AcceptCKKSResult(const CKKSAccuracyMetrics& m, double max_rel_error = 1e-4,
-                      double max_abs_error = 1e-4, double min_bits = 10.0);
-
 
 std::vector<uint32_t> extraBitsBetweenDeltaAndQ(const CampaignArgs& args);
 std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args);
 
 void validateArgs(const CampaignArgs& args);
-double percentile(std::vector<double>& v, double p);
-
-double compute_rel_norm2(const std::vector<double>& v1, const std::vector<double>& v2);
-
 std::vector<double> uniform_dist(uint32_t batchSize, int64_t  logMin, int64_t logMax, uint64_t seed, bool verbose=false);
 
 

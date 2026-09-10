@@ -1,4 +1,4 @@
-#include "campaign_registry.h"
+#include "registry.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -158,9 +158,24 @@ CampaignRegistry::ScanResult CampaignRegistry::scanCsv(
     return result;
 }
 
-uint32_t CampaignRegistry::findCampaignId(const std::string& csvFile, const std::string& key)
+bool CampaignRegistry::idInCsv(const std::string& csvFile, uint32_t id)
 {
-    return scanCsv(csvFile, key).existing_id;
+    std::ifstream file(csvFile);
+    std::string line;
+    std::getline(file, line); // header
+
+    while (std::getline(file, line)) {
+        auto comma = line.find(',');
+        if (comma == std::string::npos)
+            continue;
+        try {
+            if (std::stoul(line.substr(0, comma)) == id)
+                return true;
+        } catch (const std::exception&) {
+            continue; // línea corrupta
+        }
+    }
+    return false;
 }
 
 CampaignRegistry::CampaignRegistry(const CampaignArgs& args)
@@ -178,13 +193,10 @@ CampaignRegistry::CampaignRegistry(const CampaignArgs& args)
 
     const auto key = makeCampaignKey(args);
     const auto scan = scanCsv(start_csv_, key);
-
     if (scan.existing_id != kInvalidId) {
-        if (args.existing_policy == ExistingCampaignPolicy::Fail) {
-            throw std::runtime_error(
-                "Campaign already exists id=" + std::to_string(scan.existing_id));
-        }
-        campaign_id = scan.existing_id;
+        // Ya estaba en start: o terminó (está en end) o quedó interrumpida.
+        campaign_id  = scan.existing_id;
+        already_done = idInCsv(end_csv_, campaign_id);
     } else {
         campaign_id = scan.max_id + 1;
 
