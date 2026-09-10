@@ -1,9 +1,18 @@
-#include "backend_openfhe.h"
+#include "openfhe.h"
+#include "backend_interface.h"
 #include "attack_mode.h"
 #include "constants-defs.h"
 #include "metrics.h"
 #include "args.h"
+using namespace lbcrypto;
 
+struct OpenFHEContext final : BackendContext {
+    CryptoContext<DCRTPoly> cc;
+    KeyPair<DCRTPoly> keys;
+    std::vector<double> baseInput;
+    std::vector<double> goldenOutput;
+    PRNG* prng;
+};
 std::vector<double> get_reference_output(const BackendContext* bctx)
 {
     auto& ctx = static_cast<const OpenFHEContext&>(*bctx);
@@ -219,86 +228,3 @@ IterationResult run_iteration(BackendContext* bctx,
 }
 
 
-IterationChequer gen_cipher(BackendContext* bctx,
-              const CampaignArgs& args,
-              std::optional<IterationArgs> iterArgs)
-{
-    auto& ctx = static_cast<OpenFHEContext&>(*bctx);
-
-    ctx.prng->ResetToSeed();
-    Plaintext result_bitFlip;
-    Plaintext ptxt = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
-    Plaintext ptxt_clean;
-    if (iterArgs && args.stage == "encode") {
-        bitFlip(ptxt, args.withNTT,
-                iterArgs->limb,
-                iterArgs->coeff,
-                iterArgs->bit);
-    }
-
-    Ciphertext<DCRTPoly> c = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt);
-    Ciphertext<DCRTPoly> c_clean;
-
-    if(args.doAdd || args.doMul){
-        ptxt_clean = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
-        c_clean = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt_clean);
-    }
-
-    if(args.doPlainMul){
-        ptxt_clean = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
-    }
-
-    if (iterArgs) {
-        if (args.stage == "encrypt_c0") {
-            bitFlip(c, args.withNTT, 0,
-                    iterArgs->limb,
-                    iterArgs->coeff,
-                    iterArgs->bit);
-        } else if (args.stage == "encrypt_c1") {
-            bitFlip(c, args.withNTT, 1,
-                    iterArgs->limb,
-                    iterArgs->coeff,
-                    iterArgs->bit);
-        }
-    }
-
-    for (uint32_t i = 0; i < args.doAdd; ++i)
-        c = ctx.cc->EvalAdd(c, c_clean);
-
-    for (uint32_t i = 0; i < args.doPlainMul; ++i)
-        c = ctx.cc->EvalMult(c, ptxt_clean);
-
-    for (uint32_t i = 0; i < args.doMul; ++i)
-        c = ctx.cc->EvalMult(c, c_clean);
-
-    if(args.doScalarMul>0){
-        double scalar = static_cast<double>(args.doScalarMul);
-        c = ctx.cc->EvalMult(c, scalar);
-    }
-
-    if(args.doRot){
-        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
-        c = ctx.cc->EvalRotate(c, rotIndex);
-    }
-
-    if (iterArgs) {
-        if (args.stage == "decrypt_c0" ) {
-            bitFlip(c, args.withNTT, 0,
-                    iterArgs->limb,
-                    iterArgs->coeff,
-                    iterArgs->bit);
-        } else if (args.stage == "decrypt_c1") {
-            bitFlip(c, args.withNTT, 1,
-                    iterArgs->limb,
-                    iterArgs->coeff,
-                    iterArgs->bit);
-        }
-    }
-    ctx.cc->Decrypt(ctx.keys.secretKey, c, &result_bitFlip);
-
-    bool detected = SDCConfigHelper::WasSDCDetected(result_bitFlip);
-
-    result_bitFlip->SetLength(1 << args.logSlots);
-
-    return {result_bitFlip->GetRealPackedValue(), detected, c};
-}

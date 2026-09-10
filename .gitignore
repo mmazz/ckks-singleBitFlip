@@ -9,3 +9,6 @@ results/
 compile_commands.json
 *.txt
 !CMakeLists.txt
+
+.ipynb_checkpoints/
+*.csv
