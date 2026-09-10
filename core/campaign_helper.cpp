@@ -14,7 +14,7 @@ void CampaignArgs::print(std::ostream& os) const {
     os << "library: " << library << '\n';
     os << "stage: " << stage << '\n';
 
-    os << "bitPerCoeff: " << bitPerCoeff << '\n';
+    os << "bitsPerCoeff: " << bitsPerCoeff << '\n';
     os << "logN: " << logN << '\n';
     os << "logQ: " << logQ << '\n';
     os << "logDelta: " << logDelta << '\n';
@@ -44,6 +44,8 @@ void CampaignArgs::print(std::ostream& os) const {
     os << "amountBits: " << amountBits << '\n';
     os << "scaleTech: " << scaleTech << '\n';
     os << "results_dir: " << results_dir << '\n';
+    os << "numSamples: " << numSamples << '\n';
+    os << "saveVectors: " << saveVectors<< '\n';
 
     if (openfhe_attack_mode)
         os << "openfhe_attack_mode: " << static_cast<int>(*openfhe_attack_mode) << '\n';
@@ -64,7 +66,7 @@ void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [OPTIONS]\n\n"
               << "Options:\n"
               << "  --stage <name>              Stage to target: none, encode, encrypt_c0, encrypt_c1, decrypt_c0, decrypt_c1, decode, mul_inside, mul_outside, add_inside, add_outside, rot_inside, rot_outside (default: none)\n"
-              << "  --bitPerCoeff <value>   Max bits per coeff (default: 64)\n"
+              << "  --bitsPerCoeff <value>   Max bits per coeff (default: 64)\n"
               << "  --logN <value>          log Ring dimension (default: 3 = 2^3 = 8)\n"
               << "  --logQ <value>          First mod bits (default: 60)\n"
               << "  --logDelta <value>      Scaling factor bits (default: 50)\n"
@@ -89,6 +91,8 @@ void print_usage(const char* program_name) {
               << "  --thresholdSKA <value>  Bits for threshold for SKA (only heaan, default: 5.0)\n"
               << "  --dnum <value>          Digit number (default: 3)\n"
               << "  --amountBits <value>    Amount of burst bits (default: 1)\n"
+              << "  --numSamples <value>    Amount of injections (default: 50)\n"
+              << "  --saveVectors <value>   Save the input output vectors (default: 0)\n"
               << "  --scaleTech <value>     Scaling technique (default: FIXEDMANUAL, others: FIXEDAUTO, FLEXIBLEAUTO or FLEXIBLEAUTOEXT)\n"
               << "  --results_dir <path>    Results directory (default: results)\n"
               << "  --verbose, -v           Verbose output\n"
@@ -103,7 +107,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     static struct option long_options[] = {
         {"stage",          required_argument, 0, 'S'},
-        {"bitPerCoeff",    required_argument, 0, 'c'},
+        {"bitsPerCoeff",    required_argument, 0, 'c'},
         {"logN",           required_argument, 0, 'N'},
         {"logQ",           required_argument, 0, 'Q'},
         {"logDelta",       required_argument, 0, 'd'},
@@ -131,6 +135,8 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
         {"amountBits",     required_argument, 0, 'J'},
         {"scaleTech",      required_argument, 0, 'C'},
         {"results_dir",    required_argument, 0, 'R'},
+        {"numSamples",     required_argument, 0, 'K'},
+        {"saveVectors",    required_argument, 0, 'V'},
         {"verbose",        no_argument,       0, 'v'},
         {"help",           no_argument,       0, 'h'},
         {0, 0, 0, 0}
@@ -140,20 +146,13 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
 
     while ((opt = getopt_long(
         argc, argv,
-        "S:c:N:Q:d:g:m:n:A:p:M:L:r:B:o:O:X:T:x:y:s:b:a:t:D:C:R:v:h",
+        "S:c:N:Q:d:g:m:n:A:p:M:L:r:B:o:O:X:T:x:y:s:b:a:t:D:C:R:K:V:v:h",
         long_options,
         &option_index)) != -1)
     {
         switch (opt) {
-            case 'l':
-                args.library = optarg;
-                if (args.library != "openfhe" && args.library != "heaan") {
-                    std::cerr << "Error: library must be 'openfhe' or 'heaan'\n";
-                    std::exit(1);
-                }
-                break;
 
-            case 'c': args.bitPerCoeff = std::stoul(optarg); break;
+            case 'c': args.bitsPerCoeff = std::stoul(optarg); break;
             case 'N': args.logN = std::stoul(optarg); break;
             case 'Q': args.logQ = std::stoul(optarg); break;
             case 'd': args.logDelta = std::stoul(optarg); break;
@@ -168,6 +167,8 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
             case 'o': args.op_step = std::stoul(optarg); break;
             case 'O': args.op_depth = std::stoul(optarg); break;
             case 'J': args.amountBits = std::stoul(optarg); break;
+            case 'K': args.numSamples = std::stoul(optarg); break;
+            case 'V': args.saveVectors = std::stoul(optarg); break;
 
             case 'v':
                 args.verbose = true;
@@ -228,7 +229,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                 break;
 
             case 'T':
-                args.isExhaustive = optarg;
+                args.isExhaustive = std::stoul(optarg) != 0;
                 break;
 
             case 'a':

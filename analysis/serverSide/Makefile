@@ -7,19 +7,19 @@ ANALYSIS_TARGETS := \
 	rot_analysis \
 	#mulDepth_analysis \
 
-PARAMS = --logN 6 --logQ 120 --bitPerCoeff 144 --logDelta 40 --logSlots 4
-PARAMS_BOOT = --logN 6 --logQ 620 --bitPerCoeff 640 --logDelta 34 --logSlots 4 --doBoot 1 --doMul 4
-PARAMS_BOOT2 = --logN 4 --logSlots 3  --logQ 840 --bitPerCoeff 860 --logDelta 40 --doBoot 1 --results ../../results
+PARAMS = --logN 6 --logQ 120 --bitsPerCoeff 144 --logDelta 40 --logSlots 4
+PARAMS_BOOT = --logN 6 --logQ 620 --bitsPerCoeff 640 --logDelta 34 --logSlots 4 --doBoot 1 --doMul 4
+PARAMS_BOOT2 = --logN 4 --logSlots 3  --logQ 840 --bitsPerCoeff 860 --logDelta 40 --doBoot 1 --results ../../results
 
 .PHONY: $(ANALYSIS_TARGETS) $(ANALYSIS_TARGETS_RNS) all_analysis
 
 all_analysis: $(ANALYSIS_TARGETS)
 
 Asplos_Mul:
-	python3 register_analysis.py --library $(LIBRARY)   --logN 6 --logQ 60  --bitPerCoeff 64 --logDelta 25 --logSlots 3 --stage mul_inside --doMul 1 --doAdd 1 --mult_depth 0 --op_depth 0 --op_step 25 --title mul_inside_asplos
+	python3 register_analysis.py --library $(LIBRARY)   --logN 6 --logQ 60  --bitsPerCoeff 64 --logDelta 25 --logSlots 3 --stage mul_inside --doMul 1 --doAdd 1 --mult_depth 0 --op_depth 0 --op_step 25 --title mul_inside_asplos
 
 Asplos_Add:
-	python3 register_analysis.py --library $(LIBRARY)   --logN 6 --logQ 60  --bitPerCoeff 64 --logDelta 25 --logSlots 3 --stage add_inside --doMul 1 --doAdd 1 --mult_depth 0 --op_depth 0 --op_step 25 --title add_inside_asplos
+	python3 register_analysis.py --library $(LIBRARY)   --logN 6 --logQ 60  --bitsPerCoeff 64 --logDelta 25 --logSlots 3 --stage add_inside --doMul 1 --doAdd 1 --mult_depth 0 --op_depth 0 --op_step 25 --title add_inside_asplos
 
 
 Asplos_Boot:
@@ -58,7 +58,7 @@ add_analysis_registers:
 mul_analysis_registers:
 	python3 register_analysis.py --library $(LIBRARY) $(PARAMS) --stage mul_inside_asplos --doMul 1 --mult_depth 0 --op_step 25 --title mul_inside_register
 
-PARAMS = --logN 6 --logQ 160 --bitPerCoeff 174 --logDelta 40 --logSlots 4
+PARAMS = --logN 6 --logQ 160 --bitsPerCoeff 174 --logDelta 40 --logSlots 4
 mulDepth_analysis_registers:
 	python3 register_analysis.py --library $(LIBRARY) $(PARAMS) --stage mul_inside --doMul 3 --mult_depth 0 --op_depth 1 --op_step 25 --title mulDepth_inside_register2 --results ../../results_mul
 

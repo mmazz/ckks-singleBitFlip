@@ -1,7 +1,8 @@
 #include "backend_openfhe.h"
 #include "attack_mode.h"
 #include "constants-defs.h"
-#include "utils_ckks.h"
+#include "metrics.h"
+#include "args.h"
 
 std::vector<double> get_reference_output(const BackendContext* bctx)
 {
@@ -33,6 +34,15 @@ static void bitFlip(Plaintext &ptxt, bool withNTT, size_t i, size_t j, size_t bi
 
     if(!withNTT)
         ptxt->GetElement<DCRTPoly>().SwitchFormat();
+}
+
+void backend_prepare_args(CampaignArgs& args){
+    args.library = "openfhe";
+}
+
+// TODO: Esto depende de la tecnica, o uso la api de openfhe o aprendo a hacerlo sabendo la tecnica de rescaling
+uint32_t num_limbs(const BackendContext* ctx, const CampaignArgs& args){
+    return args.mult_depth+1;
 }
 
 SecretKeyAttackMode to_openfhe_attack_mode(AttackModeSKA mode)
@@ -119,7 +129,9 @@ BackendContext* setup_campaign(const CampaignArgs& args)
 
     return ctx;
 }
-
+void destroy_campaign(BackendContext* ctx) {
+    delete ctx;
+}
 
 IterationResult run_iteration(BackendContext* bctx,
               const CampaignArgs& args,

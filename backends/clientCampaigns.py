@@ -5,8 +5,8 @@ seed_list = list(range(seed_init, seed_init+SEEDS_PRNG+1))
 
 def gen_heaan_VS_openfhe_plain_analysis():
     variants = [
-        {"library": "heaan",   "bitPerCoeff": 128},
-        {"library": "openfhe", "bitPerCoeff": 64},
+        {"library": "heaan",   "bitsPerCoeff": 128},
+        {"library": "openfhe", "bitsPerCoeff": 64},
     ]
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
@@ -40,7 +40,7 @@ def gen_heaan_plain_VS_c0_VS_c1_analysis():
         "binary": "exhaustiveSingleBitFlip",
         "logN": 6,
         "logSlots": 5,
-        "bitPerCoeff": 64,
+        "bitsPerCoeff": 64,
         "logQ": 60,
         "logDelta": 40,
         "withNTT": 0,
@@ -53,7 +53,7 @@ def gen_seeds_analysis():
         "library": "heaan",
         "logN": 6,
         "logQ": 60,
-        "bitPerCoeff": 64,
+        "bitsPerCoeff": 64,
         "logDelta": 40,
         "stage": "encrypt_c0",
         "logSlots": 5,
@@ -80,7 +80,7 @@ def gen_logN_analysis():
         fixed = {
             "library": "heaan",
             "logQ": 60,
-            "bitPerCoeff": 64,
+            "bitsPerCoeff": 64,
             "logDelta": 40,
             #"stage": "encrypt_c0",
             "withNTT": 0,
@@ -92,10 +92,10 @@ def gen_logN_analysis():
 
 def gen_logQ_analysis():
     variants = [
-        {"logQ": 40, "bitPerCoeff": 50, "logDelta": 30},
-        {"logQ": 60, "bitPerCoeff": 75, "logDelta": 45},
-        {"logQ": 80, "bitPerCoeff": 100, "logDelta": 60},
-        {"logQ": 100, "bitPerCoeff": 125, "logDelta": 75},
+        {"logQ": 40, "bitsPerCoeff": 50, "logDelta": 30},
+        {"logQ": 60, "bitsPerCoeff": 75, "logDelta": 45},
+        {"logQ": 80, "bitsPerCoeff": 100, "logDelta": 60},
+        {"logQ": 100, "bitsPerCoeff": 125, "logDelta": 75},
     ]
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
@@ -134,7 +134,7 @@ def gen_logDelta_analysis():
             "library": "heaan",
             "logN": 6,
             "logSlots": 5,
-            "bitPerCoeff": 64,
+            "bitsPerCoeff": 64,
             "logQ": 60,
             "stage": "encrypt_c0",
             "withNTT": 0,
@@ -163,7 +163,7 @@ def gen_gap_analysis():
             "library": "heaan",
             "logN": 6,
             "logDelta": 40,
-            "bitPerCoeff": 64,
+            "bitsPerCoeff": 64,
             "logQ": 60,
             "withNTT": 0,
             **v,
@@ -174,12 +174,12 @@ def gen_gap_analysis():
 
 def gen_boot_analysis():
     variants = [
-        {"stage": "encode" ,     "bitPerCoeff": 1280},
-        {"stage": "encrypt_c0" , "bitPerCoeff": 640},
-        {"stage": "encrypt_c1" , "bitPerCoeff": 640},
-        {"stage": "decrypt_c0" , "bitPerCoeff": 640},
-        {"stage": "decrypt_c1" , "bitPerCoeff": 640},
-        {"stage": "decode" , "bitPerCoeff": 640},
+        {"stage": "encode" ,     "bitsPerCoeff": 1280},
+        {"stage": "encrypt_c0" , "bitsPerCoeff": 640},
+        {"stage": "encrypt_c1" , "bitsPerCoeff": 640},
+        {"stage": "decrypt_c0" , "bitsPerCoeff": 640},
+        {"stage": "decrypt_c1" , "bitsPerCoeff": 640},
+        {"stage": "decode" , "bitsPerCoeff": 640},
     ]
     sweep = {
         "seed": list(range(1, SEEDS_PRNG+1)),
@@ -221,7 +221,7 @@ def gen_input_analysis():
             "library": "heaan",
             "logN": 6,
             "logQ": 60,
-            "bitPerCoeff": 64,
+            "bitsPerCoeff": 64,
             "logDelta": 20,
             "stage": "encrypt_c0",
             "logSlots": 5,
@@ -234,9 +234,9 @@ def gen_input_analysis():
 
 def gen_opClientAdd_analysis():
     variants = [
-        {"stage": "encode" ,     "bitPerCoeff": 128},
-        {"stage": "encrypt_c0" , "bitPerCoeff": 64},
-        {"stage": "encrypt_c1" , "bitPerCoeff": 64},
+        {"stage": "encode" ,     "bitsPerCoeff": 128},
+        {"stage": "encrypt_c0" , "bitsPerCoeff": 64},
+        {"stage": "encrypt_c1" , "bitsPerCoeff": 64},
     ]
     sweep = {
         "seed": seed_list,
@@ -261,9 +261,9 @@ def gen_opClientAdd_analysis():
 
 def gen_opClientRot_analysis():
     variants = [
-        {"stage": "encode" ,     "bitPerCoeff": 128},
-        {"stage": "encrypt_c0" , "bitPerCoeff": 64},
-        {"stage": "encrypt_c1" , "bitPerCoeff": 64},
+        {"stage": "encode" ,     "bitsPerCoeff": 128},
+        {"stage": "encrypt_c0" , "bitsPerCoeff": 64},
+        {"stage": "encrypt_c1" , "bitsPerCoeff": 64},
     ]
     sweep = {
         "seed":seed_list,
@@ -288,9 +288,9 @@ def gen_opClientRot_analysis():
 
 def gen_opClientAddRot_analysis():
     variants = [
-        {"stage": "encode" ,     "bitPerCoeff": 128},
-        {"stage": "encrypt_c0" , "bitPerCoeff": 64},
-        {"stage": "encrypt_c1" , "bitPerCoeff": 64},
+        {"stage": "encode" ,     "bitsPerCoeff": 128},
+        {"stage": "encrypt_c0" , "bitsPerCoeff": 64},
+        {"stage": "encrypt_c1" , "bitsPerCoeff": 64},
     ]
     sweep = {
         "seed":seed_list,
@@ -328,7 +328,7 @@ def gen_opClientMul_analysis():
         "library": "heaan",
         "logN": 6,
         "logQ": 120,
-        "bitPerCoeff": 150,
+        "bitsPerCoeff": 150,
         "logDelta": 30,
         "logSlots": 4,
         "withNTT": 0,
@@ -361,7 +361,7 @@ def gen_NN_sim_analysis():
             "library": "heaan",
             "logN": 6, 
             "logQ": 220,
-            "bitPerCoeff": 250,
+            "bitsPerCoeff": 250,
             "logDelta": 30,
             "logSlots": 4,
             "withNTT": 0,

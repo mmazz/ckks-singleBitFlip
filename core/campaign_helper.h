@@ -29,7 +29,7 @@ struct CampaignArgs {
     std::string library = "none";
     std::string stage = "none";
 
-    uint32_t bitPerCoeff = 64;
+    uint32_t bitsPerCoeff = 64;
     uint32_t logN = 3;
     uint32_t logQ = 60;
     uint32_t logDelta = 50;
@@ -56,8 +56,10 @@ struct CampaignArgs {
     uint32_t dnum = 3;
     uint32_t amountBits = 1;
     std::string scaleTech = "FIXEDMANUAL";
-    std::string results_dir = "../../results";
+    std::string results_dir = "results";
 
+    uint32_t numSamples = 50;
+    bool saveVectors = false;
 
     std::optional<AttackModeSKA> openfhe_attack_mode = AttackModeSKA::CompleteInjection;
     std::optional<double> openfhe_threshold_bits = 5.0;

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # setup_project.sh - Script to set up the project structure
-
+cd "$(dirname "$0")"
 set -e
 
 

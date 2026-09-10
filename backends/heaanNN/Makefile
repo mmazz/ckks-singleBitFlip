@@ -52,7 +52,7 @@ RUNS_SERVER_LAYERS:= dirs $(addprefix run_server_layer,$(RUN_IDS))
 RUN_IDS_new := 1 2
 RUNS_SERVER_LAYERS_new := dirs $(addprefix run_server_layer_new,$(RUN_IDS_new))
 
-COMMON_PARAMS := --logN 12 --logQ 220 --bitPerCoeff 250 --logDelta 30 --logSlots 10 --withNTT 0
+COMMON_PARAMS := --logN 12 --logQ 220 --bitsPerCoeff 250 --logDelta 30 --logSlots 10 --withNTT 0
 
 .PHONY: all allRuns $(RUNS) allRuns_client $(RUNS_CLIENT) allRuns_server $(RUNS_SERVER)  allRuns_server_layers $(RUNS_SERVER_LAYERS)
 
@@ -283,7 +283,7 @@ clean:
 
 
 run0OP:
-	build/bin/nn_mnist_randomBitFlipOp --logN 15  --logQ 336  --bitPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 2 --withNTT 0 --doMul 1 --verbose
+	build/bin/nn_mnist_randomBitFlipOp --logN 15  --logQ 336  --bitsPerCoeff 250  --logDelta 30 --stage encrypt_c0 --logSlots 10 --seed 2 --withNTT 0 --doMul 1 --verbose
 
 run:
 	build/bin/nn_mnist 6 0 >> log.txt

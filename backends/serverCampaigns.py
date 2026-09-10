@@ -18,7 +18,7 @@ def gen_opServerAdd_analysis():
         "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
         "logN": 6,
         "logQ": 120,
-        "bitPerCoeff": 144,
+        "bitsPerCoeff": 144,
         "logDelta": 40,
         "stage": "add_inside",
         "doAdd": 2,
@@ -39,7 +39,7 @@ def gen_opServerMul_analysis():
         "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
         "logN": 6,
         "logQ": 120,
-        "bitPerCoeff": 144,
+        "bitsPerCoeff": 144,
         "logDelta": 40,
         "stage": "mul_inside_asplos",
         "doMul": 1,
@@ -61,7 +61,7 @@ def gen_opServerMulDepth_analysis():
         "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
         "logN": 6,
         "logQ": 160,
-        "bitPerCoeff": 174,
+        "bitsPerCoeff": 174,
         "logDelta": 40,
         "stage": "mul_inside_asplos",
         "doMul": 3,
@@ -83,7 +83,7 @@ def gen_opServerRescaleDepth_analysis():
         "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
         "logN": 6,
         "logQ": 120,
-        "bitPerCoeff": 144,
+        "bitsPerCoeff": 144,
         "logDelta": 40,
         "stage": "rescale_inside",
         "doMul": 2,
@@ -104,7 +104,7 @@ def gen_opServerRot_analysis():
         "library": "heaan",  # ajustar si corresponde a $(LIBRARY)
         "logN": 6,
         "logQ": 120,
-        "bitPerCoeff": 144,
+        "bitsPerCoeff": 144,
         "logDelta": 40,
         "stage": "rot_inside_asplos",
         "doRot": 2,
@@ -130,7 +130,7 @@ def gen_opServerBootOutside_analysis():
         "stage": "boot_outside",
         "logN": 4,
         "logDelta": 40,
-        "bitPerCoeff": 860,
+        "bitsPerCoeff": 860,
         "logSlots": 3,
         "logQ": 840,
         "doMul": 4,
@@ -152,7 +152,7 @@ def gen_opServerBootEval_analysis():
         "stage": "boot_eval",
         "logN": 4,
         "logDelta": 40,
-        "bitPerCoeff": 860,
+        "bitsPerCoeff": 860,
         "logSlots": 3,
         "logQ": 840,
         "doMul": 4,
@@ -187,7 +187,7 @@ def gen_opServerBootOps_analysis():
             "logSlots": 4,
             "logDelta": 34,
             "logQ": 660,
-            "bitPerCoeff": 680,
+            "bitsPerCoeff": 680,
             "doBoot": 1,
             "withNTT": 0,
             **v,
@@ -221,7 +221,7 @@ def gen_opServerBootOpsSlots_analysis():
             "logN": 4,
             "logDelta": 40,
             "logQ": 840,
-            "bitPerCoeff": 860,
+            "bitsPerCoeff": 860,
             "doBoot": 1,
             "withNTT": 0,
             **v,
@@ -236,7 +236,7 @@ def gen_opServerBootOpsSlots_analysis():
 
 def gen_ASPLOS_mul_analysis():
     variants = [
-            {"logN": 6,  "logSlots": 3, "logQ": 60, "logDelta": 25, "bitPerCoeff": 64, "doAdd":1, "doMul":1 },
+            {"logN": 6,  "logSlots": 3, "logQ": 60, "logDelta": 25, "bitsPerCoeff": 64, "doAdd":1, "doMul":1 },
     ]
     sweep = {
         "seed": list(range(1, 2)),
@@ -258,7 +258,7 @@ def gen_ASPLOS_mul_analysis():
 
 def gen_ASPLOS_add_analysis():
     variants = [
-            {"logN": 6,  "logSlots": 3, "logQ": 60, "logDelta": 25, "bitPerCoeff": 64, "doAdd":1, "doMul":1 },
+            {"logN": 6,  "logSlots": 3, "logQ": 60, "logDelta": 25, "bitsPerCoeff": 64, "doAdd":1, "doMul":1 },
     ]
     sweep = {
         "seed": list(range(1, 2)),

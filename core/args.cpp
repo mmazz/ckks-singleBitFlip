@@ -47,7 +47,7 @@ void printVector(const std::vector<cdouble>& v,
 
 void validateArgs(const CampaignArgs& args)
 {
-    if (args.logQ > args.bitPerCoeff)
+    if (args.logQ > args.bitsPerCoeff)
         throw std::invalid_argument(
             "Bits per coefficient is less than logQ"
         );
@@ -71,7 +71,7 @@ std::vector<uint32_t> bitsToFlipGenerator(const CampaignArgs& args)
 
     const uint32_t logQ     = args.logQ;
     const uint32_t logDelta = args.logDelta;
-    const uint32_t maxBits  = args.bitPerCoeff;
+    const uint32_t maxBits  = args.bitsPerCoeff;
     const uint32_t M        = maxBits - 1;
 
     auto addRange = [&](uint32_t start, uint32_t end)

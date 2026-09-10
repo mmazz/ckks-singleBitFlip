@@ -36,11 +36,11 @@ OPTIONAL_DEFAULTS = {
     "op_depth": 0,
     "doBoot": 0,
     "isComplex": 0,
-    "bitPerCoeff": 64,
+    "bitsPerCoeff": 64,
     "dnum": 3,
 }
 
-OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive", "scaleTech"}
+OPTIONAL_NO_FILTER = {"seed", "seed_input", "isExhaustive", "numSamples", "scaleTech"}
 
 
 def load_and_filter_campaigns(csv_path, filters, extra_optionals=None):

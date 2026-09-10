@@ -59,7 +59,7 @@ def main():
         filters["logSlots"]   =  ("int", BASELINE_LOGSLOTS)
         filters["logQ"]       =  ("int", logQ)
         filters["logDelta"]   =  ("int", LOGDELTA_VALUES[logQ])
-        filters["bitPerCoeff"]= ("int", BIT_PER_COEFF[logQ])
+        filters["bitsPerCoeff"]= ("int", BIT_PER_COEFF[logQ])
 
     ########################## DATA ################################
         selected = load_and_filter_campaigns(config.CAMPAIGNS_CSV, filters)
