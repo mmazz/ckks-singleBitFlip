@@ -52,7 +52,7 @@ static void check_transient(BackendContext* ctx, const CampaignArgs& args,
 
 static bool baseline_ok(const CampaignArgs& args, const std::vector<double>& plain_golden, const std::vector<double>& ckks_golden){
     CKKSAccuracyMetrics baseline_metrics = EvaluateCKKSAccuracy(plain_golden, ckks_golden);
-    double tol = args.doBoot ? 1e-3 : 1e-4;
+    double tol= has_op(args.ops, OpType::Boot) ? 1e-3 : 1e-4;
     bool res = AcceptCKKSResult(baseline_metrics, tol, tol);
     if(!res)
         printBaselineComparison(

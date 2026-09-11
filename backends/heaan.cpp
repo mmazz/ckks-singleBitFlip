@@ -7,6 +7,8 @@
 #include <vector>
 #include <complex>
 #include <algorithm>
+#include <array> 
+#include <set>
 
 const size_t MAX_H = 64;
 /*
@@ -137,12 +139,14 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     g_N = long(N);
     auto* ctx = new HEAANContext(args.logN, args.logQ, h, args.seed);
     std::srand(args.seed);
-    if(args.doBoot)
-        ctx->scheme.addBootKey(ctx->sk, args.logSlots, logq_boot + 4);
+    if (has_op(args.ops, OpType::Boot))
+       ctx->scheme.addBootKey(ctx->sk, args.logSlots, logq_boot + 4);
 
-    if(args.doRot){
-        ctx->scheme.addLeftRotKey(ctx->sk, args.doRot);
-    }
+    std::set<long> rots;
+    for (const Op& op : args.ops)
+       if (op.type == OpType::Rot) rots.insert(long(op.param));
+    for (long r : rots)
+       ctx->scheme.addLeftRotKey(ctx->sk, r);
     if(args.isComplex>0){
         compute_plain_io(args, ctx->baseInputComplex, ctx->goldenOutputComplex);
         ctx->isComplex = true;
@@ -197,7 +201,7 @@ IterationResult run_iteration(
 
     Ciphertext c = ctx.scheme.encryptMsg(plain, ctx.seed);
     Ciphertext c_clean;
-    if(args.doAdd || args.doMul){
+    if (has_op(args.ops, OpType::Add) || has_op(args.ops, OpType::Mul)){
         if(args.isComplex){
             plain_clean =  ctx.scheme.encode(baseInputComplex,
                                 baseSize,
@@ -213,8 +217,7 @@ IterationResult run_iteration(
         }
         c_clean = ctx.scheme.encryptMsg(plain_clean, ctx.seed);
     }
-
-    if(args.doPlainMul){
+    if (has_op(args.ops, OpType::PMul)){
         if(args.isComplex){
             plain_clean =  ctx.cc.encode(baseInputComplex, baseSize, args.logDelta);
         } else {
@@ -224,63 +227,90 @@ IterationResult run_iteration(
 
     if (inj.here("encrypt_c0")) client_flip(inj, c.bx);
     if (inj.here("encrypt_c1")) client_flip(inj, c.ax);
+    // ---- Server side: el pipeline ----
+    std::array<uint32_t, kNumOpTypes> occ{};   // ocurrencias por tipo -> op_depth
+    uint32_t n_rescale = 0;
 
-    // Server Side
-    for (uint32_t i = 0; i < args.doAdd; ++i) {
-      if (inj.here("add_inside", i)) {
-           const FaultSpec& f = inj.spec();
-           c = ctx.scheme.addBitFlip(c, c_clean,f.op_step, f.coeff, f.bit, f.amountBits);
-       } else {
-           c = ctx.scheme.add(c, c_clean);
-       }
-    }
-
-    for (uint32_t i = 0; i < args.doPlainMul; ++i) {
-        c = ctx.scheme.multByPoly(c, plain_clean.mx, args.logDelta);
-    }
-
-    for (uint32_t i = 0; i < args.doMul; ++i) {
-       if (inj.here("mul_inside", i)) {
-           const FaultSpec& f = inj.spec();
-           c = ctx.scheme.multBitFlip(c, c_clean, f.op_step, f.coeff, f.bit, f.amountBits);
-       } else {
-                c = ctx.scheme.mult(c, c_clean);
-       }
-
-       if (inj.here("rescale_inside", i)) {
+    auto rescale = [&]() {
+       const uint32_t r = n_rescale++;
+       if (inj.here("rescale", r)) {
            const FaultSpec& f = inj.spec();
            ctx.scheme.reScaleByAndEqualBitFlip(c, args.logDelta, f.op_step, f.coeff, f.bit, f.amountBits);
        } else {
            ctx.scheme.reScaleByAndEqual(c, args.logDelta);
        }
-    }
-    if(args.doRot>0){
-        if (inj.here("rort_inside")) {
-            const FaultSpec& f = inj.spec();
-            c = ctx.scheme.leftRotateFastBitFlip(c, args.doRot,f.op_step, f.coeff, f.bit, f.amountBits);
-        } else {
-            c = ctx.scheme.leftRotateFast(c, args.doRot);
-        }
+    };
+
+    for (const Op& op : args.ops) {
+       const uint32_t d = occ[size_t(op.type)]++;
+       switch (op.type) {
+       case OpType::Add:
+           if (inj.here("add", d)) {
+               const FaultSpec& f = inj.spec();
+               c = ctx.scheme.addBitFlip(c, c_clean, f.op_step, f.coeff, f.bit, f.amountBits);
+           } else {
+               c = ctx.scheme.add(c, c_clean);
+           }
+           break;
+
+       case OpType::PMul:
+           c = ctx.scheme.multByPoly(c, plain_clean.mx, args.logDelta);
+           rescale();
+           break;
+
+       case OpType::Mul:
+           if (inj.here("mul", d)) {
+               const FaultSpec& f = inj.spec();
+               c = ctx.scheme.multBitFlip(c, c_clean, f.op_step, f.coeff, f.bit, f.amountBits);
+           } else if (inj.here("mul_asplos", d)) {
+               const FaultSpec& f = inj.spec();
+               c = ctx.scheme.multBitFlipAsplos(c, c_clean, f.op_step, f.coeff, f.bit, f.amountBits);
+           } else {
+               c = ctx.scheme.mult(c, c_clean);
+           }
+           rescale();
+           break;
+
+       case OpType::Scalar:
+           c = ctx.scheme.multByConst(c, op.param, args.logDelta);
+           rescale();
+           break;
+
+       case OpType::Rot: {
+           const long k = long(op.param);
+           if (inj.here("rot", d)) {
+               const FaultSpec& f = inj.spec();
+               c = ctx.scheme.leftRotateFastBitFlip(c, k, f.op_step, f.coeff, f.bit, f.amountBits);
+           } else if (inj.here("rot_asplos", d)) {
+               const FaultSpec& f = inj.spec();
+               c = ctx.scheme.leftRotateFastBitFlipAsplos(c, k, f.op_step, f.coeff, f.bit, f.amountBits);
+           } else {
+               c = ctx.scheme.leftRotateFast(c, k);
+           }
+           break;
+       }
+
+    //cipher, logq, logQ, logT, logI=4
+       case OpType::Boot:
+           if (inj.here("boot", d)) {
+               const FaultSpec& f = inj.spec();
+               ctx.scheme.bootstrapAndEqualBitFlip(c, logq_boot, args.logQ, 4, 4, f.op_step, f.coeff, f.bit, f.amountBits);
+           } else if (inj.here("boot_coeff", d) || inj.here("boot_eval", d) || inj.here("boot_slot", d)) {
+               const FaultSpec& f = inj.spec();
+               ctx.scheme.bootstrapAndEqualBitFlip_inside(c, logq_boot, args.logQ, 4, 4, f.stage, f.op_step, f.coeff, f.bit, f.amountBits);
+           } else {
+               ctx.scheme.bootstrapAndEqual(c, logq_boot, args.logQ, 4, 4);
+           }
+           break;
+       }
     }
 
-// TODO FIX! esto va despues
-    // Back to client side
+    // ---- Back to client side (despues de TODO el pipeline, incluido el boot) ----
     if (inj.here("decrypt_c0")) client_flip(inj, c.bx);
     if (inj.here("decrypt_c1")) client_flip(inj, c.ax);
 
 
-    //cipher, logq, logQ, logT, logI=4
-    if(args.doBoot>0){
-        if (inj.here("boot_outside")) {
-            const FaultSpec& f = inj.spec();
-            ctx.scheme.bootstrapAndEqualBitFlip(c, logq_boot, args.logQ, 4, 4, f.op_step, f.coeff, f.bit, f.amountBits);
-        } else if (inj.here("boot_coeff") || inj.here("boot_eval") || inj.here("boot_slot")) {
-            const FaultSpec& f = inj.spec();
-            ctx.scheme.bootstrapAndEqualBitFlip_inside(c, logq_boot, args.logQ, 4, 4, f.stage, f.op_step, f.coeff, f.bit, f.amountBits);
-        } else {
-            ctx.scheme.bootstrapAndEqual(c, logq_boot, args.logQ, 4, 4);
-        }
-    }
+
     Plaintext decrypt_plain = ctx.scheme.decryptMsg(ctx.sk, c);
 
     if (inj.here("decode")) client_flip(inj, decrypt_plain.mx);

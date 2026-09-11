@@ -35,6 +35,9 @@ CASES=(
   "openfhe_encrypt_c0  | fi_openfhe | --isExhaustive 1 --stage encrypt_c0 $OFHE_S"
   "openfhe_add_dec_c0  | fi_openfhe | --isExhaustive 1 --stage decrypt_c0 --doAdd 1 $OFHE_S"
   "openfhe_random      | fi_openfhe | --isExhaustive 0 --numSamples 5 --stage encrypt_c1 $OFHE_S"
+  "heaan_pipeline_mal  | fi_heaan   | --isExhaustive 1 --stage encode --pipeline 'mul x2; rot' $HEAAN_L"
+  "heaan_stage_mal     | fi_heaan   | --isExhaustive 1 --stage rot --pipeline 'mul' $HEAAN_L"
+  "openfhe_boot        | fi_openfhe | --isExhaustive 1 --stage encode --pipeline 'boot' $OFHE_S"
 )
 
 # Configs invalidas: tienen que terminar con error y SIN registrar la campania.
@@ -50,8 +53,8 @@ trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; echo "${s%"${s##*[![:spac
 run_case() {   # run_case <nombre> <binario> <args> <dir>  -> deja el rc en $RC
   local name="$1" bin="$2" args="$3" dir="$4"
   rm -rf "$dir"
-  # shellcheck disable=SC2086
-  "$BIN/$bin" $args --results_dir "$dir" >"$dir.log" 2>&1
+  # eval para respetar las comillas de --pipeline '...'
+  eval "\"\$BIN/\$bin\" $args --results_dir \"\$dir\"" >"$dir.log" 2>&1
   RC=$?
 }
 data_of() { echo "$1/data/campaign_000001.csv.gz"; }

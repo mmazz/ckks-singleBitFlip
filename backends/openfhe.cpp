@@ -12,6 +12,7 @@ struct OpenFHEContext final : BackendContext {
     std::vector<double> baseInput;
     std::vector<double> goldenOutput;
     PRNG* prng;
+    bool manualRescale = false;
 };
 std::vector<double> get_reference_output(const BackendContext* bctx)
 {
@@ -87,7 +88,7 @@ BackendContext* setup_campaign(const CampaignArgs& args)
 
     params.SetSecurityLevel(HEStd_NotSet);
     auto* ctx = new OpenFHEContext();
-
+    ctx->manualRescale = (toScalingTechnique(args.scaleTech) == ScalingTechnique::FIXEDMANUAL);
     ctx->prng = &lbcrypto::PseudoRandomNumberGenerator::GetPRNG();
     ctx->prng->SetSeed(args.seed);
     ctx->cc = GenCryptoContext(params);
@@ -96,13 +97,25 @@ BackendContext* setup_campaign(const CampaignArgs& args)
     ctx->cc->Enable(LEVELEDSHE);
 
     ctx->keys = ctx->cc->KeyGen();
-    if(args.doMul)
-        ctx->cc->EvalMultKeyGen(ctx->keys.secretKey);
+   if (has_op(args.ops, OpType::Boot))
+       throw std::invalid_argument("openfhe: 'boot' todavia no esta implementado");
 
-    if(args.doRot>0){
-        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
-        ctx->cc->EvalAtIndexKeyGen(ctx->keys.secretKey, {rotIndex});
-    }
+   uint32_t n_mults = 0;
+   for (const Op& op : args.ops) n_mults += is_mult(op.type);
+   if (ctx->manualRescale && n_mults > args.mult_depth)
+       throw std::invalid_argument("openfhe: el pipeline tiene " + std::to_string(n_mults) +
+                                   " multiplicaciones y mult_depth=" + std::to_string(args.mult_depth));
+
+   if (has_op(args.ops, OpType::Mul))
+       ctx->cc->EvalMultKeyGen(ctx->keys.secretKey);
+
+   std::vector<int32_t> rots;
+   for (const Op& op : args.ops)
+       if (op.type == OpType::Rot && std::find(rots.begin(), rots.end(), int32_t(op.param)) == rots.end())
+           rots.push_back(int32_t(op.param));
+   if (!rots.empty())
+       ctx->cc->EvalAtIndexKeyGen(ctx->keys.secretKey, rots);
+
 
     compute_plain_io(args, ctx->baseInput, ctx->goldenOutput);
 
@@ -152,44 +165,34 @@ IterationResult run_iteration(BackendContext* bctx,
     ctx.prng->ResetToSeed();
     Plaintext result_bitFlip;
     Plaintext ptxt = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
-    Plaintext ptxt_clean;
-if (inj.here("encode")) inject(ptxt->GetElement<DCRTPoly>(), args.withNTT, inj);
+
+    if (inj.here("encode")) inject(ptxt->GetElement<DCRTPoly>(), args.withNTT, inj);
 
     Ciphertext<DCRTPoly> c = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt);
-    Ciphertext<DCRTPoly> c_clean;
 
-    if(args.doAdd || args.doMul){
-        ptxt_clean = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
-        c_clean = ctx.cc->Encrypt(ctx.keys.publicKey, ptxt_clean);
-    }
 
-    if(args.doPlainMul){
-        ptxt_clean = ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput);
-    }
 
-if (inj.here("encrypt_c0")) inject(c->GetElements()[0], args.withNTT, inj);
-if (inj.here("encrypt_c1")) inject(c->GetElements()[1], args.withNTT, inj);
+    if (inj.here("encrypt_c0")) inject(c->GetElements()[0], args.withNTT, inj);
+    if (inj.here("encrypt_c1")) inject(c->GetElements()[1], args.withNTT, inj);
 
-    for (uint32_t i = 0; i < args.doAdd; ++i)
-        c = ctx.cc->EvalAdd(c, c_clean);
+   // ---- Server side: el pipeline ----
+   // Operandos frescos al nivel actual de c: nunca se mezclan niveles.
+   auto operand_pt = [&]() { return ctx.cc->MakeCKKSPackedPlaintext(ctx.baseInput, 1, c->GetLevel()); };
+   auto operand_ct = [&]() { return ctx.cc->Encrypt(ctx.keys.publicKey, operand_pt()); };
+   auto rescale    = [&]() { if (ctx.manualRescale) ctx.cc->RescaleInPlace(c); };
 
-    for (uint32_t i = 0; i < args.doPlainMul; ++i)
-        c = ctx.cc->EvalMult(c, ptxt_clean);
-
-    for (uint32_t i = 0; i < args.doMul; ++i)
-        c = ctx.cc->EvalMult(c, c_clean);
-
-    if(args.doScalarMul>0){
-        double scalar = static_cast<double>(args.doScalarMul);
-        c = ctx.cc->EvalMult(c, scalar);
-    }
-
-    if(args.doRot){
-        int32_t rotIndex = static_cast<int32_t>(1ULL << (args.doRot - 1));
-        c = ctx.cc->EvalRotate(c, rotIndex);
-    }
-if (inj.here("decrypt_c0")) inject(c->GetElements()[0], args.withNTT, inj);
-if (inj.here("decrypt_c1")) inject(c->GetElements()[1], args.withNTT, inj);
+   for (const Op& op : args.ops) {
+       switch (op.type) {
+       case OpType::Add:    c = ctx.cc->EvalAdd(c, operand_ct());                   break;
+       case OpType::PMul:   c = ctx.cc->EvalMult(c, operand_pt());   rescale();     break;
+       case OpType::Mul:    c = ctx.cc->EvalMult(c, operand_ct());   rescale();     break;
+       case OpType::Scalar: c = ctx.cc->EvalMult(c, op.param);       rescale();     break;
+       case OpType::Rot:    c = ctx.cc->EvalRotate(c, int32_t(op.param));           break;
+       case OpType::Boot:   throw std::logic_error("openfhe: boot no implementado");
+       }
+   }
+    if (inj.here("decrypt_c0")) inject(c->GetElements()[0], args.withNTT, inj);
+    if (inj.here("decrypt_c1")) inject(c->GetElements()[1], args.withNTT, inj);
 
     ctx.cc->Decrypt(ctx.keys.secretKey, c, &result_bitFlip);
 
