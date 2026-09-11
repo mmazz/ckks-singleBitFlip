@@ -38,8 +38,7 @@ public:
     void record_flip(int flipped_bits, int changed_coeffs) {
         if (mode_ != Mode::Fault) throw std::logic_error("record_flip out of Fault mode");
         if (flipped_bits != int(f_.amountBits))
-            throw std::logic_error(std::to_string(flipped_bits) +
-                                   " bits were flip,  " + std::to_string(f_.amountBits) + " were lost");
+            throw std::logic_error(std::to_string(flipped_bits) + " bits flipped, " + std::to_string(f_.amountBits) + " requested");
         if (changed_coeffs != 1)
             throw std::logic_error(std::to_string(changed_coeffs) + " coefficients change, no 1");
         ++applied_;

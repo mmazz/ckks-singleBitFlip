@@ -247,7 +247,7 @@ CampaignArgs parse_arguments(int argc, char* argv[]) {
                 break;
 
             case 'R':
-                args.results_dir = "results";
+                args.results_dir = optarg;
                 break;
 
             case 'h':

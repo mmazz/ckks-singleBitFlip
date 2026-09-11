@@ -19,20 +19,6 @@ std::vector<double> get_reference_output(const BackendContext* bctx)
     return ctx.goldenOutput;
 }
 
-static void bitFlip(Ciphertext<DCRTPoly> &c, bool withNTT, size_t k, size_t i, size_t j, size_t bit){
-    if(!withNTT)
-        c->GetElements()[k].SwitchFormat();
-
-    NativeInteger& x = c->GetElements()[k].GetAllElements()[i][j];
-    uint64_t val = x.ConvertToInt();  // Extrae como uint64_t
-    val ^= (1ULL << bit);               // Aplica XOR
-    x = NativeInteger(val);
-
-    if(!withNTT)
-        c->GetElements()[k].SwitchFormat();
-}
-
-
 
 void backend_prepare_args(CampaignArgs& args){
     args.library = "openfhe";
