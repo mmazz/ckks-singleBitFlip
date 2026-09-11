@@ -35,11 +35,8 @@ if(WITH_HEAAN)
         INTERFACE_INCLUDE_DIRECTORIES ${HEAAN_DIR}/src)
     target_link_libraries(heaan_lib INTERFACE ${NTL_LIB} ${GMP_LIB} Threads::Threads m)
 
-<<<<<<< HEAD
     add_library(fi_backend_heaan STATIC backends/heaan.cpp)
-=======
-    add_library(fi_backend_heaan STATIC backends/heaan/src/backend.cpp)
->>>>>>> 8e4d1d0a2fccdd4b5f6eec023835a18844c6bf94
+
     target_link_libraries(fi_backend_heaan PUBLIC fi_core heaan_lib)
 endif()
 
@@ -52,16 +49,9 @@ if(WITH_OPENFHE)
     separate_arguments(OFHE_CXX_FLAGS UNIX_COMMAND "${OpenFHE_CXX_FLAGS}")
     separate_arguments(OFHE_LD_FLAGS  UNIX_COMMAND "${OpenFHE_EXE_LINKER_FLAGS}")
 
-<<<<<<< HEAD
     add_library(fi_backend_openfhe STATIC backends/openfhe.cpp)
     target_compile_options(fi_backend_openfhe PRIVATE ${OFHE_CXX_FLAGS})
     target_include_directories(fi_backend_openfhe PUBLIC
-=======
-    add_library(fi_backend_openfhe STATIC backends/openfhe/src/backend.cpp)
-    target_compile_options(fi_backend_openfhe PRIVATE ${OFHE_CXX_FLAGS})
-    target_include_directories(fi_backend_openfhe PUBLIC
-        ${CMAKE_SOURCE_DIR}/backends/openfhe/src
->>>>>>> 8e4d1d0a2fccdd4b5f6eec023835a18844c6bf94
         ${OpenFHE_INCLUDE}
         ${OpenFHE_INCLUDE}/third-party/include
         ${OpenFHE_INCLUDE}/core
