@@ -14,7 +14,7 @@ ERR_FLOOR = 2.0 ** -60   # piso para log2 cuando el error es exactamente 0
 def load_campaigns(results_dir):
     """Una fila por campania TERMINADA (start JOIN end), con config_id."""
     results_dir = Path(results_dir)
-    start = pd.read_csv(results_dir / "campaigns_start.csv")
+    start = pd.read_csv(results_dir / "campaigns_start.csv", keep_default_na=False)   # pipeline vacio = ""
     end = pd.read_csv(results_dir / "campaigns_end.csv")
     camps = start.merge(end, on="campaign_id", how="inner")   # las interrumpidas quedan afuera
 
