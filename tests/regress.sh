@@ -27,26 +27,26 @@ CASES=(
   "heaan_encode        | fi_heaan   | --isExhaustive 1 --stage encode     $HEAAN_S"
   "heaan_encrypt_c1    | fi_heaan   | --isExhaustive 1 --stage encrypt_c1 $HEAAN_S"
   "heaan_decode        | fi_heaan   | --isExhaustive 1 --stage decode     $HEAAN_S"
-  "heaan_ops_enc_c0    | fi_heaan   | --isExhaustive 1 --stage encrypt_c0 --doAdd 1 --doMul 2 --doRot 2 $HEAAN_L"
-  "heaan_ops_dec_c1    | fi_heaan   | --isExhaustive 1 --stage decrypt_c1 --doAdd 1 --doMul 2 --doRot 2 $HEAAN_L"
-  "heaan_mul_inside    | fi_heaan   | --isExhaustive 1 --stage mul_inside --op_depth 1 --op_step 5 --doMul 2 $HEAAN_L"
-  "heaan_random        | fi_heaan   | --isExhaustive 0 --numSamples 5 --stage encrypt_c0 --doMul 1 $HEAAN_L"
+  "heaan_ops_enc_c0    | fi_heaan   | --isExhaustive 1 --stage encrypt_c0 --pipeline 'add; mul x2; rot 2' $HEAAN_L"
+  "heaan_ops_dec_c1    | fi_heaan   | --isExhaustive 1 --stage decrypt_c1 --pipeline 'add; mul x2; rot 2' $HEAAN_L"
+  "heaan_mul_inside    | fi_heaan   | --isExhaustive 1 --stage mul --op_depth 1 --op_step 5 --pipeline 'mul x2' $HEAAN_L"
+  "heaan_random        | fi_heaan   | --isExhaustive 0 --numSamples 5 --stage encrypt_c0 --pipeline 'mul' $HEAAN_L"
   "openfhe_encode      | fi_openfhe | --isExhaustive 1 --stage encode     $OFHE_S"
   "openfhe_encrypt_c0  | fi_openfhe | --isExhaustive 1 --stage encrypt_c0 $OFHE_S"
-  "openfhe_add_dec_c0  | fi_openfhe | --isExhaustive 1 --stage decrypt_c0 --doAdd 1 $OFHE_S"
+  "openfhe_add_dec_c0  | fi_openfhe | --isExhaustive 1 --stage decrypt_c0 --pipeline 'add' $OFHE_S"
   "openfhe_random      | fi_openfhe | --isExhaustive 0 --numSamples 5 --stage encrypt_c1 $OFHE_S"
-  "heaan_pipeline_mal  | fi_heaan   | --isExhaustive 1 --stage encode --pipeline 'mul x2; rot' $HEAAN_L"
-  "heaan_stage_mal     | fi_heaan   | --isExhaustive 1 --stage rot --pipeline 'mul' $HEAAN_L"
-  "openfhe_boot        | fi_openfhe | --isExhaustive 1 --stage encode --pipeline 'boot' $OFHE_S"
+)
+# Configs invalidas: tienen que fallar, POR EL MOTIVO ESPERADO, y sin registrar la campania.
+# nombre | binario | argumentos | pedazo del mensaje de error esperado
+MUST_FAIL=(
+  "heaan_depth_fuera   | fi_heaan   | --isExhaustive 1 --stage mul --op_depth 5 --pipeline 'mul x2' $HEAAN_L   | never reach"
+  "heaan_step_fuera    | fi_heaan   | --isExhaustive 1 --stage mul --op_step 999 --pipeline 'mul x2' $HEAAN_L | never reach"
+  "heaan_stage_mal     | fi_heaan   | --isExhaustive 1 --stage rot --pipeline 'mul' $HEAAN_L                  | never reach"
+  "heaan_pipeline_mal  | fi_heaan   | --isExhaustive 1 --stage encode --pipeline 'mul x2; rot' $HEAAN_L      | necesita un valor"
+  "openfhe_mul_inside  | fi_openfhe | --isExhaustive 1 --stage mul --pipeline 'mul' $OFHE_S                   | never reach"
+  "openfhe_boot        | fi_openfhe | --isExhaustive 1 --stage encode --pipeline 'boot' $OFHE_S               | no esta implementado"
 )
 
-# Configs invalidas: tienen que terminar con error y SIN registrar la campania.
-# Hasta terminar el Bloque A fallan (se inyecta "nada" en silencio).
-MUST_FAIL=(
-  "heaan_depth_fuera   | fi_heaan   | --isExhaustive 1 --stage mul_inside --op_depth 5 --doMul 2 $HEAAN_L"
-  "heaan_step_fuera    | fi_heaan   | --isExhaustive 1 --stage mul_inside --op_step 999 --doMul 2 $HEAAN_L"
-  "openfhe_mul_inside  | fi_openfhe | --isExhaustive 1 --stage mul_inside --doMul 1 $OFHE_S"
-)
 
 trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; echo "${s%"${s##*[![:space:]]}"}"; }
 
@@ -96,16 +96,22 @@ done
 if [[ "$MODE" == "check" ]]; then
   echo "== configs invalidas (tienen que fallar sin registrarse) =="
   for entry in "${MUST_FAIL[@]}"; do
-    IFS='|' read -r name bin args <<<"$entry"
-    name=$(trim "$name"); bin=$(trim "$bin"); args=$(trim "$args")
+    IFS='|' read -r name bin args expect <<<"$entry"
+    name=$(trim "$name"); bin=$(trim "$bin"); args=$(trim "$args"); expect=$(trim "$expect")
     [[ -x "$BIN/$bin" ]] || { skip "$name" "no existe $bin"; continue; }
+
     run_case "$name" "$bin" "$args" "$TMP/$name"
     rows=0
     [[ -f "$TMP/$name/campaigns_start.csv" ]] && rows=$(( $(wc -l <"$TMP/$name/campaigns_start.csv") - 1 ))
-    if [[ $RC -ne 0 && $rows -le 0 ]]; then
-      pass "$name ($(grep -m1 -i 'error' "$TMP/$name.log" | cut -c1-70))"
+    if [[ $RC -eq 0 ]]; then
+      fail "$name" "termino OK y tenia que fallar"
+    elif [[ $rows -gt 0 ]]; then
+      fail "$name" "fallo, pero registro $rows campania(s)"
+    elif ! grep -q -- "$expect" "$TMP/$name.log"; then
+      fail "$name" "fallo por otro motivo (se esperaba '$expect'):"
+      grep -m2 -iE 'error|unrecognized|invalid' "$TMP/$name.log" | sed 's/^/        /'
     else
-      fail "$name" "rc=$RC, campanias registradas=$rows"
+      pass "$name ($expect)"
     fi
   done
 fi
